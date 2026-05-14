@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>貯玉記録（スロット）</title>
+<title>パチスロ銀行</title>
 <style>
   :root {
     --bg: #0f1115;
@@ -28,7 +28,7 @@
     margin: 0 auto;
     font-size: 15px;
   }
-  h1 { font-size: 18px; margin-bottom: 2px; }
+  h1 { font-size: 19px; margin-bottom: 2px; }
   .updated-head { color: var(--sub); font-size: 12px; margin-bottom: 14px; }
 
   #errbox {
@@ -84,6 +84,7 @@
     padding-left: 8px;
     border-left: 3px solid var(--accent);
   }
+  h2 .gsum { color: var(--sub); font-weight: 400; font-size: 11px; margin-left: 8px; }
 
   .empty {
     color: var(--sub);
@@ -141,7 +142,7 @@
   .raterow { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
   .raterow .lbl { font-size: 11px; color: var(--sub); }
   input.rate {
-    width: 52px;
+    width: 56px;
     background: #11141a;
     border: 1px solid #3a4150;
     border-radius: 7px;
@@ -201,7 +202,7 @@
   }
   .modal h3 { font-size: 15px; margin-bottom: 12px; color: var(--accent); }
   .modal label { display: block; font-size: 11px; color: var(--sub); margin-bottom: 10px; }
-  .modal input {
+  .modal input, .modal select {
     display: block;
     width: 100%;
     margin-top: 3px;
@@ -213,7 +214,7 @@
     padding: 8px 9px;
     font-family: inherit;
   }
-  .modal input:focus { outline: none; border-color: var(--accent); }
+  .modal input:focus, .modal select:focus { outline: none; border-color: var(--accent); }
   .frow { display: flex; gap: 10px; }
   .frow label { flex: 1; }
   .modal .btn { margin-top: 4px; }
@@ -221,7 +222,7 @@
 </head>
 <body>
 
-<h1>貯玉記録（スロット）</h1>
+<h1>パチスロ銀行</h1>
 <div class="updated-head" id="today"></div>
 
 <div id="errbox"></div>
@@ -235,7 +236,7 @@
 <div class="toolbar">
   <button class="btn primary" id="addStore">＋ 店舗を追加</button>
   <button class="btn" id="resetRates">レートを初期値に戻す</button>
-  <button class="btn" id="clearBalances">全店の貯玉を0にする</button>
+  <button class="btn" id="clearBalances">全店の残高を0にする</button>
   <button class="btn danger" id="deleteAll">全店舗を削除</button>
   <button class="btn" id="restoreDefault">初期25店舗を再読込</button>
 </div>
@@ -245,11 +246,11 @@
 <details class="notes">
   <summary>確認メモ・使い方</summary>
   <ul>
-    <li><b>貯玉の入力</b>：各店の「貯玉」欄に当日の枚数を入力すると、換金額と合計が自動計算されます。入力内容はこの端末のブラウザに自動保存されます。</li>
+    <li><b>残高の入力</b>：各店の入力欄に当日の貯メダル（スロット）／貯玉（パチンコ）の枚数・玉数を入力すると、換金額と合計が自動計算されます。入力内容はこの端末のブラウザに自動保存されます。</li>
     <li><b>レート修正</b>：貸／交換の数字は直接書き換えできます。「↺ 初期」ボタンで登録時の初期値に戻せます（修正済みはオレンジ表示）。</li>
-    <li><b>店舗の追加・削除</b>：上部「＋ 店舗を追加」で新しい店を登録、各カード右上の「✕」で削除。「全店舗を削除」で空にでき、「初期25店舗を再読込」で最初の25店舗に戻せます。</li>
+    <li><b>店舗の追加・削除</b>：上部「＋ 店舗を追加」で新しい店を登録（スロット／パチンコを選択）、各カード右上の「✕」で削除。「全店舗を削除」で空に、「初期25店舗を再読込」で最初の25店舗（スロット）に戻せます。</li>
     <li>初期登録の交換率はみんパチ調査値。記録と不一致だった店：ベラジオ住之江（記録52／みんパチ50）、123玉出（記録52／みんパチ56）、天王寺ホール（記録52／みんパチ53）。店頭表示で要確認。</li>
-    <li>換金額は理論値。ベラジオは5,000円交換ごとに-100円のギャップあり。再プレイ利用なら貸し玉レート相当でこれより有利。</li>
+    <li>換金額は理論値。ベラジオは5,000円交換ごとに-100円のギャップあり。再プレイ利用なら貸しレート相当でこれより有利。</li>
   </ul>
 </details>
 
@@ -259,12 +260,14 @@
     <label>店舗名 <span style="color:#e9605f">*</span>
       <input id="f-name" type="text" placeholder="例：マルハン〇〇店">
     </label>
-    <label>グループ（交換率の区分など）
-      <input id="f-group" type="text" list="groupList" placeholder="例：46貸し52交換">
-      <datalist id="groupList"></datalist>
+    <label>種別
+      <select id="f-type">
+        <option value="slot">スロット（メダル）</option>
+        <option value="pachinko">パチンコ（玉）</option>
+      </select>
     </label>
     <div class="frow">
-      <label>貸玉 <span style="color:#e9605f">*</span>
+      <label>貸 <span style="color:#e9605f">*</span>
         <input id="f-lend" type="number" inputmode="decimal" value="50">
       </label>
       <label>交換率 <span style="color:#e9605f">*</span>
@@ -300,35 +303,40 @@
     var STORE_KEY = 'chodama_v2';
 
     var DEFAULT_STORES = [
-      { id:'maruhan-oriono', name:'マルハン遠里小野', group:'46貸し47交換', url:'https://minpachi.com/maruhan-oriono/', defLend:46, defEx:47, balance:0, memo:'' },
-      { id:'maruhan-kitakagaya', name:'マルハン北加賀屋', group:'46貸し47交換', url:'', defLend:46, defEx:47, balance:0, memo:'みんパチに数値記載なし（暫定で47交換に設定）' },
-      { id:'maruhan-shinsekai', name:'マルハン新世界', group:'46貸し47交換', url:'https://minpachi.com/maruhan-shinsekai/', defLend:46, defEx:47, balance:174, memo:'⇧pw → 3830' },
-      { id:'kicona-sakai', name:'キコーナ堺', group:'46貸し47交換', url:'https://minpachi.com/grankicona-2/', defLend:46, defEx:47, balance:0, memo:'グランキコーナ堺店として確認' },
+      { id:'maruhan-oriono', name:'マルハン遠里小野', type:'slot', url:'https://minpachi.com/maruhan-oriono/', defLend:46, defEx:47, balance:0, memo:'' },
+      { id:'maruhan-kitakagaya', name:'マルハン北加賀屋', type:'slot', url:'', defLend:46, defEx:47, balance:0, memo:'みんパチに数値記載なし（暫定で47交換に設定）' },
+      { id:'maruhan-shinsekai', name:'マルハン新世界', type:'slot', url:'https://minpachi.com/maruhan-shinsekai/', defLend:46, defEx:47, balance:174, memo:'⇧pw → 3830' },
+      { id:'kicona-sakai', name:'キコーナ堺', type:'slot', url:'https://minpachi.com/grankicona-2/', defLend:46, defEx:47, balance:0, memo:'グランキコーナ堺店として確認' },
 
-      { id:'bellagio-suminoe', name:'ベラジオ住之江', group:'46貸し52交換', url:'https://minpachi.com/bellagio-b-5/', defLend:46, defEx:50, balance:1800, memo:'記録は52交換／みんパチ50交換。5k交換で-100円のギャップあり' },
-      { id:'bellagio-nishinaka', name:'ベラジオ西中島', group:'46貸し52交換', url:'https://minpachi.com/bellagio-nishinaka/', defLend:46, defEx:51.6, balance:0, memo:'5k交換で-100円のギャップあり' },
-      { id:'hyper-ms', name:'ハイパーエムズ', group:'46貸し52交換', url:'https://minpachi.com/as-ms/', defLend:46, defEx:51.6, balance:0, memo:'' },
-      { id:'kicona-nishitanabe', name:'キコーナ西田辺', group:'46貸し52交換', url:'https://minpachi.com/kicona-nishitanabe/', defLend:46, defEx:51.6, balance:0, memo:'20円専用機1台のみ・通常非稼働との口コミ' },
-      { id:'tamade123', name:'123玉出', group:'46貸し52交換', url:'https://minpachi.com/tamade123/', defLend:46, defEx:56, balance:472, memo:'記録は52交換／みんパチ56交換。口コミでは実際5.1〜5.2との指摘も' },
-      { id:'nagai123', name:'123長居', group:'46貸し52交換', url:'https://minpachi.com/nagai123/', defLend:46, defEx:52, balance:0, memo:'' },
-      { id:'proots-suminoe', name:'p-root 住之江', group:'46貸し52交換', url:'https://minpachi.com/proots-s/', defLend:46, defEx:52, balance:null, memo:'貯玉枚数が未記入' },
-      { id:'kikuya', name:'キクヤ', group:'46貸し52交換', url:'https://minpachi.com/kikuyasakaihonten/', defLend:46, defEx:51.5, balance:0, memo:'キクヤ堺本店として確認' },
-      { id:'richwell', name:'リッチウェル', group:'46貸し52交換', url:'https://minpachi.com/richwell/', defLend:46, defEx:52, balance:0, memo:'リッチウエル本店（住之江区）として確認' },
-      { id:'tennoji-hall', name:'天王寺ホール', group:'46貸し52交換', url:'https://minpachi.com/tennoji-hall/', defLend:46, defEx:53, balance:0, memo:'記録は52交換／みんパチ53交換。「換金率が大阪一悪い」との口コミあり' },
-      { id:'super-hall', name:'スーパーホール', group:'46貸し52交換', url:'https://minpachi.com/super-hall/', defLend:46, defEx:51.5, balance:0, memo:'' },
-      { id:'matsubara-123n', name:'123N松原', group:'46貸し52交換', url:'https://minpachi.com/123-matsubara/', defLend:46, defEx:51.6, balance:0, memo:'' },
-      { id:'slot123-matsubara', name:'スロット123松原', group:'46貸し52交換', url:'https://minpachi.com/slot123matsubara/', defLend:46, defEx:52, balance:0, memo:'2019年に123+N松原店へ改名済み・123N松原と実質同一の可能性' },
-      { id:'cosmo-sakai', name:'スーパーコスモプレミアム堺', group:'46貸し52交換', url:'https://minpachi.com/s-cosmo-city-acty/', defLend:46, defEx:52, balance:0, memo:'' },
+      { id:'bellagio-suminoe', name:'ベラジオ住之江', type:'slot', url:'https://minpachi.com/bellagio-b-5/', defLend:46, defEx:50, balance:1800, memo:'記録は52交換／みんパチ50交換。5k交換で-100円のギャップあり' },
+      { id:'bellagio-nishinaka', name:'ベラジオ西中島', type:'slot', url:'https://minpachi.com/bellagio-nishinaka/', defLend:46, defEx:51.6, balance:0, memo:'5k交換で-100円のギャップあり' },
+      { id:'hyper-ms', name:'ハイパーエムズ', type:'slot', url:'https://minpachi.com/as-ms/', defLend:46, defEx:51.6, balance:0, memo:'' },
+      { id:'kicona-nishitanabe', name:'キコーナ西田辺', type:'slot', url:'https://minpachi.com/kicona-nishitanabe/', defLend:46, defEx:51.6, balance:0, memo:'20円専用機1台のみ・通常非稼働との口コミ' },
+      { id:'tamade123', name:'123玉出', type:'slot', url:'https://minpachi.com/tamade123/', defLend:46, defEx:56, balance:472, memo:'記録は52交換／みんパチ56交換。口コミでは実際5.1〜5.2との指摘も' },
+      { id:'nagai123', name:'123長居', type:'slot', url:'https://minpachi.com/nagai123/', defLend:46, defEx:52, balance:0, memo:'' },
+      { id:'proots-suminoe', name:'p-root 住之江', type:'slot', url:'https://minpachi.com/proots-s/', defLend:46, defEx:52, balance:null, memo:'残高が未記入' },
+      { id:'kikuya', name:'キクヤ', type:'slot', url:'https://minpachi.com/kikuyasakaihonten/', defLend:46, defEx:51.5, balance:0, memo:'キクヤ堺本店として確認' },
+      { id:'richwell', name:'リッチウェル', type:'slot', url:'https://minpachi.com/richwell/', defLend:46, defEx:52, balance:0, memo:'リッチウエル本店（住之江区）として確認' },
+      { id:'tennoji-hall', name:'天王寺ホール', type:'slot', url:'https://minpachi.com/tennoji-hall/', defLend:46, defEx:53, balance:0, memo:'記録は52交換／みんパチ53交換。「換金率が大阪一悪い」との口コミあり' },
+      { id:'super-hall', name:'スーパーホール', type:'slot', url:'https://minpachi.com/super-hall/', defLend:46, defEx:51.5, balance:0, memo:'' },
+      { id:'matsubara-123n', name:'123N松原', type:'slot', url:'https://minpachi.com/123-matsubara/', defLend:46, defEx:51.6, balance:0, memo:'' },
+      { id:'slot123-matsubara', name:'スロット123松原', type:'slot', url:'https://minpachi.com/slot123matsubara/', defLend:46, defEx:52, balance:0, memo:'2019年に123+N松原店へ改名済み・123N松原と実質同一の可能性' },
+      { id:'cosmo-sakai', name:'スーパーコスモプレミアム堺', type:'slot', url:'https://minpachi.com/s-cosmo-city-acty/', defLend:46, defEx:52, balance:0, memo:'' },
 
-      { id:'sigma', name:'シグマ本店', group:'50貸し56交換', url:'https://minpachi.com/siguma/', defLend:50, defEx:56, balance:450, memo:'280枚（=5,000円）単位で交換' },
-      { id:'proots-mandore', name:'p-root MANDORE', group:'50貸し56交換', url:'https://minpachi.com/prootsmandore/', defLend:50, defEx:56, balance:500, memo:'280枚（=5,000円）単位で交換' },
-      { id:'amuse-minami', name:'アミューズ南住吉', group:'50貸し56交換', url:'https://minpachi.com/amuse-minami/', defLend:50, defEx:56, balance:0, memo:'280枚（=5,000円）単位で交換' },
+      { id:'sigma', name:'シグマ本店', type:'slot', url:'https://minpachi.com/siguma/', defLend:50, defEx:56, balance:450, memo:'280枚（=5,000円）単位で交換' },
+      { id:'proots-mandore', name:'p-root MANDORE', type:'slot', url:'https://minpachi.com/prootsmandore/', defLend:50, defEx:56, balance:500, memo:'280枚（=5,000円）単位で交換' },
+      { id:'amuse-minami', name:'アミューズ南住吉', type:'slot', url:'https://minpachi.com/amuse-minami/', defLend:50, defEx:56, balance:0, memo:'280枚（=5,000円）単位で交換' },
 
-      { id:'daiichi-suminoe', name:'ダイチ', group:'50貸し60交換', url:'https://minpachi.com/daiichi-suminoe/', defLend:50, defEx:60, balance:1070, memo:'大いち住之江店として確認' },
-      { id:'j-story', name:'J story', group:'50貸し60交換', url:'https://minpachi.com/j-story/', defLend:50, defEx:60, balance:0, memo:'2026/3/31閉店予定の記載 → 現在は閉店の可能性' },
+      { id:'daiichi-suminoe', name:'ダイチ', type:'slot', url:'https://minpachi.com/daiichi-suminoe/', defLend:50, defEx:60, balance:1070, memo:'大いち住之江店として確認' },
+      { id:'j-story', name:'J story', type:'slot', url:'https://minpachi.com/j-story/', defLend:50, defEx:60, balance:0, memo:'2026/3/31閉店予定の記載 → 現在は閉店の可能性' },
 
-      { id:'monroe', name:'モンロー', group:'46貸し50交換', url:'https://minpachi.com/monroe/', defLend:46, defEx:50, balance:null, memo:'貯玉枚数が未記入' },
-      { id:'tenichi', name:'テンイチ', group:'46貸し50交換', url:'https://minpachi.com/tenichi-nishinari/', defLend:46, defEx:50, balance:0, memo:'TENICHI西成店として確認（生野店は5.2枚で別レート）' }
+      { id:'monroe', name:'モンロー', type:'slot', url:'https://minpachi.com/monroe/', defLend:46, defEx:50, balance:null, memo:'残高が未記入' },
+      { id:'tenichi', name:'テンイチ', type:'slot', url:'https://minpachi.com/tenichi-nishinari/', defLend:46, defEx:50, balance:0, memo:'TENICHI西成店として確認（生野店は5.2枚で別レート）' }
+    ];
+
+    var TYPES = [
+      { key:'slot', label:'スロット', unit:'枚', balLabel:'貯メダル' },
+      { key:'pachinko', label:'パチンコ', unit:'玉', balLabel:'貯玉' }
     ];
 
     function todayStr() {
@@ -345,7 +353,7 @@
       for (var i = 0; i < DEFAULT_STORES.length; i++) {
         var s = DEFAULT_STORES[i];
         stores.push({
-          id: s.id, name: s.name, group: s.group, url: s.url,
+          id: s.id, name: s.name, type: s.type, url: s.url,
           defLend: s.defLend, defEx: s.defEx,
           lend: s.defLend, exchange: s.defEx,
           balance: s.balance, memo: s.memo, updated: null
@@ -361,6 +369,9 @@
         try {
           var parsed = JSON.parse(raw);
           if (parsed && parsed.stores && Object.prototype.toString.call(parsed.stores) === '[object Array]') {
+            for (var i = 0; i < parsed.stores.length; i++) {
+              if (parsed.stores[i].type !== 'pachinko') parsed.stores[i].type = 'slot';
+            }
             return parsed;
           }
         } catch (e) {}
@@ -406,18 +417,46 @@
     }
 
     function refreshTotal() {
-      var total = 0, count = 0, medals = 0;
+      var total = 0, count = 0;
       for (var i = 0; i < store.stores.length; i++) {
         var s = store.stores[i];
         if (s.balance && s.balance > 0) {
           total += calcValue(s.balance, s.exchange);
-          medals += s.balance;
           count++;
         }
       }
       document.getElementById('totalAmount').textContent = yen(total);
       document.getElementById('totalNote').textContent =
-        '貯玉 ' + medals.toLocaleString('ja-JP') + '枚 ／ 残高あり ' + count + '店舗 ／ 登録 ' + store.stores.length + '店舗';
+        '残高あり ' + count + '店舗 ／ 登録 ' + store.stores.length + '店舗';
+    }
+
+    function sumHtml(t) {
+      var sub = 0, units = 0;
+      for (var j = 0; j < store.stores.length; j++) {
+        var s = store.stores[j];
+        if (s.type !== t.key) continue;
+        if (s.balance && s.balance > 0) {
+          sub += calcValue(s.balance, s.exchange);
+          units += s.balance;
+        }
+      }
+      return esc(t.label) +
+        '<span class="gsum">' + yen(sub) + '（' + units.toLocaleString('ja-JP') + t.unit + '）</span>';
+    }
+
+    function refreshSums() {
+      var headers = document.getElementById('list').getElementsByTagName('h2');
+      var hi = 0;
+      for (var ti = 0; ti < TYPES.length; ti++) {
+        var t = TYPES[ti];
+        var has = false;
+        for (var j = 0; j < store.stores.length; j++) {
+          if (store.stores[j].type === t.key) { has = true; break; }
+        }
+        if (!has) continue;
+        if (headers[hi]) headers[hi].innerHTML = sumHtml(t);
+        hi++;
+      }
     }
 
     function render() {
@@ -433,29 +472,26 @@
         return;
       }
 
-      var groups = [];
-      for (var i = 0; i < store.stores.length; i++) {
-        var g = store.stores[i].group || 'その他';
-        if (groups.indexOf(g) === -1) groups.push(g);
-      }
+      for (var ti = 0; ti < TYPES.length; ti++) {
+        var t = TYPES[ti];
+        var inType = [];
+        for (var j = 0; j < store.stores.length; j++) {
+          if (store.stores[j].type === t.key) inType.push(store.stores[j]);
+        }
+        if (inType.length === 0) continue;
 
-      for (var gi = 0; gi < groups.length; gi++) {
-        (function (groupName) {
-          var h = document.createElement('h2');
-          h.textContent = groupName;
-          list.appendChild(h);
+        var h = document.createElement('h2');
+        h.innerHTML = sumHtml(t);
+        list.appendChild(h);
 
-          for (var j = 0; j < store.stores.length; j++) {
-            var s = store.stores[j];
-            if ((s.group || 'その他') !== groupName) continue;
-            renderCard(s, list);
-          }
-        })(groups[gi]);
+        for (var m = 0; m < inType.length; m++) {
+          renderCard(inType[m], list, t);
+        }
       }
       refreshTotal();
     }
 
-    function renderCard(s, list) {
+    function renderCard(s, list, t) {
       var card = document.createElement('div');
       card.className = 'store';
       card.setAttribute('data-id', s.id);
@@ -465,9 +501,9 @@
           (s.url ? '<a class="mp" href="' + esc(s.url) + '" target="_blank" rel="noopener">みんパチ↗</a>' : '') +
           '<button class="del" title="この店舗を削除">✕</button></div>' +
         '<div class="inputrow">' +
-          '<label>貯玉</label>' +
+          '<label>' + t.balLabel + '</label>' +
           '<input class="bal" inputmode="numeric" pattern="[0-9]*" value="' + balVal + '" placeholder="0">' +
-          '<span class="unit">枚</span>' +
+          '<span class="unit">' + t.unit + '</span>' +
           '<span class="value">—</span>' +
         '</div>' +
         '<div class="raterow">' +
@@ -489,22 +525,22 @@
         var v = balInput.value.replace(/[^0-9.]/g, '');
         s.balance = (v === '') ? null : Number(v);
         s.updated = todayStr();
-        save(); refreshCard(card, s); refreshTotal();
+        save(); refreshCard(card, s); refreshTotal(); refreshSums();
       });
       lendInput.addEventListener('input', function () {
         var v = lendInput.value.replace(/[^0-9.]/g, '');
         s.lend = (v === '') ? 0 : Number(v);
-        save(); refreshCard(card, s); refreshTotal();
+        save(); refreshCard(card, s); refreshTotal(); refreshSums();
       });
       exInput.addEventListener('input', function () {
         var v = exInput.value.replace(/[^0-9.]/g, '');
         s.exchange = (v === '') ? 0 : Number(v);
-        save(); refreshCard(card, s); refreshTotal();
+        save(); refreshCard(card, s); refreshTotal(); refreshSums();
       });
       resetBtn.addEventListener('click', function () {
         s.lend = s.defLend; s.exchange = s.defEx;
         lendInput.value = s.lend; exInput.value = s.exchange;
-        save(); refreshCard(card, s); refreshTotal();
+        save(); refreshCard(card, s); refreshTotal(); refreshSums();
       });
       delBtn.addEventListener('click', function () {
         if (!confirm('「' + s.name + '」を削除します。よろしいですか？')) return;
@@ -522,17 +558,8 @@
     // ---- モーダル ----
     var modalBg = document.getElementById('modalBg');
     function openModal() {
-      var dl = document.getElementById('groupList');
-      var groups = [];
-      for (var i = 0; i < store.stores.length; i++) {
-        var g = store.stores[i].group || 'その他';
-        if (groups.indexOf(g) === -1) groups.push(g);
-      }
-      var html = '';
-      for (var j = 0; j < groups.length; j++) html += '<option value="' + esc(groups[j]) + '">';
-      dl.innerHTML = html;
       document.getElementById('f-name').value = '';
-      document.getElementById('f-group').value = '';
+      document.getElementById('f-type').value = 'slot';
       document.getElementById('f-lend').value = '50';
       document.getElementById('f-ex').value = '';
       document.getElementById('f-url').value = '';
@@ -545,19 +572,23 @@
     document.getElementById('addStore').addEventListener('click', openModal);
     document.getElementById('f-cancel').addEventListener('click', closeModal);
     modalBg.addEventListener('click', function (e) { if (e.target === modalBg) closeModal(); });
+    document.getElementById('f-type').addEventListener('change', function () {
+      document.getElementById('f-lend').value =
+        (document.getElementById('f-type').value === 'pachinko') ? '250' : '50';
+    });
     document.getElementById('f-add').addEventListener('click', function () {
       var name = document.getElementById('f-name').value.replace(/^\s+|\s+$/g, '');
-      var group = document.getElementById('f-group').value.replace(/^\s+|\s+$/g, '') || 'その他';
+      var type = document.getElementById('f-type').value === 'pachinko' ? 'pachinko' : 'slot';
       var lend = Number(document.getElementById('f-lend').value);
       var ex = Number(document.getElementById('f-ex').value);
       var url = document.getElementById('f-url').value.replace(/^\s+|\s+$/g, '');
       var memo = document.getElementById('f-memo').value.replace(/^\s+|\s+$/g, '');
       if (!name) { alert('店舗名を入力してください'); return; }
-      if (!lend || lend <= 0) { alert('貸玉を正しく入力してください'); return; }
+      if (!lend || lend <= 0) { alert('貸を正しく入力してください'); return; }
       if (!ex || ex <= 0) { alert('交換率を正しく入力してください'); return; }
       store.stores.push({
         id: 'custom-' + Date.now(),
-        name: name, group: group, url: url,
+        name: name, type: type, url: url,
         defLend: lend, defEx: ex,
         lend: lend, exchange: ex,
         balance: 0, memo: memo, updated: null
@@ -566,7 +597,7 @@
     });
 
     document.getElementById('resetRates').addEventListener('click', function () {
-      if (!confirm('全店のレートを初期値に戻します。貯玉の入力は消えません。よろしいですか？')) return;
+      if (!confirm('全店のレートを初期値に戻します。残高の入力は消えません。よろしいですか？')) return;
       for (var i = 0; i < store.stores.length; i++) {
         store.stores[i].lend = store.stores[i].defLend;
         store.stores[i].exchange = store.stores[i].defEx;
@@ -574,7 +605,7 @@
       save(); render();
     });
     document.getElementById('clearBalances').addEventListener('click', function () {
-      if (!confirm('全店の貯玉を0にします。よろしいですか？')) return;
+      if (!confirm('全店の残高を0にします。よろしいですか？')) return;
       for (var i = 0; i < store.stores.length; i++) {
         store.stores[i].balance = 0;
         store.stores[i].updated = todayStr();
@@ -587,7 +618,7 @@
       save(); render();
     });
     document.getElementById('restoreDefault').addEventListener('click', function () {
-      if (!confirm('初期の25店舗を読み込みます。今の店舗リストは置き換わります。よろしいですか？')) return;
+      if (!confirm('初期の25店舗（スロット）を読み込みます。今の店舗リストは置き換わります。よろしいですか？')) return;
       store = buildSeed();
       save(); render();
     });

@@ -84,7 +84,7 @@
     border: 1px solid #3b3520;
     border-radius: 18px;
     padding: 16px 18px;
-    margin-bottom: 14px;
+    margin-bottom: 10px;
     box-shadow:
       inset 0 1px 0 rgba(255,255,255,0.05),
       0 8px 24px rgba(0,0,0,0.45);
@@ -116,6 +116,37 @@
     display: none;
   }
   .total .filt.on { display: block; }
+
+  /* 月次グラフ */
+  .chart-card {
+    background: linear-gradient(180deg, var(--card), #14171e);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 12px 14px 10px;
+    margin-bottom: 12px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+  }
+  .chart-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 6px;
+  }
+  .chart-label {
+    font-size: 10px; color: var(--sub); letter-spacing: 1px; text-transform: uppercase;
+  }
+  .chart-period { font-size: 10px; color: var(--dim); }
+  .chart-body { width: 100%; }
+  .chart-body svg { display: block; width: 100%; height: 130px; }
+  .chart-empty {
+    padding: 30px 8px; text-align: center; color: var(--dim);
+    font-size: 12px;
+  }
+  .chart-trend {
+    margin-top: 4px; font-size: 11px; color: var(--sub);
+    display: flex; gap: 14px; flex-wrap: wrap;
+  }
+  .chart-trend b { color: var(--text); font-weight: 700; margin-left: 2px; }
+  .chart-trend b.up { color: var(--green); }
+  .chart-trend b.down { color: var(--red); }
 
   .toolbar { display: flex; gap: 8px; margin-bottom: 10px; }
   .btn {
@@ -430,6 +461,15 @@
   <div class="filt" id="filtNote"></div>
 </div>
 
+<div class="chart-card">
+  <div class="chart-head">
+    <span class="chart-label">月次推移</span>
+    <span class="chart-period" id="chartPeriod"></span>
+  </div>
+  <div class="chart-body" id="chartBody"></div>
+  <div class="chart-trend" id="chartTrend"></div>
+</div>
+
 <div class="toolbar">
   <button class="btn primary" id="addStore">＋ 店舗を追加</button>
   <button class="btn" id="toggleRates">レート設定を表示</button>
@@ -454,10 +494,8 @@
 <details class="settings">
   <summary>設定・一括操作</summary>
   <div class="setbtns">
-    <button class="btn" id="resetRates">全店のレートを初期値に戻す</button>
     <button class="btn" id="clearBalances">全店の残高を0にする</button>
     <button class="btn danger" id="deleteAll">全店舗を削除（空にする）</button>
-    <button class="btn" id="restoreDefault">初期25店舗を再読込</button>
     <button class="btn" id="exportData">データをエクスポート（JSONをコピー）</button>
     <button class="btn" id="importData">データをインポート</button>
   </div>
@@ -467,12 +505,12 @@
   <summary>確認メモ・使い方</summary>
   <ul>
     <li><b>残高入力</b>：各店のスロット（貯メダル/枚）・パチンコ（貯玉/玉）の欄に当日の数を入力。換金額と合計が自動計算され、この端末のブラウザに自動保存されます。</li>
-    <li><b>お気に入り★</b>：店舗右上の星をタップでお気に入り。お気に入り店舗は常にリスト先頭に固定されます。</li>
+    <li><b>月次推移</b>：残高を入力するたびに「その日の最新状態」を自動記録し、月ごとの合計推移をグラフで表示します。</li>
+    <li><b>お気に入り★</b>：店舗の星をタップでお気に入り。常にリスト先頭に固定されます。</li>
     <li><b>フィルタ・並び替え</b>：店舗名検索、法人で絞り込み、並び順、「残高あり」のみ表示が可能。</li>
     <li><b>レート修正</b>：上部「レート設定を表示」で各店の貸／交換を編集。「↺」で初期値に戻せます。</li>
-    <li><b>ホーム画面に追加</b>：iPhoneのSafariで「共有 → ホーム画面に追加」でアプリのように起動・オフラインでも動作します。</li>
-    <li>初期登録の交換率はみんパチ調査値。マルハン北加賀屋はみんパチに記載なく他マルハン店と同レートで暫定。店頭表示で要確認。</li>
-    <li>換金額は理論値。ベラジオは5,000円交換ごとに-100円のギャップあり。</li>
+    <li><b>ホーム画面に追加</b>：iPhoneのSafariで「共有 → ホーム画面に追加」でアプリのように起動・オフライン動作。</li>
+    <li>初期登録の交換率はみんパチ調査値。店頭表示で要確認。</li>
   </ul>
 </details>
 
@@ -565,8 +603,6 @@
       'エスパス日拓','やすだ','プレイランドハッピー','その他'
     ];
 
-    // [id, 正式名称, 法人, みんパチURL, P-world URL,
-    //  スロット貸, スロット交換, スロット残高, パチンコ貸, パチンコ交換, メモ]
     var D = [
       ['maruhan-oriono','マルハン堺遠里小野店','マルハン','https://minpachi.com/maruhan-oriono/','https://www.p-world.co.jp/osaka/maruhan-oriono.htm',46,47,0,250,255,''],
       ['maruhan-kitakagaya','マルハン北加賀屋店','マルハン','https://minpachi.com/%E3%83%9E%E3%83%AB%E3%83%8F%E3%83%B3%E5%8C%97%E5%8A%A0%E8%B3%80%E5%B1%8B%E5%BA%97/','https://www.p-world.co.jp/osaka/maruhan-kita.htm',46,47,0,250,255,'みんパチに交換率の記載なし。他マルハン店と同レートで暫定設定'],
@@ -595,6 +631,10 @@
       ['tenichi','TENICHI西成店','その他','https://minpachi.com/tenichi-nishinari/','https://www.p-world.co.jp/osaka/tenichi-nishinari.htm',46,50,0,250,270,'生野店は別レート']
     ];
 
+    // 初期店舗の法人を id でひける辞書（既存ローカルデータの修正に使用）
+    var DEFAULT_CORP_MAP = {};
+    for (var di = 0; di < D.length; di++) DEFAULT_CORP_MAP[D[di][0]] = D[di][2];
+
     function buildSeed() {
       var stores = [];
       for (var i = 0; i < D.length; i++) {
@@ -608,7 +648,8 @@
       }
       return {
         stores: stores,
-        filter: { corp:'all', sort:'default', onlyBalance:false, search:'' }
+        filter: { corp:'all', sort:'default', onlyBalance:false, search:'' },
+        history: {}
       };
     }
 
@@ -650,6 +691,10 @@
     function storeValue(s) {
       return calcValue(s.slot.balance, s.slot.exchange) + calcValue(s.pachinko.balance, s.pachinko.exchange);
     }
+    function findStore(id) {
+      for (var i = 0; i < store.stores.length; i++) if (store.stores[i].id === id) return store.stores[i];
+      return null;
+    }
 
     function load() {
       var raw = null;
@@ -663,18 +708,38 @@
               if (!s.slot) s.slot = { defLend:50, defEx:50, lend:50, exchange:50, balance:0 };
               if (!s.pachinko) s.pachinko = { defLend:250, defEx:250, lend:250, exchange:250, balance:0 };
               if (typeof s.corp !== 'string') s.corp = 'その他';
+              // 既定店舗は正しい法人で上書き
+              if (DEFAULT_CORP_MAP[s.id]) s.corp = DEFAULT_CORP_MAP[s.id];
+              // 大手リストに無いものは「その他」に正規化
               if (MAJOR_CHAINS.indexOf(s.corp) === -1) s.corp = 'その他';
               if (typeof s.pworld !== 'string') s.pworld = '';
               if (typeof s.favorite !== 'boolean') s.favorite = false;
             }
             if (!p.filter) p.filter = { corp:'all', sort:'default', onlyBalance:false, search:'' };
+            if (!p.history || typeof p.history !== 'object') p.history = {};
             return p;
           }
         } catch (e) {}
       }
       return buildSeed();
     }
+
+    // 日次スナップショット記録
+    function snapshot() {
+      if (!store.history) store.history = {};
+      var date = todayStr();
+      var snap = {};
+      for (var i = 0; i < store.stores.length; i++) {
+        var s = store.stores[i];
+        if (s.slot.balance > 0 || s.pachinko.balance > 0) {
+          snap[s.id] = { s: s.slot.balance, p: s.pachinko.balance };
+        }
+      }
+      store.history[date] = snap;
+    }
+
     function save() {
+      snapshot();
       try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch (e) {}
     }
 
@@ -699,7 +764,6 @@
       if (f.sort === 'value-desc') arr.sort(function (a, b) { return storeValue(b) - storeValue(a); });
       else if (f.sort === 'value-asc') arr.sort(function (a, b) { return storeValue(a) - storeValue(b); });
       else if (f.sort === 'name') arr.sort(function (a, b) { return a.name.localeCompare(b.name, 'ja'); });
-      // お気に入りを先頭に固定
       var favs = [], rest = [];
       for (var i = 0; i < arr.length; i++) (arr[i].favorite ? favs : rest).push(arr[i]);
       return favs.concat(rest);
@@ -754,6 +818,91 @@
       } else {
         filt.classList.remove('on');
       }
+      renderChart();
+    }
+
+    // ---- 月次グラフ ----
+    function getMonthlySeries() {
+      if (!store.history) return [];
+      var dates = Object.keys(store.history).sort();
+      var monthsObj = {};
+      for (var i = 0; i < dates.length; i++) {
+        var d = dates[i];
+        var ym = d.substring(0, 7);
+        var snap = store.history[d];
+        var total = 0;
+        for (var id in snap) {
+          if (!Object.prototype.hasOwnProperty.call(snap, id)) continue;
+          var s = findStore(id);
+          if (!s) continue;
+          total += calcValue(snap[id].s, s.slot.exchange);
+          total += calcValue(snap[id].p, s.pachinko.exchange);
+        }
+        monthsObj[ym] = total; // 同月内は最新が上書きされて月末値になる
+      }
+      // 現在月のスナップショットが今日無くても、現在の残高で上書き
+      var nowYm = todayStr().substring(0, 7);
+      var currentTotal = 0;
+      for (var k = 0; k < store.stores.length; k++) currentTotal += storeValue(store.stores[k]);
+      if (currentTotal > 0 || monthsObj[nowYm] !== undefined) {
+        monthsObj[nowYm] = currentTotal;
+      }
+      var keys = Object.keys(monthsObj).sort();
+      var out = [];
+      for (var x = 0; x < keys.length; x++) out.push({ ym: keys[x], value: monthsObj[keys[x]] });
+      return out;
+    }
+
+    function renderChart() {
+      var series = getMonthlySeries();
+      var body = document.getElementById('chartBody');
+      var period = document.getElementById('chartPeriod');
+      var trend = document.getElementById('chartTrend');
+
+      if (!series.length) {
+        body.innerHTML = '<div class="chart-empty">残高を入力すると履歴が蓄積されます</div>';
+        period.textContent = '';
+        trend.innerHTML = '';
+        return;
+      }
+      if (series.length > 12) series = series.slice(-12);
+      var max = 0;
+      for (var i = 0; i < series.length; i++) if (series[i].value > max) max = series[i].value;
+      if (max === 0) max = 1;
+
+      var w = 320, h = 130;
+      var pad = 8, gap = 3;
+      var barW = (w - pad*2 - gap*(series.length-1)) / series.length;
+      if (barW < 6) barW = 6;
+
+      var svg = '<svg viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none">';
+      svg += '<line x1="' + pad + '" y1="' + (h-22) + '" x2="' + (w-pad) + '" y2="' + (h-22) + '" stroke="#2a2f3a" stroke-width="1"/>';
+      for (var j = 0; j < series.length; j++) {
+        var v = series[j].value;
+        var bh = Math.max((v / max) * (h - 40), v > 0 ? 1 : 0);
+        var by = h - 22 - bh;
+        var bx = pad + j * (barW + gap);
+        var isLast = (j === series.length - 1);
+        var fill = isLast ? '#ffd45c' : '#7a6428';
+        svg += '<rect x="' + bx + '" y="' + by + '" width="' + barW + '" height="' + bh + '" rx="2" fill="' + fill + '"/>';
+        var monthNum = parseInt(series[j].ym.substring(5), 10);
+        svg += '<text x="' + (bx + barW/2) + '" y="' + (h - 8) + '" font-size="9" text-anchor="middle" fill="#9098a4">' + monthNum + '月</text>';
+      }
+      svg += '</svg>';
+      body.innerHTML = svg;
+
+      period.textContent = series[0].ym + ' 〜 ' + series[series.length - 1].ym;
+
+      var cur = series[series.length - 1].value;
+      var html = '今月 <b>' + yen(cur) + '</b>';
+      if (series.length >= 2) {
+        var diff = cur - series[series.length - 2].value;
+        var absT = yen(Math.abs(diff));
+        if (diff > 0) html += '<span>先月比 <b class="up">+' + absT + '</b></span>';
+        else if (diff < 0) html += '<span>先月比 <b class="down">-' + absT + '</b></span>';
+        else html += '<span>先月比 <b>±0</b></span>';
+      }
+      trend.innerHTML = html;
     }
 
     function segHtml(kind, k) {
@@ -829,8 +978,7 @@
 
       card.querySelector('.fav').addEventListener('click', function () {
         s.favorite = !s.favorite;
-        save();
-        render();
+        save(); render();
       });
       card.querySelector('.del').addEventListener('click', function () {
         if (!confirm('「' + s.name + '」を削除します。よろしいですか？')) return;
@@ -853,7 +1001,7 @@
       if (!store.stores.length) {
         var empty = document.createElement('div');
         empty.className = 'empty';
-        empty.textContent = '登録されている店舗がありません。「＋ 店舗を追加」から追加するか、設定の「初期25店舗を再読込」を押してください。';
+        empty.textContent = '登録されている店舗がありません。「＋ 店舗を追加」から追加してください。';
         list.appendChild(empty);
       } else if (!visible.length) {
         var none = document.createElement('div');
@@ -874,7 +1022,6 @@
         if (corps.indexOf(c) === -1) corps.push(c);
       }
       corps.sort(function (a, b) {
-        // その他は末尾に
         if (a === 'その他') return 1;
         if (b === 'その他') return -1;
         return a.localeCompare(b, 'ja');
@@ -917,21 +1064,25 @@
       if (searchTimer) clearTimeout(searchTimer);
       searchTimer = setTimeout(function () {
         store.filter.search = v;
-        save(); render();
+        try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch (e) {}
+        render();
       }, 120);
     });
     document.getElementById('f-corp').addEventListener('change', function () {
       store.filter.corp = this.value;
-      save(); render();
+      try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch (e) {}
+      render();
     });
     document.getElementById('f-sort').addEventListener('change', function () {
       store.filter.sort = this.value;
-      save(); render();
+      try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch (e) {}
+      render();
     });
     document.getElementById('f-onlybal').addEventListener('change', function () {
       store.filter.onlyBalance = this.checked;
       document.getElementById('onlyBalLbl').classList.toggle('on', this.checked);
-      save(); render();
+      try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch (e) {}
+      render();
     });
 
     var modalBg = document.getElementById('modalBg');
@@ -976,15 +1127,6 @@
       save(); closeModal(); render();
     });
 
-    document.getElementById('resetRates').addEventListener('click', function () {
-      if (!confirm('全店のレートを初期値に戻します。残高の入力は消えません。よろしいですか？')) return;
-      for (var i = 0; i < store.stores.length; i++) {
-        var s = store.stores[i];
-        s.slot.lend = s.slot.defLend; s.slot.exchange = s.slot.defEx;
-        s.pachinko.lend = s.pachinko.defLend; s.pachinko.exchange = s.pachinko.defEx;
-      }
-      save(); render();
-    });
     document.getElementById('clearBalances').addEventListener('click', function () {
       if (!confirm('全店の残高（スロット・パチンコ両方）を0にします。よろしいですか？')) return;
       for (var i = 0; i < store.stores.length; i++) {
@@ -997,11 +1139,6 @@
     document.getElementById('deleteAll').addEventListener('click', function () {
       if (!confirm('登録されている全店舗を削除して空にします。よろしいですか？')) return;
       store.stores = [];
-      save(); render();
-    });
-    document.getElementById('restoreDefault').addEventListener('click', function () {
-      if (!confirm('初期の25店舗を読み込みます。今の店舗リストは置き換わります。よろしいですか？')) return;
-      store = buildSeed();
       save(); render();
     });
     document.getElementById('exportData').addEventListener('click', function () {
@@ -1025,7 +1162,9 @@
         if (!p || !p.stores) throw new Error('構造が不正');
         store = p;
         if (!store.filter) store.filter = { corp:'all', sort:'default', onlyBalance:false, search:'' };
-        save(); render();
+        if (!store.history) store.history = {};
+        try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch (e) {}
+        render();
         alert('インポートしました。');
       } catch (e) {
         alert('読み込めませんでした: ' + (e && e.message ? e.message : e));
@@ -1043,7 +1182,7 @@
 // Service Worker 登録
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('sw.js').catch(function () { /* 失敗しても無視 */ });
+    navigator.serviceWorker.register('sw.js').catch(function () {});
   });
 }
 </script>

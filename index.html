@@ -117,7 +117,6 @@
   }
   .total .filt.on { display: block; }
 
-  /* 月次グラフ */
   .chart-card {
     background: linear-gradient(180deg, var(--card), #14171e);
     border: 1px solid var(--line);
@@ -127,15 +126,23 @@
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
   }
   .chart-head {
-    display: flex; justify-content: space-between; align-items: baseline;
+    display: flex; align-items: center; gap: 10px;
     margin-bottom: 6px;
   }
   .chart-label {
     font-size: 10px; color: var(--sub); letter-spacing: 1px; text-transform: uppercase;
   }
-  .chart-period { font-size: 10px; color: var(--dim); }
+  .chart-tabs { display: flex; gap: 4px; }
+  .chart-tab {
+    background: transparent; border: 1px solid var(--line); color: var(--sub);
+    border-radius: 7px; padding: 3px 9px; font-size: 10px; cursor: pointer;
+    font-family: inherit;
+  }
+  .chart-tab.active { background: var(--card2); border-color: var(--accent-d); color: var(--accent); }
+  .chart-tab:active { opacity: 0.6; }
+  .chart-period { font-size: 10px; color: var(--dim); margin-left: auto; }
   .chart-body { width: 100%; }
-  .chart-body svg { display: block; width: 100%; height: 130px; }
+  .chart-body svg { display: block; width: 100%; height: 140px; }
   .chart-empty {
     padding: 30px 8px; text-align: center; color: var(--dim);
     font-size: 12px;
@@ -148,15 +155,16 @@
   .chart-trend b.up { color: var(--green); }
   .chart-trend b.down { color: var(--red); }
 
-  .toolbar { display: flex; gap: 8px; margin-bottom: 10px; }
+  .toolbar { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
   .btn {
     flex: 1;
+    min-width: 100px;
     background: var(--card2);
     color: var(--text);
     border: 1px solid var(--line);
     border-radius: 12px;
-    padding: 12px 8px;
-    font-size: 13px;
+    padding: 11px 8px;
+    font-size: 12px;
     font-weight: 600;
     cursor: pointer;
     font-family: inherit;
@@ -169,6 +177,7 @@
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
   }
   .btn.on { background: #173a44; border-color: var(--slot); color: var(--slot); }
+  .btn.session { background: #2a1a35; border-color: var(--pachi); color: var(--pachi); }
   .btn.danger { color: var(--red); }
   .btn:active { opacity: 0.6; transform: scale(0.98); }
 
@@ -238,6 +247,13 @@
     box-shadow:
       inset 0 1px 0 rgba(255,255,255,0.04),
       0 0 0 1px rgba(255,212,92,0.08);
+  }
+  body.session-on .store.has-session {
+    border-color: #5b3552;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.04),
+      0 0 0 1px rgba(238,148,177,0.10),
+      0 4px 14px rgba(0,0,0,0.35);
   }
 
   .row1 { display: flex; align-items: center; gap: 8px; }
@@ -320,6 +336,41 @@
   .value.pachic { color: var(--pachi); }
   .value.z { color: var(--dim); font-weight: 400; }
 
+  /* 稼働モードの行 */
+  .sessionrow {
+    display: none;
+    align-items: center;
+    gap: 7px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--line);
+    flex-wrap: wrap;
+  }
+  body.session-on .sessionrow { display: flex; }
+  .sessionrow .lbl { font-size: 11px; color: var(--sub); }
+  .sessionrow .lbl.used { color: var(--red); }
+  .sessionrow .lbl.col { color: var(--green); }
+  input.delta {
+    width: 64px;
+    background: var(--inset);
+    border: 1px solid var(--line2);
+    border-radius: 7px;
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 600;
+    padding: 5px 7px;
+    text-align: right;
+    font-family: inherit;
+  }
+  input.delta:focus { outline: none; border-color: var(--accent); }
+  .net {
+    margin-left: auto; font-size: 11px; color: var(--sub);
+    white-space: nowrap;
+  }
+  .net b { font-weight: 700; }
+  .net.up b { color: var(--green); }
+  .net.down b { color: var(--red); }
+
   .raterow {
     display: none;
     align-items: center;
@@ -358,15 +409,30 @@
   .reset:active { opacity: 0.6; }
 
   .cardfoot {
-    display: flex; align-items: baseline; gap: 8px;
+    display: flex; align-items: center; gap: 8px;
     margin-top: 8px; padding: 0 2px;
     font-size: 12px; color: var(--sub);
   }
+  .cardfoot .ftxt { display: flex; align-items: baseline; gap: 8px; flex: 1; }
   .cardfoot b {
     color: var(--accent); font-size: 16px; font-weight: 700;
     letter-spacing: -0.2px;
   }
-  .cardfoot .upd { margin-left: auto; font-size: 10px; color: var(--dim); }
+  .cardfoot .upd { font-size: 10px; color: var(--dim); }
+  .commit {
+    display: none;
+    background: linear-gradient(180deg, #5a2a4a, #3a1a32);
+    border: 1px solid var(--pachi);
+    color: var(--pachi);
+    border-radius: 999px;
+    padding: 5px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  body.session-on .commit { display: inline-block; }
+  .commit:active { opacity: 0.6; }
   .memo { color: var(--sub); font-size: 11px; margin: 4px 2px 0; }
 
   details {
@@ -464,6 +530,10 @@
 <div class="chart-card">
   <div class="chart-head">
     <span class="chart-label">月次推移</span>
+    <div class="chart-tabs">
+      <button class="chart-tab" data-type="bar">棒</button>
+      <button class="chart-tab" data-type="line">折線</button>
+    </div>
     <span class="chart-period" id="chartPeriod"></span>
   </div>
   <div class="chart-body" id="chartBody"></div>
@@ -472,7 +542,8 @@
 
 <div class="toolbar">
   <button class="btn primary" id="addStore">＋ 店舗を追加</button>
-  <button class="btn" id="toggleRates">レート設定を表示</button>
+  <button class="btn" id="toggleRates">レート設定</button>
+  <button class="btn" id="toggleSession">稼働モード</button>
 </div>
 
 <div class="filter">
@@ -505,12 +576,12 @@
   <summary>確認メモ・使い方</summary>
   <ul>
     <li><b>残高入力</b>：各店のスロット（貯メダル/枚）・パチンコ（貯玉/玉）の欄に当日の数を入力。換金額と合計が自動計算され、この端末のブラウザに自動保存されます。</li>
-    <li><b>月次推移</b>：残高を入力するたびに「その日の最新状態」を自動記録し、月ごとの合計推移をグラフで表示します。</li>
+    <li><b>稼働モード</b>：上部「稼働モード」を押すと各店に「使用」「回収」の入力が出ます。差引枚数・差引金額がリアルタイムで表示され、稼働終了時にカード下の「転記」を押すと残高に反映されます。</li>
+    <li><b>月次推移</b>：直近12ヶ月分を棒/折線で表示。今月は自動で現在の残高、過去はその月末の最新スナップショット。</li>
     <li><b>お気に入り★</b>：店舗の星をタップでお気に入り。常にリスト先頭に固定されます。</li>
     <li><b>フィルタ・並び替え</b>：店舗名検索、法人で絞り込み、並び順、「残高あり」のみ表示が可能。</li>
-    <li><b>レート修正</b>：上部「レート設定を表示」で各店の貸／交換を編集。「↺」で初期値に戻せます。</li>
+    <li><b>レート修正</b>：上部「レート設定」で各店の貸／交換を編集。「↺」で初期値に戻せます。</li>
     <li><b>ホーム画面に追加</b>：iPhoneのSafariで「共有 → ホーム画面に追加」でアプリのように起動・オフライン動作。</li>
-    <li>初期登録の交換率はみんパチ調査値。店頭表示で要確認。</li>
   </ul>
 </details>
 
@@ -631,7 +702,6 @@
       ['tenichi','TENICHI西成店','その他','https://minpachi.com/tenichi-nishinari/','https://www.p-world.co.jp/osaka/tenichi-nishinari.htm',46,50,0,250,270,'生野店は別レート']
     ];
 
-    // 初期店舗の法人を id でひける辞書（既存ローカルデータの修正に使用）
     var DEFAULT_CORP_MAP = {};
     for (var di = 0; di < D.length; di++) DEFAULT_CORP_MAP[D[di][0]] = D[di][2];
 
@@ -642,13 +712,13 @@
         stores.push({
           id: r[0], name: r[1], corp: r[2], url: r[3], pworld: r[4],
           memo: r[10], updated: null, favorite: false,
-          slot:     { defLend:r[5], defEx:r[6], lend:r[5], exchange:r[6], balance:r[7] },
-          pachinko: { defLend:r[8], defEx:r[9], lend:r[8], exchange:r[9], balance:0 }
+          slot:     { defLend:r[5], defEx:r[6], lend:r[5], exchange:r[6], balance:r[7], used:0, collected:0 },
+          pachinko: { defLend:r[8], defEx:r[9], lend:r[8], exchange:r[9], balance:0,  used:0, collected:0 }
         });
       }
       return {
         stores: stores,
-        filter: { corp:'all', sort:'default', onlyBalance:false, search:'' },
+        filter: { corp:'all', sort:'default', onlyBalance:false, search:'', chartType:'bar' },
         history: {}
       };
     }
@@ -682,11 +752,28 @@
     }
     function num(v) { var n = Number(v); return (isNaN(n) || n < 0) ? 0 : n; }
     function calcValue(b, e) { return (!b || b <= 0 || !e || e <= 0) ? 0 : Math.round(b / e * 1000); }
-    function yen(n) { return '¥' + n.toLocaleString('ja-JP'); }
+    function yen(n) { return '¥' + Math.round(n).toLocaleString('ja-JP'); }
+    function yenSigned(n) {
+      n = Math.round(n);
+      if (n > 0) return '+¥' + n.toLocaleString('ja-JP');
+      if (n < 0) return '-¥' + (-n).toLocaleString('ja-JP');
+      return '±¥0';
+    }
+    function numSigned(n) {
+      if (n > 0) return '+' + n.toLocaleString('ja-JP');
+      if (n < 0) return '-' + (-n).toLocaleString('ja-JP');
+      return '±0';
+    }
     function esc(str) {
       return String(str).replace(/[&<>"]/g, function (c) {
         return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
       });
+    }
+    function effBal(k) {
+      return Math.max(0, (k.balance || 0) - (k.used || 0) + (k.collected || 0));
+    }
+    function storeValueEff(s) {
+      return calcValue(effBal(s.slot), s.slot.exchange) + calcValue(effBal(s.pachinko), s.pachinko.exchange);
     }
     function storeValue(s) {
       return calcValue(s.slot.balance, s.slot.exchange) + calcValue(s.pachinko.balance, s.pachinko.exchange);
@@ -694,6 +781,9 @@
     function findStore(id) {
       for (var i = 0; i < store.stores.length; i++) if (store.stores[i].id === id) return store.stores[i];
       return null;
+    }
+    function hasSession(s) {
+      return (s.slot.used > 0) || (s.slot.collected > 0) || (s.pachinko.used > 0) || (s.pachinko.collected > 0);
     }
 
     function load() {
@@ -705,17 +795,20 @@
           if (p && p.stores && Object.prototype.toString.call(p.stores) === '[object Array]') {
             for (var i = 0; i < p.stores.length; i++) {
               var s = p.stores[i];
-              if (!s.slot) s.slot = { defLend:50, defEx:50, lend:50, exchange:50, balance:0 };
-              if (!s.pachinko) s.pachinko = { defLend:250, defEx:250, lend:250, exchange:250, balance:0 };
+              if (!s.slot) s.slot = { defLend:50, defEx:50, lend:50, exchange:50, balance:0, used:0, collected:0 };
+              if (!s.pachinko) s.pachinko = { defLend:250, defEx:250, lend:250, exchange:250, balance:0, used:0, collected:0 };
+              if (typeof s.slot.used !== 'number') s.slot.used = 0;
+              if (typeof s.slot.collected !== 'number') s.slot.collected = 0;
+              if (typeof s.pachinko.used !== 'number') s.pachinko.used = 0;
+              if (typeof s.pachinko.collected !== 'number') s.pachinko.collected = 0;
               if (typeof s.corp !== 'string') s.corp = 'その他';
-              // 既定店舗は正しい法人で上書き
               if (DEFAULT_CORP_MAP[s.id]) s.corp = DEFAULT_CORP_MAP[s.id];
-              // 大手リストに無いものは「その他」に正規化
               if (MAJOR_CHAINS.indexOf(s.corp) === -1) s.corp = 'その他';
               if (typeof s.pworld !== 'string') s.pworld = '';
               if (typeof s.favorite !== 'boolean') s.favorite = false;
             }
-            if (!p.filter) p.filter = { corp:'all', sort:'default', onlyBalance:false, search:'' };
+            if (!p.filter) p.filter = { corp:'all', sort:'default', onlyBalance:false, search:'', chartType:'bar' };
+            if (typeof p.filter.chartType !== 'string') p.filter.chartType = 'bar';
             if (!p.history || typeof p.history !== 'object') p.history = {};
             return p;
           }
@@ -724,7 +817,6 @@
       return buildSeed();
     }
 
-    // 日次スナップショット記録
     function snapshot() {
       if (!store.history) store.history = {};
       var date = todayStr();
@@ -744,6 +836,8 @@
     }
 
     var store = load();
+    var sessionOn = false;
+    var ratesOn = false;
 
     function getVisible() {
       var arr = store.stores.slice();
@@ -759,10 +853,10 @@
         });
       }
       if (f.onlyBalance) {
-        arr = arr.filter(function (s) { return s.slot.balance > 0 || s.pachinko.balance > 0; });
+        arr = arr.filter(function (s) { return effBal(s.slot) > 0 || effBal(s.pachinko) > 0; });
       }
-      if (f.sort === 'value-desc') arr.sort(function (a, b) { return storeValue(b) - storeValue(a); });
-      else if (f.sort === 'value-asc') arr.sort(function (a, b) { return storeValue(a) - storeValue(b); });
+      if (f.sort === 'value-desc') arr.sort(function (a, b) { return storeValueEff(b) - storeValueEff(a); });
+      else if (f.sort === 'value-asc') arr.sort(function (a, b) { return storeValueEff(a) - storeValueEff(b); });
       else if (f.sort === 'name') arr.sort(function (a, b) { return a.name.localeCompare(b.name, 'ja'); });
       var favs = [], rest = [];
       for (var i = 0; i < arr.length; i++) (arr[i].favorite ? favs : rest).push(arr[i]);
@@ -771,23 +865,33 @@
 
     function refreshKind(card, s, kind) {
       var k = s[kind];
-      var v = calcValue(k.balance, k.exchange);
+      var eb = effBal(k);
+      var v = calcValue(eb, k.exchange);
       var valEl = card.querySelector('.value[data-kind="' + kind + '"]');
       valEl.textContent = yen(v);
       valEl.className = 'value ' + (v === 0 ? 'z' : KIND[kind].vcls);
       var rb = card.querySelector('.reset[data-kind="' + kind + '"]');
       rb.textContent = '↺ ' + k.defLend + '/' + k.defEx;
       rb.className = (k.lend != k.defLend || k.exchange != k.defEx) ? 'reset edited' : 'reset';
+
+      var netEl = card.querySelector('.net[data-kind="' + kind + '"]');
+      var netDelta = (k.collected || 0) - (k.used || 0);
+      var yenDelta = (k.exchange > 0) ? Math.round(netDelta / k.exchange * 1000) : 0;
+      var unit = KIND[kind].unit;
+      var cls = 'net' + (netDelta > 0 ? ' up' : (netDelta < 0 ? ' down' : ''));
+      netEl.className = cls;
+      netEl.innerHTML = '差引 <b>' + numSigned(netDelta) + unit + '</b> (<b>' + yenSigned(yenDelta) + '</b>)';
       return v;
     }
     function refreshCard(card, s) {
       var sv = refreshKind(card, s, 'slot');
       var pv = refreshKind(card, s, 'pachinko');
-      card.querySelector('.cardfoot b').textContent = yen(sv + pv);
+      card.querySelector('.cardfoot b.stotal').textContent = yen(sv + pv);
       card.querySelector('.cardfoot .upd').textContent = s.updated ? '更新 ' + s.updated : '';
       var cls = 'store';
-      if (s.slot.balance > 0 || s.pachinko.balance > 0) cls += ' has-balance';
+      if (effBal(s.slot) > 0 || effBal(s.pachinko) > 0) cls += ' has-balance';
       if (s.favorite) cls += ' fav-on';
+      if (hasSession(s)) cls += ' has-session';
       card.className = cls;
     }
 
@@ -795,10 +899,10 @@
       var total = 0, slotT = 0, pacT = 0, count = 0;
       for (var i = 0; i < store.stores.length; i++) {
         var s = store.stores[i];
-        var sv = calcValue(s.slot.balance, s.slot.exchange);
-        var pv = calcValue(s.pachinko.balance, s.pachinko.exchange);
+        var sv = calcValue(effBal(s.slot), s.slot.exchange);
+        var pv = calcValue(effBal(s.pachinko), s.pachinko.exchange);
         slotT += sv; pacT += pv; total += sv + pv;
-        if (s.slot.balance > 0 || s.pachinko.balance > 0) count++;
+        if (effBal(s.slot) > 0 || effBal(s.pachinko) > 0) count++;
       }
       document.getElementById('totalAmount').textContent = yen(total);
       document.getElementById('slotTotal').textContent = yen(slotT);
@@ -812,7 +916,7 @@
       if (filterActive) {
         var vis = getVisible();
         var vt = 0;
-        for (var j = 0; j < vis.length; j++) vt += storeValue(vis[j]);
+        for (var j = 0; j < vis.length; j++) vt += storeValueEff(vis[j]);
         filt.classList.add('on');
         filt.textContent = '表示中: ' + yen(vt) + ' ／ ' + vis.length + '店舗';
       } else {
@@ -821,36 +925,45 @@
       renderChart();
     }
 
-    // ---- 月次グラフ ----
+    // ---- 月次推移グラフ ----
     function getMonthlySeries() {
-      if (!store.history) return [];
-      var dates = Object.keys(store.history).sort();
-      var monthsObj = {};
-      for (var i = 0; i < dates.length; i++) {
-        var d = dates[i];
-        var ym = d.substring(0, 7);
-        var snap = store.history[d];
-        var total = 0;
-        for (var id in snap) {
-          if (!Object.prototype.hasOwnProperty.call(snap, id)) continue;
-          var s = findStore(id);
-          if (!s) continue;
-          total += calcValue(snap[id].s, s.slot.exchange);
-          total += calcValue(snap[id].p, s.pachinko.exchange);
+      var now = new Date();
+      var months = [];
+      for (var i = 11; i >= 0; i--) {
+        var d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        var m = d.getMonth() + 1;
+        var ym = d.getFullYear() + '-' + (m < 10 ? '0' : '') + m;
+        months.push({ ym: ym, value: 0 });
+      }
+      var snapshotDates = store.history ? Object.keys(store.history).sort() : [];
+      for (var j = 0; j < months.length; j++) {
+        var monthEnd = months[j].ym + '-31';
+        var latest = null;
+        for (var k = 0; k < snapshotDates.length; k++) {
+          if (snapshotDates[k] <= monthEnd) latest = snapshotDates[k];
+          else break;
         }
-        monthsObj[ym] = total; // 同月内は最新が上書きされて月末値になる
+        if (latest) {
+          var snap = store.history[latest];
+          var total = 0;
+          for (var id in snap) {
+            if (!Object.prototype.hasOwnProperty.call(snap, id)) continue;
+            var s = findStore(id);
+            if (!s) continue;
+            total += calcValue(snap[id].s, s.slot.exchange);
+            total += calcValue(snap[id].p, s.pachinko.exchange);
+          }
+          months[j].value = total;
+        }
       }
-      // 現在月のスナップショットが今日無くても、現在の残高で上書き
+      // 現在月は最新の残高（稼働中の暫定値も反映）で上書き
       var nowYm = todayStr().substring(0, 7);
-      var currentTotal = 0;
-      for (var k = 0; k < store.stores.length; k++) currentTotal += storeValue(store.stores[k]);
-      if (currentTotal > 0 || monthsObj[nowYm] !== undefined) {
-        monthsObj[nowYm] = currentTotal;
+      var liveTotal = 0;
+      for (var x = 0; x < store.stores.length; x++) liveTotal += storeValueEff(store.stores[x]);
+      for (var y = 0; y < months.length; y++) {
+        if (months[y].ym === nowYm) months[y].value = liveTotal;
       }
-      var keys = Object.keys(monthsObj).sort();
-      var out = [];
-      for (var x = 0; x < keys.length; x++) out.push({ ym: keys[x], value: monthsObj[keys[x]] });
-      return out;
+      return months;
     }
 
     function renderChart() {
@@ -858,61 +971,98 @@
       var body = document.getElementById('chartBody');
       var period = document.getElementById('chartPeriod');
       var trend = document.getElementById('chartTrend');
+      var type = (store.filter.chartType === 'line') ? 'line' : 'bar';
 
-      if (!series.length) {
+      var max = 0;
+      for (var i = 0; i < series.length; i++) if (series[i].value > max) max = series[i].value;
+      if (max === 0) {
         body.innerHTML = '<div class="chart-empty">残高を入力すると履歴が蓄積されます</div>';
         period.textContent = '';
         trend.innerHTML = '';
         return;
       }
-      if (series.length > 12) series = series.slice(-12);
-      var max = 0;
-      for (var i = 0; i < series.length; i++) if (series[i].value > max) max = series[i].value;
-      if (max === 0) max = 1;
 
-      var w = 320, h = 130;
-      var pad = 8, gap = 3;
-      var barW = (w - pad*2 - gap*(series.length-1)) / series.length;
-      if (barW < 6) barW = 6;
-
+      var w = 320, h = 140;
+      var pad = 10, gap = 3;
+      var n = series.length;
       var svg = '<svg viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none">';
       svg += '<line x1="' + pad + '" y1="' + (h-22) + '" x2="' + (w-pad) + '" y2="' + (h-22) + '" stroke="#2a2f3a" stroke-width="1"/>';
-      for (var j = 0; j < series.length; j++) {
-        var v = series[j].value;
-        var bh = Math.max((v / max) * (h - 40), v > 0 ? 1 : 0);
-        var by = h - 22 - bh;
-        var bx = pad + j * (barW + gap);
-        var isLast = (j === series.length - 1);
-        var fill = isLast ? '#ffd45c' : '#7a6428';
-        svg += '<rect x="' + bx + '" y="' + by + '" width="' + barW + '" height="' + bh + '" rx="2" fill="' + fill + '"/>';
-        var monthNum = parseInt(series[j].ym.substring(5), 10);
-        svg += '<text x="' + (bx + barW/2) + '" y="' + (h - 8) + '" font-size="9" text-anchor="middle" fill="#9098a4">' + monthNum + '月</text>';
+
+      if (type === 'bar') {
+        var barW = (w - pad*2 - gap*(n-1)) / n;
+        for (var j = 0; j < n; j++) {
+          var v = series[j].value;
+          var bh = (v / max) * (h - 40);
+          if (v > 0 && bh < 1) bh = 1;
+          var by = h - 22 - bh;
+          var bx = pad + j * (barW + gap);
+          var isLast = (j === n - 1);
+          var fill = isLast ? '#ffd45c' : '#7a6428';
+          if (v > 0) svg += '<rect x="' + bx + '" y="' + by + '" width="' + barW + '" height="' + bh + '" rx="2" fill="' + fill + '"/>';
+          var monthNum = parseInt(series[j].ym.substring(5), 10);
+          svg += '<text x="' + (bx + barW/2) + '" y="' + (h - 7) + '" font-size="9" text-anchor="middle" fill="#9098a4">' + monthNum + '</text>';
+        }
+      } else {
+        // 折線
+        var stepX = (w - pad*2) / (n - 1);
+        var pts = [];
+        for (var jj = 0; jj < n; jj++) {
+          var px = pad + jj * stepX;
+          var py = (h - 22) - (series[jj].value / max) * (h - 40);
+          pts.push([px, py]);
+        }
+        // 塗り（面）
+        var areaD = 'M ' + pts[0][0] + ',' + (h - 22) + ' ';
+        for (var jp = 0; jp < n; jp++) areaD += 'L ' + pts[jp][0] + ',' + pts[jp][1] + ' ';
+        areaD += 'L ' + pts[n-1][0] + ',' + (h - 22) + ' Z';
+        svg += '<defs><linearGradient id="lineFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffd45c" stop-opacity="0.35"/><stop offset="100%" stop-color="#ffd45c" stop-opacity="0"/></linearGradient></defs>';
+        svg += '<path d="' + areaD + '" fill="url(#lineFill)"/>';
+        // 折線
+        var lineD = '';
+        for (var jl = 0; jl < n; jl++) lineD += (jl === 0 ? 'M ' : 'L ') + pts[jl][0] + ',' + pts[jl][1] + ' ';
+        svg += '<path d="' + lineD + '" fill="none" stroke="#ffd45c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+        // 点
+        for (var jd = 0; jd < n; jd++) {
+          var r = (jd === n - 1) ? 3.2 : 2;
+          svg += '<circle cx="' + pts[jd][0] + '" cy="' + pts[jd][1] + '" r="' + r + '" fill="#ffd45c"/>';
+        }
+        // ラベル
+        for (var jx = 0; jx < n; jx++) {
+          var mn = parseInt(series[jx].ym.substring(5), 10);
+          svg += '<text x="' + pts[jx][0] + '" y="' + (h - 7) + '" font-size="9" text-anchor="middle" fill="#9098a4">' + mn + '</text>';
+        }
       }
       svg += '</svg>';
       body.innerHTML = svg;
 
-      period.textContent = series[0].ym + ' 〜 ' + series[series.length - 1].ym;
+      period.textContent = series[0].ym + ' 〜 ' + series[n - 1].ym;
 
-      var cur = series[series.length - 1].value;
+      var cur = series[n - 1].value;
+      var prev = (n >= 2) ? series[n - 2].value : 0;
+      var diff = cur - prev;
       var html = '今月 <b>' + yen(cur) + '</b>';
-      if (series.length >= 2) {
-        var diff = cur - series[series.length - 2].value;
-        var absT = yen(Math.abs(diff));
-        if (diff > 0) html += '<span>先月比 <b class="up">+' + absT + '</b></span>';
-        else if (diff < 0) html += '<span>先月比 <b class="down">-' + absT + '</b></span>';
-        else html += '<span>先月比 <b>±0</b></span>';
+      if (n >= 2) {
+        var cls = diff > 0 ? 'up' : (diff < 0 ? 'down' : '');
+        html += '<span>先月比 <b class="' + cls + '">' + yenSigned(diff) + '</b></span>';
       }
       trend.innerHTML = html;
     }
 
     function segHtml(kind, k) {
       var c = KIND[kind];
+      var usedVal = (k.used && k.used > 0) ? k.used : '';
+      var colVal = (k.collected && k.collected > 0) ? k.collected : '';
       return '<div class="seg">' +
         '<div class="segmain">' +
           '<span class="tag ' + c.cls + '">' + c.label + '</span>' +
           '<input class="bal" data-kind="' + kind + '" inputmode="numeric" pattern="[0-9]*" value="' + k.balance + '" placeholder="0">' +
           '<span class="unit">' + c.unit + '</span>' +
           '<span class="value z" data-kind="' + kind + '">¥0</span>' +
+        '</div>' +
+        '<div class="sessionrow">' +
+          '<span class="lbl used">使用</span><input class="delta used" data-kind="' + kind + '" inputmode="numeric" pattern="[0-9]*" value="' + usedVal + '" placeholder="0">' +
+          '<span class="lbl col">回収</span><input class="delta col" data-kind="' + kind + '" inputmode="numeric" pattern="[0-9]*" value="' + colVal + '" placeholder="0">' +
+          '<span class="net" data-kind="' + kind + '"></span>' +
         '</div>' +
         '<div class="raterow">' +
           '<span class="lbl">貸</span><input class="rate lend" data-kind="' + kind + '" inputmode="decimal" value="' + k.lend + '">' +
@@ -927,6 +1077,8 @@
       var lend = card.querySelector('.lend[data-kind="' + kind + '"]');
       var ex = card.querySelector('.ex[data-kind="' + kind + '"]');
       var rb = card.querySelector('.reset[data-kind="' + kind + '"]');
+      var usedI = card.querySelector('.delta.used[data-kind="' + kind + '"]');
+      var colI = card.querySelector('.delta.col[data-kind="' + kind + '"]');
 
       bal.addEventListener('input', function () {
         var v = bal.value.replace(/[^0-9.]/g, '');
@@ -951,6 +1103,18 @@
         ex.value = s[kind].exchange;
         save(); refreshCard(card, s); refreshTotal();
       });
+      usedI.addEventListener('input', function () {
+        var v = usedI.value.replace(/[^0-9.]/g, '');
+        s[kind].used = (v === '') ? 0 : num(v);
+        s.updated = todayStr();
+        save(); refreshCard(card, s); refreshTotal();
+      });
+      colI.addEventListener('input', function () {
+        var v = colI.value.replace(/[^0-9.]/g, '');
+        s[kind].collected = (v === '') ? 0 : num(v);
+        s.updated = todayStr();
+        save(); refreshCard(card, s); refreshTotal();
+      });
     }
 
     function renderCard(s, list) {
@@ -970,7 +1134,10 @@
         segHtml('slot', s.slot) +
         segHtml('pachinko', s.pachinko) +
         (s.memo ? '<div class="memo">' + esc(s.memo) + '</div>' : '') +
-        '<div class="cardfoot">店舗計 <b>¥0</b><span class="upd"></span></div>';
+        '<div class="cardfoot">' +
+          '<span class="ftxt">店舗計 <b class="stotal">¥0</b><span class="upd"></span></span>' +
+          '<button class="commit" title="使用・回収を残高に反映">転記</button>' +
+        '</div>';
       list.appendChild(card);
 
       bindKind(card, s, 'slot');
@@ -988,6 +1155,33 @@
         }
         store.stores = arr;
         save(); render();
+      });
+      card.querySelector('.commit').addEventListener('click', function () {
+        if (!hasSession(s)) { alert('稼働の入力（使用・回収）がありません。'); return; }
+        var preview = '使用/回収を残高に反映します。\n\n';
+        ['slot','pachinko'].forEach(function (kind) {
+          var k = s[kind];
+          if ((k.used || 0) > 0 || (k.collected || 0) > 0) {
+            var newBal = Math.max(0, (k.balance || 0) - (k.used || 0) + (k.collected || 0));
+            preview += '[' + KIND[kind].label + '] ' +
+              (k.balance || 0) + ' - ' + (k.used || 0) + ' + ' + (k.collected || 0) +
+              ' = ' + newBal + KIND[kind].unit + '\n';
+          }
+        });
+        preview += '\nよろしいですか？';
+        if (!confirm(preview)) return;
+        ['slot','pachinko'].forEach(function (kind) {
+          var k = s[kind];
+          k.balance = Math.max(0, (k.balance || 0) - (k.used || 0) + (k.collected || 0));
+          k.used = 0; k.collected = 0;
+          card.querySelector('.bal[data-kind="' + kind + '"]').value = k.balance;
+          card.querySelector('.delta.used[data-kind="' + kind + '"]').value = '';
+          card.querySelector('.delta.col[data-kind="' + kind + '"]').value = '';
+        });
+        s.updated = todayStr();
+        save();
+        refreshCard(card, s);
+        refreshTotal();
       });
 
       refreshCard(card, s);
@@ -1045,12 +1239,43 @@
       dl1.innerHTML = h;
     })();
 
-    var ratesOn = false;
+    // ---- チャートタブ ----
+    var chartTabs = document.getElementsByClassName('chart-tab');
+    function updateChartTabUI() {
+      for (var i = 0; i < chartTabs.length; i++) {
+        chartTabs[i].className = 'chart-tab' + (chartTabs[i].getAttribute('data-type') === store.filter.chartType ? ' active' : '');
+      }
+    }
+    for (var ci = 0; ci < chartTabs.length; ci++) {
+      (function (btn) {
+        btn.addEventListener('click', function () {
+          store.filter.chartType = btn.getAttribute('data-type');
+          updateChartTabUI();
+          try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch (e) {}
+          renderChart();
+        });
+      })(chartTabs[ci]);
+    }
+    updateChartTabUI();
+
+    // ---- レート/稼働モードトグル ----
+    function applyModes() {
+      var cls = '';
+      if (ratesOn) cls += 'rates-on ';
+      if (sessionOn) cls += 'session-on';
+      document.body.className = cls.replace(/\s+$/, '');
+    }
     document.getElementById('toggleRates').addEventListener('click', function () {
       ratesOn = !ratesOn;
-      document.body.className = ratesOn ? 'rates-on' : '';
-      this.textContent = ratesOn ? 'レート設定を隠す' : 'レート設定を表示';
+      applyModes();
+      this.textContent = ratesOn ? 'レート設定を隠す' : 'レート設定';
       this.className = ratesOn ? 'btn on' : 'btn';
+    });
+    document.getElementById('toggleSession').addEventListener('click', function () {
+      sessionOn = !sessionOn;
+      applyModes();
+      this.textContent = sessionOn ? '稼働モードを隠す' : '稼働モード';
+      this.className = sessionOn ? 'btn session' : 'btn';
     });
 
     document.getElementById('f-search').value = store.filter.search || '';
@@ -1121,18 +1346,19 @@
         id: 'custom-' + Date.now(),
         name: name, corp: corp, url: url, pworld: pworld, memo: memo,
         updated: null, favorite: false,
-        slot:     { defLend:sl, defEx:se, lend:sl, exchange:se, balance:0 },
-        pachinko: { defLend:pl, defEx:pe, lend:pl, exchange:pe, balance:0 }
+        slot:     { defLend:sl, defEx:se, lend:sl, exchange:se, balance:0, used:0, collected:0 },
+        pachinko: { defLend:pl, defEx:pe, lend:pl, exchange:pe, balance:0, used:0, collected:0 }
       });
       save(); closeModal(); render();
     });
 
     document.getElementById('clearBalances').addEventListener('click', function () {
-      if (!confirm('全店の残高（スロット・パチンコ両方）を0にします。よろしいですか？')) return;
+      if (!confirm('全店の残高（スロット・パチンコ両方）と稼働中の使用/回収を0にします。よろしいですか？')) return;
       for (var i = 0; i < store.stores.length; i++) {
-        store.stores[i].slot.balance = 0;
-        store.stores[i].pachinko.balance = 0;
-        store.stores[i].updated = todayStr();
+        var s = store.stores[i];
+        s.slot.balance = 0; s.slot.used = 0; s.slot.collected = 0;
+        s.pachinko.balance = 0; s.pachinko.used = 0; s.pachinko.collected = 0;
+        s.updated = todayStr();
       }
       save(); render();
     });
@@ -1146,7 +1372,7 @@
       try {
         if (navigator.clipboard) {
           navigator.clipboard.writeText(json);
-          alert('データをクリップボードにコピーしました（' + json.length + '文字）。安全な場所に貼り付けて保存してください。');
+          alert('データをクリップボードにコピーしました（' + json.length + '文字）。');
         } else {
           window.prompt('下記をコピーして保存してください:', json);
         }
@@ -1161,7 +1387,7 @@
         var p = JSON.parse(json);
         if (!p || !p.stores) throw new Error('構造が不正');
         store = p;
-        if (!store.filter) store.filter = { corp:'all', sort:'default', onlyBalance:false, search:'' };
+        if (!store.filter) store.filter = { corp:'all', sort:'default', onlyBalance:false, search:'', chartType:'bar' };
         if (!store.history) store.history = {};
         try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch (e) {}
         render();
@@ -1179,7 +1405,6 @@
   }
 })();
 
-// Service Worker 登録
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
     navigator.serviceWorker.register('sw.js').catch(function () {});

@@ -6,33 +6,56 @@
 <title>パチスロ銀行</title>
 <style>
   :root {
-    --bg: #0f1115;
-    --card: #1a1d24;
-    --card2: #21252e;
-    --inset: #11141a;
-    --line: #2e333d;
-    --text: #e8eaed;
-    --sub: #9aa0aa;
-    --accent: #ffcc44;
-    --amber: #e0a93b;
-    --blue: #6fb3ff;
-    --red: #e9605f;
-    --slot: #5fc6d8;
-    --pachi: #e58aa6;
+    --bg: #0b0d12;
+    --bg2: #11141b;
+    --card: #181b22;
+    --card2: #1f232c;
+    --inset: #0e1116;
+    --line: #2a2f3a;
+    --line2: #353c49;
+    --text: #ecedf1;
+    --sub: #9098a4;
+    --dim: #6a7080;
+    --accent: #ffd45c;
+    --accent-d: #c89a30;
+    --amber: #e8b049;
+    --blue: #79bcff;
+    --red: #ec6b6a;
+    --green: #6ed59d;
+    --slot: #62cee0;
+    --pachi: #ee94b1;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-text-size-adjust: 100%; }
   body {
-    background: var(--bg);
+    background:
+      radial-gradient(1100px 500px at 50% -100px, rgba(255,212,92,0.07), transparent 60%),
+      var(--bg);
     color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Helvetica Neue", sans-serif;
     line-height: 1.5;
-    padding: 16px 12px 60px;
+    padding: 16px 12px 70px;
     max-width: 720px;
     margin: 0 auto;
     font-size: 15px;
+    min-height: 100vh;
+    font-feature-settings: 'tnum' 1;
   }
-  h1 { font-size: 20px; margin-bottom: 2px; letter-spacing: 0.5px; }
-  .updated-head { color: var(--sub); font-size: 12px; margin-bottom: 14px; }
+  .h1wrap { display: flex; align-items: baseline; gap: 10px; margin-bottom: 2px; }
+  h1 {
+    font-size: 22px;
+    letter-spacing: 1.5px;
+    font-weight: 800;
+    background: linear-gradient(180deg, #fff, #b8b8b8);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .h1wrap .badge {
+    font-size: 10px; letter-spacing: 0.5px; color: var(--accent-d);
+    border: 1px solid var(--accent-d); padding: 2px 7px; border-radius: 999px;
+    font-weight: 700;
+  }
+  .updated-head { color: var(--sub); font-size: 11px; margin-bottom: 14px; }
 
   #errbox {
     display: none;
@@ -47,108 +70,209 @@
     word-break: break-all;
   }
 
+  /* ---- 合計カード ---- */
   .total {
-    background: linear-gradient(135deg, #2e2812, #1a1d24);
-    border: 1px solid var(--accent);
-    border-radius: 16px;
-    padding: 16px;
-    text-align: center;
-    margin-bottom: 14px;
     position: sticky;
-    top: 0;
-    z-index: 10;
-    -webkit-backdrop-filter: blur(6px);
-    backdrop-filter: blur(6px);
+    top: 8px;
+    z-index: 20;
+    background:
+      linear-gradient(135deg, rgba(255,212,92,0.10), rgba(255,212,92,0.02) 60%),
+      linear-gradient(180deg, #20232c, #161922);
+    border: 1px solid #3b3520;
+    border-radius: 18px;
+    padding: 16px 18px;
+    margin-bottom: 14px;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.05),
+      0 8px 24px rgba(0,0,0,0.45);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
   }
-  .total .label { color: var(--sub); font-size: 12px; }
-  .total .amount { color: var(--accent); font-size: 34px; font-weight: 700; line-height: 1.2; }
-  .total .note { color: var(--sub); font-size: 11px; margin-top: 3px; }
+  .total .label {
+    color: var(--sub); font-size: 11px; letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .total .amount {
+    color: var(--accent);
+    font-size: 38px;
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.5px;
+    text-shadow: 0 0 24px rgba(255,212,92,0.25);
+    margin-top: 2px;
+  }
+  .total .breakdown {
+    display: flex; gap: 14px; flex-wrap: wrap;
+    margin-top: 8px; font-size: 11px; color: var(--sub);
+  }
+  .total .breakdown b { color: var(--text); font-weight: 600; margin-left: 4px; }
+  .total .breakdown .s b { color: var(--slot); }
+  .total .breakdown .p b { color: var(--pachi); }
+  .total .filt {
+    margin-top: 6px; font-size: 11px; color: var(--accent);
+    display: none;
+  }
+  .total .filt.on { display: block; }
 
-  .toolbar { display: flex; gap: 8px; margin-bottom: 14px; }
+  /* ---- ツールバー ---- */
+  .toolbar { display: flex; gap: 8px; margin-bottom: 10px; }
   .btn {
     flex: 1;
     background: var(--card2);
     color: var(--text);
     border: 1px solid var(--line);
-    border-radius: 11px;
-    padding: 11px 8px;
+    border-radius: 12px;
+    padding: 12px 8px;
     font-size: 13px;
+    font-weight: 600;
     cursor: pointer;
     font-family: inherit;
+    transition: all 0.15s;
   }
-  .btn.primary { background: #3a3416; border-color: var(--accent); color: var(--accent); font-weight: 700; }
-  .btn.on { background: #16303a; border-color: var(--slot); color: var(--slot); }
+  .btn.primary {
+    background: linear-gradient(180deg, #4a3f17, #322a10);
+    border-color: var(--accent-d);
+    color: var(--accent);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+  .btn.on { background: #173a44; border-color: var(--slot); color: var(--slot); }
   .btn.danger { color: var(--red); }
-  .btn:active { opacity: 0.6; }
+  .btn:active { opacity: 0.6; transform: scale(0.98); }
+
+  /* ---- フィルタ ---- */
+  .filter {
+    display: flex; gap: 7px; flex-wrap: wrap; align-items: center;
+    margin-bottom: 14px;
+  }
+  .filter > * { font-family: inherit; font-size: 12px; }
+  .filter input[type="search"], .filter select {
+    flex: 1; min-width: 110px;
+    background: var(--inset);
+    color: var(--text);
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    padding: 8px 10px;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .filter input[type="search"]::placeholder { color: var(--dim); }
+  .filter select {
+    background-image: linear-gradient(45deg, transparent 50%, var(--sub) 50%),
+                      linear-gradient(135deg, var(--sub) 50%, transparent 50%);
+    background-position: calc(100% - 14px) 50%, calc(100% - 9px) 50%;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+    padding-right: 24px;
+  }
+  .filter input:focus, .filter select:focus {
+    outline: none; border-color: var(--accent);
+  }
+  .filter .onlyBal {
+    display: flex; align-items: center; gap: 6px; color: var(--sub);
+    background: var(--card2); border: 1px solid var(--line);
+    border-radius: 9px; padding: 7px 11px; cursor: pointer;
+    user-select: none;
+  }
+  .filter .onlyBal input { margin: 0; accent-color: var(--accent); }
+  .filter .onlyBal.on { color: var(--accent); border-color: var(--accent-d); }
 
   .empty {
     color: var(--sub);
     text-align: center;
-    padding: 34px 14px;
+    padding: 36px 14px;
     font-size: 13px;
     border: 1px dashed var(--line);
-    border-radius: 12px;
+    border-radius: 14px;
   }
 
   /* ---- 店舗カード ---- */
   .store {
-    background: var(--card);
+    background: linear-gradient(180deg, var(--card), #14171e);
     border: 1px solid var(--line);
     border-radius: 14px;
     padding: 12px 12px 10px;
     margin-bottom: 10px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+    transition: border-color 0.2s, box-shadow 0.2s;
   }
-  .store.has-balance { border-color: #4a4326; }
+  .store.has-balance {
+    border-color: #4d4528;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.04),
+      0 0 0 1px rgba(255,212,92,0.05),
+      0 4px 14px rgba(0,0,0,0.35);
+  }
 
-  .row1 { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-  .name { font-weight: 700; font-size: 16px; flex: 1; }
-  .mp {
-    color: var(--blue); text-decoration: none; font-size: 11px;
-    border: 1px solid #33414f; border-radius: 999px; padding: 3px 9px; white-space: nowrap;
+  .row1 { display: flex; align-items: center; gap: 8px; }
+  .name { font-weight: 700; font-size: 16px; flex: 1; letter-spacing: 0.2px; }
+  .chain {
+    font-size: 10px; font-weight: 600;
+    color: #c5cad4;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--line2);
+    border-radius: 999px;
+    padding: 2px 8px;
+    white-space: nowrap;
   }
-  .mp:active { opacity: 0.5; }
   .del {
-    background: transparent; border: none; color: #5a606c;
+    background: transparent; border: none; color: var(--dim);
     font-size: 17px; line-height: 1; cursor: pointer; padding: 2px 4px;
   }
   .del:active { color: var(--red); }
+  .links {
+    display: flex; gap: 12px;
+    margin: 6px 0 10px;
+  }
+  .links a {
+    color: var(--blue); text-decoration: none; font-size: 11px;
+    border-bottom: 1px dotted rgba(121,188,255,0.4);
+    padding-bottom: 1px;
+  }
+  .links a:active { opacity: 0.5; }
 
   .seg {
     background: var(--card2);
-    border-radius: 10px;
-    padding: 9px 10px;
+    border-radius: 11px;
+    padding: 10px 11px;
     margin-bottom: 6px;
   }
-  .segmain { display: flex; align-items: center; gap: 8px; }
+  .segmain { display: flex; align-items: center; gap: 9px; }
   .tag {
-    font-size: 11px; font-weight: 700;
-    padding: 3px 9px; border-radius: 999px; white-space: nowrap;
+    font-size: 10px; font-weight: 700;
+    padding: 4px 9px; border-radius: 999px; white-space: nowrap;
+    letter-spacing: 0.3px;
   }
-  .tag-slot { background: rgba(95,198,216,0.16); color: var(--slot); }
-  .tag-pachi { background: rgba(229,138,166,0.16); color: var(--pachi); }
+  .tag-slot { background: rgba(98,206,224,0.14); color: var(--slot); }
+  .tag-pachi { background: rgba(238,148,177,0.14); color: var(--pachi); }
   input.bal {
-    width: 100px;
+    width: 104px;
     background: var(--inset);
-    border: 1px solid #3a4150;
-    border-radius: 8px;
+    border: 1px solid var(--line2);
+    border-radius: 9px;
     color: var(--text);
     font-size: 19px;
     font-weight: 700;
-    padding: 7px 9px;
+    padding: 7px 10px;
     text-align: right;
     font-family: inherit;
+    transition: border-color 0.15s, box-shadow 0.15s;
   }
-  input.bal:focus { outline: none; border-color: var(--accent); }
+  input.bal:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(255,212,92,0.12);
+  }
   .unit { font-size: 12px; color: var(--sub); }
   .value {
     margin-left: auto;
     font-size: 16px;
     font-weight: 700;
     white-space: nowrap;
+    transition: color 0.2s;
   }
   .value.slotc { color: var(--slot); }
   .value.pachic { color: var(--pachi); }
-  .value.z { color: var(--sub); font-weight: 400; }
+  .value.z { color: var(--dim); font-weight: 400; }
 
   .raterow {
     display: none;
@@ -162,9 +286,9 @@
   body.rates-on .raterow { display: flex; }
   .raterow .lbl { font-size: 11px; color: var(--sub); }
   input.rate {
-    width: 58px;
+    width: 60px;
     background: var(--inset);
-    border: 1px solid #3a4150;
+    border: 1px solid var(--line2);
     border-radius: 7px;
     color: var(--text);
     font-size: 14px;
@@ -192,14 +316,17 @@
     margin-top: 8px; padding: 0 2px;
     font-size: 12px; color: var(--sub);
   }
-  .cardfoot b { color: var(--accent); font-size: 15px; }
-  .cardfoot .upd { margin-left: auto; font-size: 10px; color: #5a606c; }
-  .memo { color: var(--sub); font-size: 11px; margin: 2px 2px 0; }
+  .cardfoot b {
+    color: var(--accent); font-size: 16px; font-weight: 700;
+    letter-spacing: -0.2px;
+  }
+  .cardfoot .upd { margin-left: auto; font-size: 10px; color: var(--dim); }
+  .memo { color: var(--sub); font-size: 11px; margin: 4px 2px 0; }
 
   details {
     background: var(--card);
     border: 1px solid var(--line);
-    border-radius: 12px;
+    border-radius: 13px;
     padding: 12px 14px;
     margin-top: 14px;
     font-size: 12px;
@@ -215,21 +342,24 @@
   .modal-bg {
     display: none;
     position: fixed; inset: 0;
-    background: rgba(0,0,0,0.72);
+    background: rgba(0,0,0,0.74);
     z-index: 100;
     align-items: center; justify-content: center;
     padding: 16px;
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
   }
   .modal-bg.open { display: flex; }
   .modal {
     background: var(--card);
     border: 1px solid var(--line);
-    border-radius: 16px;
-    padding: 18px;
+    border-radius: 18px;
+    padding: 20px;
     width: 100%;
     max-width: 400px;
     max-height: 90vh;
     overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
   }
   .modal h3 { font-size: 16px; margin-bottom: 14px; color: var(--accent); }
   .modal label { display: block; font-size: 11px; color: var(--sub); margin-bottom: 11px; }
@@ -238,8 +368,8 @@
     width: 100%;
     margin-top: 4px;
     background: var(--inset);
-    border: 1px solid #3a4150;
-    border-radius: 8px;
+    border: 1px solid var(--line2);
+    border-radius: 9px;
     color: var(--text);
     font-size: 15px;
     padding: 9px 10px;
@@ -253,26 +383,49 @@
   .modal .sectlabel.p { color: var(--pachi); }
   .frow { display: flex; gap: 10px; }
   .frow label { flex: 1; }
-  .modal .btnrow { display: flex; gap: 8px; margin-top: 16px; }
+  .modal .btnrow { display: flex; gap: 8px; margin-top: 18px; }
   .modal .btn { margin-top: 0; }
 </style>
 </head>
 <body>
 
-<h1>パチスロ銀行</h1>
+<div class="h1wrap">
+  <h1>パチスロ銀行</h1>
+  <span class="badge">PACHI BANK</span>
+</div>
 <div class="updated-head" id="today"></div>
 
 <div id="errbox"></div>
 
 <div class="total">
-  <div class="label">合計（換金時の概算）</div>
+  <div class="label">total balance · 換金時の概算</div>
   <div class="amount" id="totalAmount">¥0</div>
-  <div class="note" id="totalNote"></div>
+  <div class="breakdown">
+    <span class="s">スロット<b id="slotTotal">¥0</b></span>
+    <span class="p">パチンコ<b id="pacTotal">¥0</b></span>
+    <span>残高あり<b id="balCount">0</b>店舗</span>
+    <span>登録<b id="storeCount">0</b>店舗</span>
+  </div>
+  <div class="filt" id="filtNote"></div>
 </div>
 
 <div class="toolbar">
   <button class="btn primary" id="addStore">＋ 店舗を追加</button>
   <button class="btn" id="toggleRates">レート設定を表示</button>
+</div>
+
+<div class="filter">
+  <input type="search" id="f-search" placeholder="店舗名で検索" autocomplete="off">
+  <select id="f-corp"></select>
+  <select id="f-sort">
+    <option value="default">並び順: 登録順</option>
+    <option value="value-desc">店舗計の高い順</option>
+    <option value="value-asc">店舗計の低い順</option>
+    <option value="name">店舗名順</option>
+  </select>
+  <label class="onlyBal" id="onlyBalLbl">
+    <input type="checkbox" id="f-onlybal"> 残高あり
+  </label>
 </div>
 
 <div id="list"></div>
@@ -284,47 +437,59 @@
     <button class="btn" id="clearBalances">全店の残高を0にする</button>
     <button class="btn danger" id="deleteAll">全店舗を削除（空にする）</button>
     <button class="btn" id="restoreDefault">初期25店舗を再読込</button>
+    <button class="btn" id="exportData">データをエクスポート（JSONをコピー）</button>
+    <button class="btn" id="importData">データをインポート</button>
   </div>
 </details>
 
 <details class="notes">
   <summary>確認メモ・使い方</summary>
   <ul>
-    <li><b>残高の入力</b>：各店のスロット（貯メダル／枚）・パチンコ（貯玉／玉）の欄に当日の数を入力すると、換金額と合計が自動計算されます。未記入は0として扱います。入力内容はこの端末のブラウザに自動保存されます。</li>
+    <li><b>残高入力</b>：各店のスロット（貯メダル/枚）・パチンコ（貯玉/玉）の欄に当日の数を入力。換金額と合計が自動計算され、この端末のブラウザに自動保存されます。</li>
+    <li><b>フィルタ・並び替え</b>：店舗名検索、法人で絞り込み、並び順の切替、「残高あり」のみ表示が可能。</li>
     <li><b>レート修正</b>：上部「レート設定を表示」を押すと、各店の貸／交換を編集できます。「↺」で初期値に戻せます（修正済みはオレンジ）。</li>
-    <li><b>店舗の追加</b>：「＋ 店舗を追加」で登録。店舗名は入力中に候補が表示されます。</li>
-    <li><b>リンク</b>：各店「店舗情報↗」はみんパチの店舗ページに飛びます（公式サイトが無いため）。</li>
-    <li>初期登録の交換率はみんパチ調査値（スロット20円・パチンコ4円）。マルハン北加賀屋はみんパチに記載が無く他マルハン店と同レートで暫定設定。店頭表示で要確認。</li>
-    <li>換金額は理論値。ベラジオは5,000円交換ごとに-100円のギャップあり。再プレイ利用なら貸しレート相当でこれより有利。</li>
+    <li><b>店舗の追加</b>：「＋ 店舗を追加」で登録。店舗名・法人名は入力中に候補が表示されます。</li>
+    <li><b>リンク</b>：各店「みんパチ↗」「P-world↗」で詳細ページに飛べます（J-STORYのみP-world掲載なし）。</li>
+    <li>初期登録の交換率はみんパチ調査値。マルハン北加賀屋はみんパチに記載なく他マルハン店と同レートで暫定。店頭表示で要確認。</li>
+    <li>換金額は理論値。ベラジオは5,000円交換ごとに-100円のギャップあり。</li>
   </ul>
 </details>
 
 <datalist id="storeNames"></datalist>
+<datalist id="corpNames"></datalist>
 
 <div class="modal-bg" id="modalBg">
   <div class="modal">
     <h3>店舗を追加</h3>
-    <label>店舗名 <span style="color:#e9605f">*</span>
-      <input id="f-name" type="text" list="storeNames" placeholder="入力すると候補が出ます" autocomplete="off">
+    <label>店舗名 <span style="color:#ec6b6a">*</span>
+      <input id="f-name" type="text" list="storeNames" placeholder="入力で候補が出ます" autocomplete="off">
     </label>
-    <label>店舗ページのURL（任意）
-      <input id="f-url" type="text" placeholder="https://...">
+    <label>法人・チェーン（任意）
+      <input id="f-corp-in" type="text" list="corpNames" placeholder="例：マルハン" autocomplete="off">
     </label>
+    <div class="frow">
+      <label>みんパチURL（任意）
+        <input id="f-url" type="text" placeholder="https://...">
+      </label>
+      <label>P-world URL（任意）
+        <input id="f-pworld" type="text" placeholder="https://...">
+      </label>
+    </div>
     <div class="sectlabel s">スロット（20円・メダル）</div>
     <div class="frow">
-      <label>貸 <span style="color:#e9605f">*</span>
+      <label>貸 <span style="color:#ec6b6a">*</span>
         <input id="f-slot-lend" type="number" inputmode="decimal" value="50">
       </label>
-      <label>交換率 <span style="color:#e9605f">*</span>
+      <label>交換率 <span style="color:#ec6b6a">*</span>
         <input id="f-slot-ex" type="number" inputmode="decimal" value="50">
       </label>
     </div>
     <div class="sectlabel p">パチンコ（4円・玉）</div>
     <div class="frow">
-      <label>貸 <span style="color:#e9605f">*</span>
+      <label>貸 <span style="color:#ec6b6a">*</span>
         <input id="f-pachi-lend" type="number" inputmode="decimal" value="250">
       </label>
-      <label>交換率 <span style="color:#e9605f">*</span>
+      <label>交換率 <span style="color:#ec6b6a">*</span>
         <input id="f-pachi-ex" type="number" inputmode="decimal" value="250">
       </label>
     </div>
@@ -358,33 +523,34 @@
       pachinko: { label:'パチンコ', unit:'玉', cls:'tag-pachi', vcls:'pachic' }
     };
 
-    // [id, 正式名称, URL, スロット貸, スロット交換, スロット残高, パチンコ貸, パチンコ交換, メモ]
+    // [id, 正式名称, 法人, みんパチURL, P-world URL,
+    //  スロット貸, スロット交換, スロット残高, パチンコ貸, パチンコ交換, メモ]
     var D = [
-      ['maruhan-oriono','マルハン堺遠里小野店','https://minpachi.com/maruhan-oriono/',46,47,0,250,255,0,''],
-      ['maruhan-kitakagaya','マルハン北加賀屋店','https://minpachi.com/%E3%83%9E%E3%83%AB%E3%83%8F%E3%83%B3%E5%8C%97%E5%8A%A0%E8%B3%80%E5%B1%8B%E5%BA%97/',46,47,0,250,255,0,'みんパチに交換率の記載なし。他マルハン店と同レートで暫定設定'],
-      ['maruhan-shinsekai','マルハン新世界店','https://minpachi.com/maruhan-shinsekai/',46,47,174,250,255,0,'⇧pw → 3830'],
-      ['kicona-sakai','グランキコーナ堺店','https://minpachi.com/grankicona-2/',46,47,0,250,255,0,''],
-      ['bellagio-suminoe','ベラジオ住之江店','https://minpachi.com/bellagio-b-5/',46,50,1800,250,250,0,'スロット専門店（パチンコ取扱なし）。5k交換で-100円のギャップあり'],
-      ['bellagio-nishinaka','ベラジオ西中島店','https://minpachi.com/bellagio-nishinaka/',46,51.6,0,250,280,0,'5k交換で-100円のギャップあり'],
-      ['hyper-ms',"HYPER M's",'https://minpachi.com/as-ms/',46,51.6,0,250,280,0,''],
-      ['kicona-nishitanabe','キコーナ西田辺店','https://minpachi.com/kicona-nishitanabe/',46,51.6,0,250,280,0,'20円スロット専用機は1台のみ・通常非稼働との口コミ'],
-      ['tamade123','123玉出店','https://minpachi.com/tamade123/',46,56,472,250,280,0,'口コミではスロット実際5.1〜5.2との指摘も'],
-      ['nagai123','123長居店','https://minpachi.com/nagai123/',46,52,0,250,280,0,''],
-      ['proots-suminoe','P-ROOTs住之江店','https://minpachi.com/proots-s/',46,52,0,250,280,0,'「46枚貸47枚交換に変更」との口コミ報告あり'],
-      ['kikuya','キクヤ堺本店','https://minpachi.com/kikuyasakaihonten/',46,51.5,0,250,280,0,''],
-      ['richwell','リッチウエル本店','https://minpachi.com/richwell/',46,52,0,250,256,0,'パチンコは4.38円貸の特殊レート'],
-      ['tennoji-hall','天王寺ホール本館','https://minpachi.com/tennoji-hall/',46,53,0,250,280,0,'「換金率が大阪一悪い」との口コミあり'],
-      ['super-hall','スーパーホール','https://minpachi.com/super-hall/',46,51.5,0,250,280,0,''],
-      ['matsubara-123n','123+N松原店','https://minpachi.com/123-matsubara/',46,51.6,0,250,280,0,''],
-      ['slot123-matsubara','スロット123松原店','https://minpachi.com/slot123matsubara/',46,52,0,250,250,0,'スロット専門店（パチンコ取扱なし）'],
-      ['cosmo-sakai','SUPER COSMO PREMIUM堺店','https://minpachi.com/s-cosmo-city-acty/',46,52,0,250,280,0,''],
-      ['sigma','シグマ本店','https://minpachi.com/siguma/',50,56,450,250,280,0,'スロットは280枚（=5,000円）単位で交換'],
-      ['proots-mandore','P-ROOTs MANDORE','https://minpachi.com/prootsmandore/',50,56,500,250,280,0,'スロットは280枚（=5,000円）単位で交換'],
-      ['amuse-minami','アミューズ南住吉','https://minpachi.com/amuse-minami/',50,56,0,250,280,0,'スロットは280枚（=5,000円）単位で交換'],
-      ['daiichi-suminoe','大いち住之江店','https://minpachi.com/daiichi-suminoe/',50,60,1070,250,300,0,''],
-      ['j-story','J-STORY','https://minpachi.com/j-story/',50,60,0,250,300,0,'2026/3/31閉店予定の記載 → 現在は閉店の可能性'],
-      ['monroe','Monroe','https://minpachi.com/%EF%BD%8Donroe/',46,50,0,250,271,0,''],
-      ['tenichi','TENICHI西成店','https://minpachi.com/tenichi-nishinari/',46,50,0,250,270,0,'生野店は別レート']
+      ['maruhan-oriono','マルハン堺遠里小野店','マルハン','https://minpachi.com/maruhan-oriono/','https://www.p-world.co.jp/osaka/maruhan-oriono.htm',46,47,0,250,255,''],
+      ['maruhan-kitakagaya','マルハン北加賀屋店','マルハン','https://minpachi.com/%E3%83%9E%E3%83%AB%E3%83%8F%E3%83%B3%E5%8C%97%E5%8A%A0%E8%B3%80%E5%B1%8B%E5%BA%97/','https://www.p-world.co.jp/osaka/maruhan-kita.htm',46,47,0,250,255,'みんパチに交換率の記載なし。他マルハン店と同レートで暫定設定'],
+      ['maruhan-shinsekai','マルハン新世界店','マルハン','https://minpachi.com/maruhan-shinsekai/','https://www.p-world.co.jp/osaka/maruhan-shinsekai.htm',46,47,174,250,255,'⇧pw → 3830'],
+      ['kicona-sakai','グランキコーナ堺店','キコーナ','https://minpachi.com/grankicona-2/','https://www.p-world.co.jp/osaka/grankicona.htm',46,47,0,250,255,''],
+      ['bellagio-suminoe','ベラジオ住之江店','ベラジオ','https://minpachi.com/bellagio-b-5/','https://www.p-world.co.jp/osaka/bellagio-b-5.htm',46,50,1800,250,250,'スロット専門店（パチンコ取扱なし）。5k交換で-100円のギャップあり'],
+      ['bellagio-nishinaka','ベラジオ西中島店','ベラジオ','https://minpachi.com/bellagio-nishinaka/','https://www.p-world.co.jp/osaka/bellagio-nishinaka.htm',46,51.6,0,250,280,'5k交換で-100円のギャップあり'],
+      ['hyper-ms',"HYPER M's","HYPER M's",'https://minpachi.com/as-ms/','https://www.p-world.co.jp/osaka/as-ms.htm',46,51.6,0,250,280,''],
+      ['kicona-nishitanabe','キコーナ西田辺店','キコーナ','https://minpachi.com/kicona-nishitanabe/','https://www.p-world.co.jp/osaka/kicona-nishitanabe.htm',46,51.6,0,250,280,'20円スロット専用機は1台のみ・通常非稼働との口コミ'],
+      ['tamade123','123玉出店','123','https://minpachi.com/tamade123/','https://www.p-world.co.jp/osaka/tamade123.htm',46,56,472,250,280,'口コミではスロット実際5.1〜5.2との指摘も'],
+      ['nagai123','123長居店','123','https://minpachi.com/nagai123/','https://www.p-world.co.jp/osaka/nagai123.htm',46,52,0,250,280,''],
+      ['proots-suminoe','P-ROOTs住之江店','P-ROOTs','https://minpachi.com/proots-s/','https://www.p-world.co.jp/osaka/proots-s.htm',46,52,0,250,280,'「46枚貸47枚交換に変更」との口コミ報告あり'],
+      ['kikuya','キクヤ堺本店','キクヤ','https://minpachi.com/kikuyasakaihonten/','https://www.p-world.co.jp/osaka/kikuyasakaihonten.htm',46,51.5,0,250,280,''],
+      ['richwell','リッチウエル本店','リッチウエル','https://minpachi.com/richwell/','https://www.p-world.co.jp/osaka/richwell.htm',46,52,0,250,256,'パチンコは4.38円貸の特殊レート'],
+      ['tennoji-hall','天王寺ホール本館','天王寺ホール','https://minpachi.com/tennoji-hall/','https://www.p-world.co.jp/osaka/tennoji-hall.htm',46,53,0,250,280,'「換金率が大阪一悪い」との口コミあり'],
+      ['super-hall','スーパーホール','スーパーホール','https://minpachi.com/super-hall/','https://www.p-world.co.jp/osaka/super-hall.htm',46,51.5,0,250,280,''],
+      ['matsubara-123n','123+N松原店','123','https://minpachi.com/123-matsubara/','https://www.p-world.co.jp/osaka/123-matsubara.htm',46,51.6,0,250,280,''],
+      ['slot123-matsubara','スロット123松原店','123','https://minpachi.com/slot123matsubara/','https://www.p-world.co.jp/osaka/slot123matsubara.htm',46,52,0,250,250,'スロット専門店（パチンコ取扱なし）'],
+      ['cosmo-sakai','SUPER COSMO PREMIUM堺店','SUPER COSMO','https://minpachi.com/s-cosmo-city-acty/','https://www.p-world.co.jp/osaka/s-cosmo-city-acty.htm',46,52,0,250,280,''],
+      ['sigma','シグマ本店','シグマ','https://minpachi.com/siguma/','https://www.p-world.co.jp/osaka/siguma.htm',50,56,450,250,280,'スロットは280枚（=5,000円）単位で交換'],
+      ['proots-mandore','P-ROOTs MANDORE','P-ROOTs','https://minpachi.com/prootsmandore/','https://www.p-world.co.jp/osaka/prootsmandore.htm',50,56,500,250,280,'スロットは280枚（=5,000円）単位で交換'],
+      ['amuse-minami','アミューズ南住吉','アミューズ','https://minpachi.com/amuse-minami/','https://www.p-world.co.jp/osaka/amuse-minami.htm',50,56,0,250,280,'スロットは280枚（=5,000円）単位で交換'],
+      ['daiichi-suminoe','大いち住之江店','大いち','https://minpachi.com/daiichi-suminoe/','https://www.p-world.co.jp/osaka/daiichi-suminoe.htm',50,60,1070,250,300,''],
+      ['j-story','J-STORY','J-STORY','https://minpachi.com/j-story/','',50,60,0,250,300,'2026/3/31閉店予定の記載 → 現在は閉店の可能性'],
+      ['monroe','Monroe','Monroe','https://minpachi.com/%EF%BD%8Donroe/','https://www.p-world.co.jp/osaka/monroe.htm',46,50,0,250,271,''],
+      ['tenichi','TENICHI西成店','TENICHI','https://minpachi.com/tenichi-nishinari/','https://www.p-world.co.jp/osaka/tenichi-nishinari.htm',46,50,0,250,270,'生野店は別レート']
     ];
 
     function buildSeed() {
@@ -392,15 +558,18 @@
       for (var i = 0; i < D.length; i++) {
         var r = D[i];
         stores.push({
-          id: r[0], name: r[1], url: r[2], memo: r[8], updated: null,
-          slot:     { defLend:r[3], defEx:r[4], lend:r[3], exchange:r[4], balance:r[5] },
-          pachinko: { defLend:r[6], defEx:r[7], lend:r[6], exchange:r[7], balance:0 }
+          id: r[0], name: r[1], corp: r[2], url: r[3], pworld: r[4],
+          memo: r[10], updated: null,
+          slot:     { defLend:r[5], defEx:r[6], lend:r[5], exchange:r[6], balance:r[7] },
+          pachinko: { defLend:r[8], defEx:r[9], lend:r[8], exchange:r[9], balance:0 }
         });
       }
-      return { stores: stores };
+      return {
+        stores: stores,
+        filter: { corp:'all', sort:'default', onlyBalance:false, search:'' }
+      };
     }
 
-    // オートコンプリート用 店舗名候補
     var NAME_SUGGEST = [
       'マルハン堺遠里小野店','マルハン北加賀屋店','マルハン新世界店','グランキコーナ堺店','ベラジオ住之江店',
       'ベラジオ西中島店',"HYPER M's",'キコーナ西田辺店','123玉出店','123長居店','P-ROOTs住之江店',
@@ -417,6 +586,7 @@
       'スーパーコスモ寝屋川店','スーパーコスモ枚方店','スーパーコスモ高石店','スーパーコスモ富田林店',
       'プレイランドハッピー梅田店','ガイア難波店','ベガスベガス大阪店'
     ];
+    var CORP_SUGGEST = ['マルハン','キコーナ','ベラジオ','123','P-ROOTs','SUPER COSMO','ダイナム','ピーアーク','ガイア','楽園','やすだ','エスパス日拓','キング観光','プレイランドハッピー','HYPER M\'s','キクヤ','リッチウエル','天王寺ホール','スーパーホール','シグマ','アミューズ','大いち','J-STORY','Monroe','TENICHI'];
 
     function todayStr() {
       var d = new Date();
@@ -426,10 +596,16 @@
       if (day.length < 2) day = '0' + day;
       return d.getFullYear() + '-' + m + '-' + day;
     }
-
-    function num(v) {
-      var n = Number(v);
-      return (isNaN(n) || n < 0) ? 0 : n;
+    function num(v) { var n = Number(v); return (isNaN(n) || n < 0) ? 0 : n; }
+    function calcValue(b, e) { return (!b || b <= 0 || !e || e <= 0) ? 0 : Math.round(b / e * 1000); }
+    function yen(n) { return '¥' + n.toLocaleString('ja-JP'); }
+    function esc(str) {
+      return String(str).replace(/[&<>"]/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+      });
+    }
+    function storeValue(s) {
+      return calcValue(s.slot.balance, s.slot.exchange) + calcValue(s.pachinko.balance, s.pachinko.exchange);
     }
 
     function load() {
@@ -437,38 +613,50 @@
       try { raw = localStorage.getItem(STORE_KEY); } catch (e) { raw = null; }
       if (raw) {
         try {
-          var parsed = JSON.parse(raw);
-          if (parsed && parsed.stores && Object.prototype.toString.call(parsed.stores) === '[object Array]') {
-            // 念のため構造を補正
-            for (var i = 0; i < parsed.stores.length; i++) {
-              var s = parsed.stores[i];
+          var p = JSON.parse(raw);
+          if (p && p.stores && Object.prototype.toString.call(p.stores) === '[object Array]') {
+            for (var i = 0; i < p.stores.length; i++) {
+              var s = p.stores[i];
               if (!s.slot) s.slot = { defLend:50, defEx:50, lend:50, exchange:50, balance:0 };
               if (!s.pachinko) s.pachinko = { defLend:250, defEx:250, lend:250, exchange:250, balance:0 };
+              if (typeof s.corp !== 'string') s.corp = '';
+              if (typeof s.pworld !== 'string') s.pworld = '';
             }
-            return parsed;
+            if (!p.filter) p.filter = { corp:'all', sort:'default', onlyBalance:false, search:'' };
+            return p;
           }
         } catch (e) {}
       }
       return buildSeed();
     }
-
     function save() {
-      try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); }
-      catch (e) { /* localStorage が使えない環境でも計算は継続 */ }
-    }
-
-    function calcValue(balance, exchange) {
-      if (!balance || balance <= 0 || !exchange || exchange <= 0) return 0;
-      return Math.round(balance / exchange * 1000);
-    }
-    function yen(n) { return '¥' + n.toLocaleString('ja-JP'); }
-    function esc(str) {
-      return String(str).replace(/[&<>"]/g, function (c) {
-        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
-      });
+      try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch (e) {}
     }
 
     var store = load();
+
+    // ---- 表示用フィルタ・ソート ----
+    function getVisible() {
+      var arr = store.stores.slice();
+      var f = store.filter;
+      if (f.corp && f.corp !== 'all') {
+        arr = arr.filter(function (s) { return (s.corp || 'その他') === f.corp; });
+      }
+      if (f.search) {
+        var q = f.search.toLowerCase();
+        arr = arr.filter(function (s) {
+          return s.name.toLowerCase().indexOf(q) >= 0 ||
+                 (s.corp || '').toLowerCase().indexOf(q) >= 0;
+        });
+      }
+      if (f.onlyBalance) {
+        arr = arr.filter(function (s) { return s.slot.balance > 0 || s.pachinko.balance > 0; });
+      }
+      if (f.sort === 'value-desc') arr.sort(function (a, b) { return storeValue(b) - storeValue(a); });
+      else if (f.sort === 'value-asc') arr.sort(function (a, b) { return storeValue(a) - storeValue(b); });
+      else if (f.sort === 'name') arr.sort(function (a, b) { return a.name.localeCompare(b.name, 'ja'); });
+      return arr;
+    }
 
     function refreshKind(card, s, kind) {
       var k = s[kind];
@@ -481,7 +669,6 @@
       rb.className = (k.lend != k.defLend || k.exchange != k.defEx) ? 'reset edited' : 'reset';
       return v;
     }
-
     function refreshCard(card, s) {
       var sv = refreshKind(card, s, 'slot');
       var pv = refreshKind(card, s, 'pachinko');
@@ -500,9 +687,24 @@
         if (s.slot.balance > 0 || s.pachinko.balance > 0) count++;
       }
       document.getElementById('totalAmount').textContent = yen(total);
-      document.getElementById('totalNote').textContent =
-        'スロット ' + yen(slotT) + ' ／ パチンコ ' + yen(pacT) +
-        ' ／ 残高あり ' + count + ' ／ 登録 ' + store.stores.length + '店舗';
+      document.getElementById('slotTotal').textContent = yen(slotT);
+      document.getElementById('pacTotal').textContent = yen(pacT);
+      document.getElementById('balCount').textContent = count;
+      document.getElementById('storeCount').textContent = store.stores.length;
+
+      // フィルタ適用時のサブ合計
+      var filt = document.getElementById('filtNote');
+      var f = store.filter;
+      var filterActive = (f.corp !== 'all') || f.search || f.onlyBalance;
+      if (filterActive) {
+        var vis = getVisible();
+        var vt = 0;
+        for (var j = 0; j < vis.length; j++) vt += storeValue(vis[j]);
+        filt.classList.add('on');
+        filt.textContent = '表示中: ' + yen(vt) + ' ／ ' + vis.length + '店舗';
+      } else {
+        filt.classList.remove('on');
+      }
     }
 
     function segHtml(kind, k) {
@@ -557,12 +759,16 @@
       var card = document.createElement('div');
       card.className = 'store';
       card.setAttribute('data-id', s.id);
+      var linksHtml = '';
+      if (s.url) linksHtml += '<a href="' + esc(s.url) + '" target="_blank" rel="noopener">みんパチ↗</a>';
+      if (s.pworld) linksHtml += '<a href="' + esc(s.pworld) + '" target="_blank" rel="noopener">P-world↗</a>';
       card.innerHTML =
         '<div class="row1">' +
           '<span class="name">' + esc(s.name) + '</span>' +
-          (s.url ? '<a class="mp" href="' + esc(s.url) + '" target="_blank" rel="noopener">店舗情報↗</a>' : '') +
+          (s.corp ? '<span class="chain">' + esc(s.corp) + '</span>' : '') +
           '<button class="del" title="この店舗を削除">✕</button>' +
         '</div>' +
+        (linksHtml ? '<div class="links">' + linksHtml + '</div>' : '') +
         segHtml('slot', s.slot) +
         segHtml('pachinko', s.pachinko) +
         (s.memo ? '<div class="memo">' + esc(s.memo) + '</div>' : '') +
@@ -586,30 +792,54 @@
     }
 
     function render() {
+      refreshCorpOptions();
       var list = document.getElementById('list');
       list.innerHTML = '';
-      if (!store.stores || store.stores.length === 0) {
+      var visible = getVisible();
+      if (!store.stores.length) {
         var empty = document.createElement('div');
         empty.className = 'empty';
         empty.textContent = '登録されている店舗がありません。「＋ 店舗を追加」から追加するか、設定の「初期25店舗を再読込」を押してください。';
         list.appendChild(empty);
-        refreshTotal();
-        return;
-      }
-      for (var i = 0; i < store.stores.length; i++) {
-        renderCard(store.stores[i], list);
+      } else if (!visible.length) {
+        var none = document.createElement('div');
+        none.className = 'empty';
+        none.textContent = 'フィルタ条件に合う店舗がありません。';
+        list.appendChild(none);
+      } else {
+        for (var i = 0; i < visible.length; i++) renderCard(visible[i], list);
       }
       refreshTotal();
     }
 
-    // ---- オートコンプリート ----
-    (function () {
-      var dl = document.getElementById('storeNames');
-      var html = '';
-      for (var i = 0; i < NAME_SUGGEST.length; i++) {
-        html += '<option value="' + esc(NAME_SUGGEST[i]) + '">';
+    function refreshCorpOptions() {
+      var sel = document.getElementById('f-corp');
+      var corps = [];
+      for (var i = 0; i < store.stores.length; i++) {
+        var c = store.stores[i].corp || 'その他';
+        if (corps.indexOf(c) === -1) corps.push(c);
       }
-      dl.innerHTML = html;
+      corps.sort(function (a, b) { return a.localeCompare(b, 'ja'); });
+      var current = store.filter.corp || 'all';
+      var html = '<option value="all">法人: すべて</option>';
+      for (var j = 0; j < corps.length; j++) {
+        html += '<option value="' + esc(corps[j]) + '"' + (corps[j] === current ? ' selected' : '') + '>' + esc(corps[j]) + '</option>';
+      }
+      sel.innerHTML = html;
+      if (corps.indexOf(current) === -1 && current !== 'all') {
+        store.filter.corp = 'all';
+        sel.value = 'all';
+      }
+    }
+
+    // ---- データリスト ----
+    (function () {
+      var dl1 = document.getElementById('storeNames');
+      var dl2 = document.getElementById('corpNames');
+      var h1 = '', h2 = '';
+      for (var i = 0; i < NAME_SUGGEST.length; i++) h1 += '<option value="' + esc(NAME_SUGGEST[i]) + '">';
+      for (var j = 0; j < CORP_SUGGEST.length; j++) h2 += '<option value="' + esc(CORP_SUGGEST[j]) + '">';
+      dl1.innerHTML = h1; dl2.innerHTML = h2;
     })();
 
     // ---- レート表示トグル ----
@@ -621,16 +851,45 @@
       this.className = ratesOn ? 'btn on' : 'btn';
     });
 
+    // ---- フィルタイベント ----
+    document.getElementById('f-search').value = store.filter.search || '';
+    document.getElementById('f-sort').value = store.filter.sort || 'default';
+    document.getElementById('f-onlybal').checked = !!store.filter.onlyBalance;
+    if (store.filter.onlyBalance) document.getElementById('onlyBalLbl').classList.add('on');
+
+    var searchTimer = null;
+    document.getElementById('f-search').addEventListener('input', function () {
+      var v = this.value;
+      if (searchTimer) clearTimeout(searchTimer);
+      searchTimer = setTimeout(function () {
+        store.filter.search = v;
+        save(); render();
+      }, 120);
+    });
+    document.getElementById('f-corp').addEventListener('change', function () {
+      store.filter.corp = this.value;
+      save(); render();
+    });
+    document.getElementById('f-sort').addEventListener('change', function () {
+      store.filter.sort = this.value;
+      save(); render();
+    });
+    document.getElementById('f-onlybal').addEventListener('change', function () {
+      store.filter.onlyBalance = this.checked;
+      document.getElementById('onlyBalLbl').classList.toggle('on', this.checked);
+      save(); render();
+    });
+
     // ---- モーダル ----
     var modalBg = document.getElementById('modalBg');
     function openModal() {
-      document.getElementById('f-name').value = '';
-      document.getElementById('f-url').value = '';
+      ['f-name','f-corp-in','f-url','f-pworld','f-memo'].forEach(function (id) {
+        document.getElementById(id).value = '';
+      });
       document.getElementById('f-slot-lend').value = '50';
       document.getElementById('f-slot-ex').value = '50';
       document.getElementById('f-pachi-lend').value = '250';
       document.getElementById('f-pachi-ex').value = '250';
-      document.getElementById('f-memo').value = '';
       modalBg.classList.add('open');
     }
     function closeModal() { modalBg.classList.remove('open'); }
@@ -640,9 +899,12 @@
     modalBg.addEventListener('click', function (e) { if (e.target === modalBg) closeModal(); });
 
     document.getElementById('f-add').addEventListener('click', function () {
-      var name = document.getElementById('f-name').value.replace(/^\s+|\s+$/g, '');
-      var url = document.getElementById('f-url').value.replace(/^\s+|\s+$/g, '');
-      var memo = document.getElementById('f-memo').value.replace(/^\s+|\s+$/g, '');
+      var get = function (id) { return document.getElementById(id).value.replace(/^\s+|\s+$/g, ''); };
+      var name = get('f-name');
+      var corp = get('f-corp-in');
+      var url = get('f-url');
+      var pworld = get('f-pworld');
+      var memo = get('f-memo');
       var sl = num(document.getElementById('f-slot-lend').value);
       var se = num(document.getElementById('f-slot-ex').value);
       var pl = num(document.getElementById('f-pachi-lend').value);
@@ -652,7 +914,7 @@
       if (!pl || !pe) { alert('パチンコの貸・交換率を入力してください'); return; }
       store.stores.push({
         id: 'custom-' + Date.now(),
-        name: name, url: url, memo: memo, updated: null,
+        name: name, corp: corp, url: url, pworld: pworld, memo: memo, updated: null,
         slot:     { defLend:sl, defEx:se, lend:sl, exchange:se, balance:0 },
         pachinko: { defLend:pl, defEx:pe, lend:pl, exchange:pe, balance:0 }
       });
@@ -687,6 +949,33 @@
       if (!confirm('初期の25店舗を読み込みます。今の店舗リストは置き換わります。よろしいですか？')) return;
       store = buildSeed();
       save(); render();
+    });
+    document.getElementById('exportData').addEventListener('click', function () {
+      var json = JSON.stringify(store, null, 2);
+      try {
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(json);
+          alert('データをクリップボードにコピーしました（' + json.length + '文字）。安全な場所に貼り付けて保存してください。');
+        } else {
+          window.prompt('下記をコピーして保存してください:', json);
+        }
+      } catch (e) {
+        window.prompt('下記をコピーして保存してください:', json);
+      }
+    });
+    document.getElementById('importData').addEventListener('click', function () {
+      var json = window.prompt('エクスポート時のJSONを貼り付けてください（既存データは上書きされます）:');
+      if (!json) return;
+      try {
+        var p = JSON.parse(json);
+        if (!p || !p.stores) throw new Error('構造が不正');
+        store = p;
+        if (!store.filter) store.filter = { corp:'all', sort:'default', onlyBalance:false, search:'' };
+        save(); render();
+        alert('インポートしました。');
+      } catch (e) {
+        alert('読み込めませんでした: ' + (e && e.message ? e.message : e));
+      }
     });
 
     // ---- 初期表示 ----

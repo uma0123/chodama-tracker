@@ -3,7 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>パチスロ銀行</title>
+<title>PACHI BANK</title>
+<meta name="theme-color" content="#ffd45c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="PACHI BANK">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
 <style>
   :root {
     --bg: #0b0d12;
@@ -28,7 +36,7 @@
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-text-size-adjust: 100%; }
   body {
     background:
-      radial-gradient(1100px 500px at 50% -100px, rgba(255,212,92,0.07), transparent 60%),
+      radial-gradient(1100px 500px at 50% -100px, rgba(255,212,92,0.08), transparent 60%),
       var(--bg);
     color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Helvetica Neue", sans-serif;
@@ -40,20 +48,16 @@
     min-height: 100vh;
     font-feature-settings: 'tnum' 1;
   }
-  .h1wrap { display: flex; align-items: baseline; gap: 10px; margin-bottom: 2px; }
   h1 {
-    font-size: 22px;
-    letter-spacing: 1.5px;
-    font-weight: 800;
-    background: linear-gradient(180deg, #fff, #b8b8b8);
+    font-size: 30px;
+    font-weight: 900;
+    letter-spacing: 3px;
+    background: linear-gradient(180deg, #ffe798, #c89a30);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
-  }
-  .h1wrap .badge {
-    font-size: 10px; letter-spacing: 0.5px; color: var(--accent-d);
-    border: 1px solid var(--accent-d); padding: 2px 7px; border-radius: 999px;
-    font-weight: 700;
+    text-shadow: 0 0 18px rgba(255,212,92,0.18);
+    margin-bottom: 4px;
   }
   .updated-head { color: var(--sub); font-size: 11px; margin-bottom: 14px; }
 
@@ -70,7 +74,6 @@
     word-break: break-all;
   }
 
-  /* ---- 合計カード ---- */
   .total {
     position: sticky;
     top: 8px;
@@ -114,7 +117,6 @@
   }
   .total .filt.on { display: block; }
 
-  /* ---- ツールバー ---- */
   .toolbar { display: flex; gap: 8px; margin-bottom: 10px; }
   .btn {
     flex: 1;
@@ -139,7 +141,6 @@
   .btn.danger { color: var(--red); }
   .btn:active { opacity: 0.6; transform: scale(0.98); }
 
-  /* ---- フィルタ ---- */
   .filter {
     display: flex; gap: 7px; flex-wrap: wrap; align-items: center;
     margin-bottom: 14px;
@@ -185,7 +186,6 @@
     border-radius: 14px;
   }
 
-  /* ---- 店舗カード ---- */
   .store {
     background: linear-gradient(180deg, var(--card), #14171e);
     border: 1px solid var(--line);
@@ -202,6 +202,12 @@
       0 0 0 1px rgba(255,212,92,0.05),
       0 4px 14px rgba(0,0,0,0.35);
   }
+  .store.fav-on {
+    border-color: #5a4a26;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.04),
+      0 0 0 1px rgba(255,212,92,0.08);
+  }
 
   .row1 { display: flex; align-items: center; gap: 8px; }
   .name { font-weight: 700; font-size: 16px; flex: 1; letter-spacing: 0.2px; }
@@ -214,6 +220,15 @@
     padding: 2px 8px;
     white-space: nowrap;
   }
+  .fav {
+    background: transparent; border: none; cursor: pointer;
+    padding: 2px 4px; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .fav svg { width: 18px; height: 18px; fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-linejoin: round; transition: all 0.15s; }
+  .fav.on svg { fill: var(--accent); stroke: var(--accent); filter: drop-shadow(0 0 4px rgba(255,212,92,0.4)); }
+  .fav:active { opacity: 0.5; }
+
   .del {
     background: transparent; border: none; color: var(--dim);
     font-size: 17px; line-height: 1; cursor: pointer; padding: 2px 4px;
@@ -338,7 +353,6 @@
   details b { color: var(--text); }
   .setbtns { display: flex; flex-direction: column; gap: 8px; }
 
-  /* ---- モーダル ---- */
   .modal-bg {
     display: none;
     position: fixed; inset: 0;
@@ -363,7 +377,7 @@
   }
   .modal h3 { font-size: 16px; margin-bottom: 14px; color: var(--accent); }
   .modal label { display: block; font-size: 11px; color: var(--sub); margin-bottom: 11px; }
-  .modal input {
+  .modal input, .modal select {
     display: block;
     width: 100%;
     margin-top: 4px;
@@ -375,7 +389,17 @@
     padding: 9px 10px;
     font-family: inherit;
   }
-  .modal input:focus { outline: none; border-color: var(--accent); }
+  .modal select {
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, var(--sub) 50%),
+                      linear-gradient(135deg, var(--sub) 50%, transparent 50%);
+    background-position: calc(100% - 16px) 50%, calc(100% - 11px) 50%;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+    padding-right: 28px;
+  }
+  .modal input:focus, .modal select:focus { outline: none; border-color: var(--accent); }
   .modal .sectlabel {
     font-size: 11px; font-weight: 700; margin: 14px 0 6px;
   }
@@ -389,10 +413,7 @@
 </head>
 <body>
 
-<div class="h1wrap">
-  <h1>パチスロ銀行</h1>
-  <span class="badge">PACHI BANK</span>
-</div>
+<h1>PACHI BANK</h1>
 <div class="updated-head" id="today"></div>
 
 <div id="errbox"></div>
@@ -446,17 +467,16 @@
   <summary>確認メモ・使い方</summary>
   <ul>
     <li><b>残高入力</b>：各店のスロット（貯メダル/枚）・パチンコ（貯玉/玉）の欄に当日の数を入力。換金額と合計が自動計算され、この端末のブラウザに自動保存されます。</li>
-    <li><b>フィルタ・並び替え</b>：店舗名検索、法人で絞り込み、並び順の切替、「残高あり」のみ表示が可能。</li>
-    <li><b>レート修正</b>：上部「レート設定を表示」を押すと、各店の貸／交換を編集できます。「↺」で初期値に戻せます（修正済みはオレンジ）。</li>
-    <li><b>店舗の追加</b>：「＋ 店舗を追加」で登録。店舗名・法人名は入力中に候補が表示されます。</li>
-    <li><b>リンク</b>：各店「みんパチ↗」「P-world↗」で詳細ページに飛べます（J-STORYのみP-world掲載なし）。</li>
+    <li><b>お気に入り★</b>：店舗右上の星をタップでお気に入り。お気に入り店舗は常にリスト先頭に固定されます。</li>
+    <li><b>フィルタ・並び替え</b>：店舗名検索、法人で絞り込み、並び順、「残高あり」のみ表示が可能。</li>
+    <li><b>レート修正</b>：上部「レート設定を表示」で各店の貸／交換を編集。「↺」で初期値に戻せます。</li>
+    <li><b>ホーム画面に追加</b>：iPhoneのSafariで「共有 → ホーム画面に追加」でアプリのように起動・オフラインでも動作します。</li>
     <li>初期登録の交換率はみんパチ調査値。マルハン北加賀屋はみんパチに記載なく他マルハン店と同レートで暫定。店頭表示で要確認。</li>
     <li>換金額は理論値。ベラジオは5,000円交換ごとに-100円のギャップあり。</li>
   </ul>
 </details>
 
 <datalist id="storeNames"></datalist>
-<datalist id="corpNames"></datalist>
 
 <div class="modal-bg" id="modalBg">
   <div class="modal">
@@ -464,8 +484,24 @@
     <label>店舗名 <span style="color:#ec6b6a">*</span>
       <input id="f-name" type="text" list="storeNames" placeholder="入力で候補が出ます" autocomplete="off">
     </label>
-    <label>法人・チェーン（任意）
-      <input id="f-corp-in" type="text" list="corpNames" placeholder="例：マルハン" autocomplete="off">
+    <label>法人・チェーン
+      <select id="f-corp-in">
+        <option value="マルハン">マルハン</option>
+        <option value="キコーナ">キコーナ</option>
+        <option value="ベラジオ">ベラジオ</option>
+        <option value="123">123</option>
+        <option value="P-ROOTs">P-ROOTs</option>
+        <option value="SUPER COSMO">SUPER COSMO</option>
+        <option value="ダイナム">ダイナム</option>
+        <option value="ガイア">ガイア</option>
+        <option value="楽園">楽園</option>
+        <option value="ピーアーク">ピーアーク</option>
+        <option value="キング観光">キング観光</option>
+        <option value="エスパス日拓">エスパス日拓</option>
+        <option value="やすだ">やすだ</option>
+        <option value="プレイランドハッピー">プレイランドハッピー</option>
+        <option value="その他" selected>その他</option>
+      </select>
     </label>
     <div class="frow">
       <label>みんパチURL（任意）
@@ -523,6 +559,12 @@
       pachinko: { label:'パチンコ', unit:'玉', cls:'tag-pachi', vcls:'pachic' }
     };
 
+    var MAJOR_CHAINS = [
+      'マルハン','キコーナ','ベラジオ','123','P-ROOTs','SUPER COSMO',
+      'ダイナム','ガイア','楽園','ピーアーク','キング観光',
+      'エスパス日拓','やすだ','プレイランドハッピー','その他'
+    ];
+
     // [id, 正式名称, 法人, みんパチURL, P-world URL,
     //  スロット貸, スロット交換, スロット残高, パチンコ貸, パチンコ交換, メモ]
     var D = [
@@ -532,25 +574,25 @@
       ['kicona-sakai','グランキコーナ堺店','キコーナ','https://minpachi.com/grankicona-2/','https://www.p-world.co.jp/osaka/grankicona.htm',46,47,0,250,255,''],
       ['bellagio-suminoe','ベラジオ住之江店','ベラジオ','https://minpachi.com/bellagio-b-5/','https://www.p-world.co.jp/osaka/bellagio-b-5.htm',46,50,1800,250,250,'スロット専門店（パチンコ取扱なし）。5k交換で-100円のギャップあり'],
       ['bellagio-nishinaka','ベラジオ西中島店','ベラジオ','https://minpachi.com/bellagio-nishinaka/','https://www.p-world.co.jp/osaka/bellagio-nishinaka.htm',46,51.6,0,250,280,'5k交換で-100円のギャップあり'],
-      ['hyper-ms',"HYPER M's","HYPER M's",'https://minpachi.com/as-ms/','https://www.p-world.co.jp/osaka/as-ms.htm',46,51.6,0,250,280,''],
+      ['hyper-ms',"HYPER M's",'その他','https://minpachi.com/as-ms/','https://www.p-world.co.jp/osaka/as-ms.htm',46,51.6,0,250,280,''],
       ['kicona-nishitanabe','キコーナ西田辺店','キコーナ','https://minpachi.com/kicona-nishitanabe/','https://www.p-world.co.jp/osaka/kicona-nishitanabe.htm',46,51.6,0,250,280,'20円スロット専用機は1台のみ・通常非稼働との口コミ'],
       ['tamade123','123玉出店','123','https://minpachi.com/tamade123/','https://www.p-world.co.jp/osaka/tamade123.htm',46,56,472,250,280,'口コミではスロット実際5.1〜5.2との指摘も'],
       ['nagai123','123長居店','123','https://minpachi.com/nagai123/','https://www.p-world.co.jp/osaka/nagai123.htm',46,52,0,250,280,''],
       ['proots-suminoe','P-ROOTs住之江店','P-ROOTs','https://minpachi.com/proots-s/','https://www.p-world.co.jp/osaka/proots-s.htm',46,52,0,250,280,'「46枚貸47枚交換に変更」との口コミ報告あり'],
-      ['kikuya','キクヤ堺本店','キクヤ','https://minpachi.com/kikuyasakaihonten/','https://www.p-world.co.jp/osaka/kikuyasakaihonten.htm',46,51.5,0,250,280,''],
-      ['richwell','リッチウエル本店','リッチウエル','https://minpachi.com/richwell/','https://www.p-world.co.jp/osaka/richwell.htm',46,52,0,250,256,'パチンコは4.38円貸の特殊レート'],
-      ['tennoji-hall','天王寺ホール本館','天王寺ホール','https://minpachi.com/tennoji-hall/','https://www.p-world.co.jp/osaka/tennoji-hall.htm',46,53,0,250,280,'「換金率が大阪一悪い」との口コミあり'],
-      ['super-hall','スーパーホール','スーパーホール','https://minpachi.com/super-hall/','https://www.p-world.co.jp/osaka/super-hall.htm',46,51.5,0,250,280,''],
+      ['kikuya','キクヤ堺本店','その他','https://minpachi.com/kikuyasakaihonten/','https://www.p-world.co.jp/osaka/kikuyasakaihonten.htm',46,51.5,0,250,280,''],
+      ['richwell','リッチウエル本店','その他','https://minpachi.com/richwell/','https://www.p-world.co.jp/osaka/richwell.htm',46,52,0,250,256,'パチンコは4.38円貸の特殊レート'],
+      ['tennoji-hall','天王寺ホール本館','その他','https://minpachi.com/tennoji-hall/','https://www.p-world.co.jp/osaka/tennoji-hall.htm',46,53,0,250,280,'「換金率が大阪一悪い」との口コミあり'],
+      ['super-hall','スーパーホール','その他','https://minpachi.com/super-hall/','https://www.p-world.co.jp/osaka/super-hall.htm',46,51.5,0,250,280,''],
       ['matsubara-123n','123+N松原店','123','https://minpachi.com/123-matsubara/','https://www.p-world.co.jp/osaka/123-matsubara.htm',46,51.6,0,250,280,''],
       ['slot123-matsubara','スロット123松原店','123','https://minpachi.com/slot123matsubara/','https://www.p-world.co.jp/osaka/slot123matsubara.htm',46,52,0,250,250,'スロット専門店（パチンコ取扱なし）'],
       ['cosmo-sakai','SUPER COSMO PREMIUM堺店','SUPER COSMO','https://minpachi.com/s-cosmo-city-acty/','https://www.p-world.co.jp/osaka/s-cosmo-city-acty.htm',46,52,0,250,280,''],
-      ['sigma','シグマ本店','シグマ','https://minpachi.com/siguma/','https://www.p-world.co.jp/osaka/siguma.htm',50,56,450,250,280,'スロットは280枚（=5,000円）単位で交換'],
+      ['sigma','シグマ本店','その他','https://minpachi.com/siguma/','https://www.p-world.co.jp/osaka/siguma.htm',50,56,450,250,280,'スロットは280枚（=5,000円）単位で交換'],
       ['proots-mandore','P-ROOTs MANDORE','P-ROOTs','https://minpachi.com/prootsmandore/','https://www.p-world.co.jp/osaka/prootsmandore.htm',50,56,500,250,280,'スロットは280枚（=5,000円）単位で交換'],
-      ['amuse-minami','アミューズ南住吉','アミューズ','https://minpachi.com/amuse-minami/','https://www.p-world.co.jp/osaka/amuse-minami.htm',50,56,0,250,280,'スロットは280枚（=5,000円）単位で交換'],
-      ['daiichi-suminoe','大いち住之江店','大いち','https://minpachi.com/daiichi-suminoe/','https://www.p-world.co.jp/osaka/daiichi-suminoe.htm',50,60,1070,250,300,''],
-      ['j-story','J-STORY','J-STORY','https://minpachi.com/j-story/','',50,60,0,250,300,'2026/3/31閉店予定の記載 → 現在は閉店の可能性'],
-      ['monroe','Monroe','Monroe','https://minpachi.com/%EF%BD%8Donroe/','https://www.p-world.co.jp/osaka/monroe.htm',46,50,0,250,271,''],
-      ['tenichi','TENICHI西成店','TENICHI','https://minpachi.com/tenichi-nishinari/','https://www.p-world.co.jp/osaka/tenichi-nishinari.htm',46,50,0,250,270,'生野店は別レート']
+      ['amuse-minami','アミューズ南住吉','その他','https://minpachi.com/amuse-minami/','https://www.p-world.co.jp/osaka/amuse-minami.htm',50,56,0,250,280,'スロットは280枚（=5,000円）単位で交換'],
+      ['daiichi-suminoe','大いち住之江店','その他','https://minpachi.com/daiichi-suminoe/','https://www.p-world.co.jp/osaka/daiichi-suminoe.htm',50,60,1070,250,300,''],
+      ['j-story','J-STORY','その他','https://minpachi.com/j-story/','',50,60,0,250,300,'2026/3/31閉店予定の記載 → 現在は閉店の可能性'],
+      ['monroe','Monroe','その他','https://minpachi.com/%EF%BD%8Donroe/','https://www.p-world.co.jp/osaka/monroe.htm',46,50,0,250,271,''],
+      ['tenichi','TENICHI西成店','その他','https://minpachi.com/tenichi-nishinari/','https://www.p-world.co.jp/osaka/tenichi-nishinari.htm',46,50,0,250,270,'生野店は別レート']
     ];
 
     function buildSeed() {
@@ -559,7 +601,7 @@
         var r = D[i];
         stores.push({
           id: r[0], name: r[1], corp: r[2], url: r[3], pworld: r[4],
-          memo: r[10], updated: null,
+          memo: r[10], updated: null, favorite: false,
           slot:     { defLend:r[5], defEx:r[6], lend:r[5], exchange:r[6], balance:r[7] },
           pachinko: { defLend:r[8], defEx:r[9], lend:r[8], exchange:r[9], balance:0 }
         });
@@ -586,7 +628,8 @@
       'スーパーコスモ寝屋川店','スーパーコスモ枚方店','スーパーコスモ高石店','スーパーコスモ富田林店',
       'プレイランドハッピー梅田店','ガイア難波店','ベガスベガス大阪店'
     ];
-    var CORP_SUGGEST = ['マルハン','キコーナ','ベラジオ','123','P-ROOTs','SUPER COSMO','ダイナム','ピーアーク','ガイア','楽園','やすだ','エスパス日拓','キング観光','プレイランドハッピー','HYPER M\'s','キクヤ','リッチウエル','天王寺ホール','スーパーホール','シグマ','アミューズ','大いち','J-STORY','Monroe','TENICHI'];
+
+    var STAR_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6l2.84 6.31 6.86.6-5.2 4.6 1.56 6.79L12 17.34l-6.06 3.56 1.56-6.79-5.2-4.6 6.86-.6L12 2.6z"/></svg>';
 
     function todayStr() {
       var d = new Date();
@@ -619,8 +662,10 @@
               var s = p.stores[i];
               if (!s.slot) s.slot = { defLend:50, defEx:50, lend:50, exchange:50, balance:0 };
               if (!s.pachinko) s.pachinko = { defLend:250, defEx:250, lend:250, exchange:250, balance:0 };
-              if (typeof s.corp !== 'string') s.corp = '';
+              if (typeof s.corp !== 'string') s.corp = 'その他';
+              if (MAJOR_CHAINS.indexOf(s.corp) === -1) s.corp = 'その他';
               if (typeof s.pworld !== 'string') s.pworld = '';
+              if (typeof s.favorite !== 'boolean') s.favorite = false;
             }
             if (!p.filter) p.filter = { corp:'all', sort:'default', onlyBalance:false, search:'' };
             return p;
@@ -635,7 +680,6 @@
 
     var store = load();
 
-    // ---- 表示用フィルタ・ソート ----
     function getVisible() {
       var arr = store.stores.slice();
       var f = store.filter;
@@ -655,7 +699,10 @@
       if (f.sort === 'value-desc') arr.sort(function (a, b) { return storeValue(b) - storeValue(a); });
       else if (f.sort === 'value-asc') arr.sort(function (a, b) { return storeValue(a) - storeValue(b); });
       else if (f.sort === 'name') arr.sort(function (a, b) { return a.name.localeCompare(b.name, 'ja'); });
-      return arr;
+      // お気に入りを先頭に固定
+      var favs = [], rest = [];
+      for (var i = 0; i < arr.length; i++) (arr[i].favorite ? favs : rest).push(arr[i]);
+      return favs.concat(rest);
     }
 
     function refreshKind(card, s, kind) {
@@ -674,7 +721,10 @@
       var pv = refreshKind(card, s, 'pachinko');
       card.querySelector('.cardfoot b').textContent = yen(sv + pv);
       card.querySelector('.cardfoot .upd').textContent = s.updated ? '更新 ' + s.updated : '';
-      card.className = (s.slot.balance > 0 || s.pachinko.balance > 0) ? 'store has-balance' : 'store';
+      var cls = 'store';
+      if (s.slot.balance > 0 || s.pachinko.balance > 0) cls += ' has-balance';
+      if (s.favorite) cls += ' fav-on';
+      card.className = cls;
     }
 
     function refreshTotal() {
@@ -692,7 +742,6 @@
       document.getElementById('balCount').textContent = count;
       document.getElementById('storeCount').textContent = store.stores.length;
 
-      // フィルタ適用時のサブ合計
       var filt = document.getElementById('filtNote');
       var f = store.filter;
       var filterActive = (f.corp !== 'all') || f.search || f.onlyBalance;
@@ -757,7 +806,6 @@
 
     function renderCard(s, list) {
       var card = document.createElement('div');
-      card.className = 'store';
       card.setAttribute('data-id', s.id);
       var linksHtml = '';
       if (s.url) linksHtml += '<a href="' + esc(s.url) + '" target="_blank" rel="noopener">みんパチ↗</a>';
@@ -766,6 +814,7 @@
         '<div class="row1">' +
           '<span class="name">' + esc(s.name) + '</span>' +
           (s.corp ? '<span class="chain">' + esc(s.corp) + '</span>' : '') +
+          '<button class="fav' + (s.favorite ? ' on' : '') + '" title="お気に入り">' + STAR_SVG + '</button>' +
           '<button class="del" title="この店舗を削除">✕</button>' +
         '</div>' +
         (linksHtml ? '<div class="links">' + linksHtml + '</div>' : '') +
@@ -778,6 +827,11 @@
       bindKind(card, s, 'slot');
       bindKind(card, s, 'pachinko');
 
+      card.querySelector('.fav').addEventListener('click', function () {
+        s.favorite = !s.favorite;
+        save();
+        render();
+      });
       card.querySelector('.del').addEventListener('click', function () {
         if (!confirm('「' + s.name + '」を削除します。よろしいですか？')) return;
         var arr = [];
@@ -819,7 +873,12 @@
         var c = store.stores[i].corp || 'その他';
         if (corps.indexOf(c) === -1) corps.push(c);
       }
-      corps.sort(function (a, b) { return a.localeCompare(b, 'ja'); });
+      corps.sort(function (a, b) {
+        // その他は末尾に
+        if (a === 'その他') return 1;
+        if (b === 'その他') return -1;
+        return a.localeCompare(b, 'ja');
+      });
       var current = store.filter.corp || 'all';
       var html = '<option value="all">法人: すべて</option>';
       for (var j = 0; j < corps.length; j++) {
@@ -832,17 +891,13 @@
       }
     }
 
-    // ---- データリスト ----
     (function () {
       var dl1 = document.getElementById('storeNames');
-      var dl2 = document.getElementById('corpNames');
-      var h1 = '', h2 = '';
-      for (var i = 0; i < NAME_SUGGEST.length; i++) h1 += '<option value="' + esc(NAME_SUGGEST[i]) + '">';
-      for (var j = 0; j < CORP_SUGGEST.length; j++) h2 += '<option value="' + esc(CORP_SUGGEST[j]) + '">';
-      dl1.innerHTML = h1; dl2.innerHTML = h2;
+      var h = '';
+      for (var i = 0; i < NAME_SUGGEST.length; i++) h += '<option value="' + esc(NAME_SUGGEST[i]) + '">';
+      dl1.innerHTML = h;
     })();
 
-    // ---- レート表示トグル ----
     var ratesOn = false;
     document.getElementById('toggleRates').addEventListener('click', function () {
       ratesOn = !ratesOn;
@@ -851,7 +906,6 @@
       this.className = ratesOn ? 'btn on' : 'btn';
     });
 
-    // ---- フィルタイベント ----
     document.getElementById('f-search').value = store.filter.search || '';
     document.getElementById('f-sort').value = store.filter.sort || 'default';
     document.getElementById('f-onlybal').checked = !!store.filter.onlyBalance;
@@ -880,12 +934,12 @@
       save(); render();
     });
 
-    // ---- モーダル ----
     var modalBg = document.getElementById('modalBg');
     function openModal() {
-      ['f-name','f-corp-in','f-url','f-pworld','f-memo'].forEach(function (id) {
+      ['f-name','f-url','f-pworld','f-memo'].forEach(function (id) {
         document.getElementById(id).value = '';
       });
+      document.getElementById('f-corp-in').value = 'その他';
       document.getElementById('f-slot-lend').value = '50';
       document.getElementById('f-slot-ex').value = '50';
       document.getElementById('f-pachi-lend').value = '250';
@@ -901,7 +955,7 @@
     document.getElementById('f-add').addEventListener('click', function () {
       var get = function (id) { return document.getElementById(id).value.replace(/^\s+|\s+$/g, ''); };
       var name = get('f-name');
-      var corp = get('f-corp-in');
+      var corp = document.getElementById('f-corp-in').value || 'その他';
       var url = get('f-url');
       var pworld = get('f-pworld');
       var memo = get('f-memo');
@@ -914,14 +968,14 @@
       if (!pl || !pe) { alert('パチンコの貸・交換率を入力してください'); return; }
       store.stores.push({
         id: 'custom-' + Date.now(),
-        name: name, corp: corp, url: url, pworld: pworld, memo: memo, updated: null,
+        name: name, corp: corp, url: url, pworld: pworld, memo: memo,
+        updated: null, favorite: false,
         slot:     { defLend:sl, defEx:se, lend:sl, exchange:se, balance:0 },
         pachinko: { defLend:pl, defEx:pe, lend:pl, exchange:pe, balance:0 }
       });
       save(); closeModal(); render();
     });
 
-    // ---- 一括操作 ----
     document.getElementById('resetRates').addEventListener('click', function () {
       if (!confirm('全店のレートを初期値に戻します。残高の入力は消えません。よろしいですか？')) return;
       for (var i = 0; i < store.stores.length; i++) {
@@ -978,7 +1032,6 @@
       }
     });
 
-    // ---- 初期表示 ----
     try { document.getElementById('today').textContent = '本日: ' + todayStr(); } catch (e) {}
     render();
 
@@ -986,6 +1039,13 @@
     showError((e && e.message) ? e.message : String(e));
   }
 })();
+
+// Service Worker 登録
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () { /* 失敗しても無視 */ });
+  });
+}
 </script>
 </body>
 </html>

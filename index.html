@@ -9,6 +9,7 @@
     --bg: #0f1115;
     --card: #1a1d24;
     --card2: #21252e;
+    --inset: #11141a;
     --line: #2e333d;
     --text: #e8eaed;
     --sub: #9aa0aa;
@@ -16,6 +17,8 @@
     --amber: #e0a93b;
     --blue: #6fb3ff;
     --red: #e9605f;
+    --slot: #5fc6d8;
+    --pachi: #e58aa6;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-text-size-adjust: 100%; }
   body {
@@ -23,12 +26,12 @@
     color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Helvetica Neue", sans-serif;
     line-height: 1.5;
-    padding: 14px 12px 60px;
+    padding: 16px 12px 60px;
     max-width: 720px;
     margin: 0 auto;
     font-size: 15px;
   }
-  h1 { font-size: 19px; margin-bottom: 2px; }
+  h1 { font-size: 20px; margin-bottom: 2px; letter-spacing: 0.5px; }
   .updated-head { color: var(--sub); font-size: 12px; margin-bottom: 14px; }
 
   #errbox {
@@ -45,85 +48,92 @@
   }
 
   .total {
-    background: linear-gradient(135deg, #2a2410, #1a1d24);
+    background: linear-gradient(135deg, #2e2812, #1a1d24);
     border: 1px solid var(--accent);
-    border-radius: 14px;
-    padding: 14px;
+    border-radius: 16px;
+    padding: 16px;
     text-align: center;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
     position: sticky;
     top: 0;
     z-index: 10;
-    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
   }
   .total .label { color: var(--sub); font-size: 12px; }
-  .total .amount { color: var(--accent); font-size: 30px; font-weight: 700; }
-  .total .note { color: var(--sub); font-size: 11px; margin-top: 2px; }
+  .total .amount { color: var(--accent); font-size: 34px; font-weight: 700; line-height: 1.2; }
+  .total .note { color: var(--sub); font-size: 11px; margin-top: 3px; }
 
-  .toolbar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .toolbar { display: flex; gap: 8px; margin-bottom: 14px; }
   .btn {
     flex: 1;
-    min-width: 110px;
     background: var(--card2);
     color: var(--text);
     border: 1px solid var(--line);
-    border-radius: 10px;
-    padding: 9px 8px;
-    font-size: 12px;
+    border-radius: 11px;
+    padding: 11px 8px;
+    font-size: 13px;
     cursor: pointer;
     font-family: inherit;
   }
-  .btn.primary { background: #3a3416; border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  .btn.primary { background: #3a3416; border-color: var(--accent); color: var(--accent); font-weight: 700; }
+  .btn.on { background: #16303a; border-color: var(--slot); color: var(--slot); }
   .btn.danger { color: var(--red); }
   .btn:active { opacity: 0.6; }
-
-  h2 {
-    font-size: 13px;
-    color: var(--accent);
-    margin: 20px 0 8px;
-    padding-left: 8px;
-    border-left: 3px solid var(--accent);
-  }
-  h2 .gsum { color: var(--sub); font-weight: 400; font-size: 11px; margin-left: 8px; }
 
   .empty {
     color: var(--sub);
     text-align: center;
-    padding: 30px 12px;
+    padding: 34px 14px;
     font-size: 13px;
     border: 1px dashed var(--line);
     border-radius: 12px;
   }
 
+  /* ---- 店舗カード ---- */
   .store {
     background: var(--card);
     border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 11px 13px;
-    margin-bottom: 8px;
+    border-radius: 14px;
+    padding: 12px 12px 10px;
+    margin-bottom: 10px;
   }
-  .store.has-balance { background: var(--card2); border-color: #3a4150; }
+  .store.has-balance { border-color: #4a4326; }
 
-  .row1 { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
-  .name { font-weight: 600; font-size: 15px; flex: 1; }
-  .mp { color: var(--blue); text-decoration: none; font-size: 12px; white-space: nowrap; }
+  .row1 { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .name { font-weight: 700; font-size: 16px; flex: 1; }
+  .mp {
+    color: var(--blue); text-decoration: none; font-size: 11px;
+    border: 1px solid #33414f; border-radius: 999px; padding: 3px 9px; white-space: nowrap;
+  }
   .mp:active { opacity: 0.5; }
   .del {
-    background: transparent; border: none; color: #6a7080;
-    font-size: 16px; line-height: 1; cursor: pointer; padding: 0 2px;
+    background: transparent; border: none; color: #5a606c;
+    font-size: 17px; line-height: 1; cursor: pointer; padding: 2px 4px;
   }
   .del:active { color: var(--red); }
 
-  .inputrow { display: flex; align-items: center; gap: 8px; margin-top: 9px; }
-  .inputrow label { font-size: 12px; color: var(--sub); }
+  .seg {
+    background: var(--card2);
+    border-radius: 10px;
+    padding: 9px 10px;
+    margin-bottom: 6px;
+  }
+  .segmain { display: flex; align-items: center; gap: 8px; }
+  .tag {
+    font-size: 11px; font-weight: 700;
+    padding: 3px 9px; border-radius: 999px; white-space: nowrap;
+  }
+  .tag-slot { background: rgba(95,198,216,0.16); color: var(--slot); }
+  .tag-pachi { background: rgba(229,138,166,0.16); color: var(--pachi); }
   input.bal {
-    width: 96px;
-    background: #11141a;
+    width: 100px;
+    background: var(--inset);
     border: 1px solid #3a4150;
     border-radius: 8px;
     color: var(--text);
-    font-size: 18px;
-    font-weight: 600;
+    font-size: 19px;
+    font-weight: 700;
     padding: 7px 9px;
     text-align: right;
     font-family: inherit;
@@ -132,18 +142,28 @@
   .unit { font-size: 12px; color: var(--sub); }
   .value {
     margin-left: auto;
-    font-size: 17px;
+    font-size: 16px;
     font-weight: 700;
-    color: var(--accent);
     white-space: nowrap;
   }
-  .value.zero { color: var(--sub); font-weight: 400; }
+  .value.slotc { color: var(--slot); }
+  .value.pachic { color: var(--pachi); }
+  .value.z { color: var(--sub); font-weight: 400; }
 
-  .raterow { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+  .raterow {
+    display: none;
+    align-items: center;
+    gap: 7px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--line);
+    flex-wrap: wrap;
+  }
+  body.rates-on .raterow { display: flex; }
   .raterow .lbl { font-size: 11px; color: var(--sub); }
   input.rate {
-    width: 56px;
-    background: #11141a;
+    width: 58px;
+    background: var(--inset);
     border: 1px solid #3a4150;
     border-radius: 7px;
     color: var(--text);
@@ -159,7 +179,7 @@
     color: var(--sub);
     border-radius: 999px;
     font-size: 10px;
-    padding: 3px 9px;
+    padding: 4px 9px;
     cursor: pointer;
     font-family: inherit;
     white-space: nowrap;
@@ -167,26 +187,35 @@
   .reset.edited { border-color: var(--amber); color: var(--amber); }
   .reset:active { opacity: 0.6; }
 
-  .memo { color: var(--sub); font-size: 11px; margin-top: 6px; }
-  .updated { color: #6a7080; font-size: 10px; margin-top: 4px; }
+  .cardfoot {
+    display: flex; align-items: baseline; gap: 8px;
+    margin-top: 8px; padding: 0 2px;
+    font-size: 12px; color: var(--sub);
+  }
+  .cardfoot b { color: var(--accent); font-size: 15px; }
+  .cardfoot .upd { margin-left: auto; font-size: 10px; color: #5a606c; }
+  .memo { color: var(--sub); font-size: 11px; margin: 2px 2px 0; }
 
-  .notes {
+  details {
     background: var(--card);
     border: 1px solid var(--line);
     border-radius: 12px;
-    padding: 13px;
-    margin-top: 22px;
+    padding: 12px 14px;
+    margin-top: 14px;
     font-size: 12px;
   }
-  .notes summary { color: var(--accent); font-size: 13px; cursor: pointer; font-weight: 600; }
-  .notes ul { padding-left: 18px; margin-top: 8px; }
-  .notes li { margin-bottom: 6px; color: var(--sub); }
-  .notes b { color: var(--text); }
+  details summary { color: var(--accent); font-size: 13px; cursor: pointer; font-weight: 600; }
+  details[open] summary { margin-bottom: 10px; }
+  details ul { padding-left: 18px; }
+  details li { margin-bottom: 6px; color: var(--sub); }
+  details b { color: var(--text); }
+  .setbtns { display: flex; flex-direction: column; gap: 8px; }
 
+  /* ---- モーダル ---- */
   .modal-bg {
     display: none;
     position: fixed; inset: 0;
-    background: rgba(0,0,0,0.7);
+    background: rgba(0,0,0,0.72);
     z-index: 100;
     align-items: center; justify-content: center;
     padding: 16px;
@@ -195,29 +224,37 @@
   .modal {
     background: var(--card);
     border: 1px solid var(--line);
-    border-radius: 14px;
+    border-radius: 16px;
     padding: 18px;
     width: 100%;
-    max-width: 380px;
+    max-width: 400px;
+    max-height: 90vh;
+    overflow-y: auto;
   }
-  .modal h3 { font-size: 15px; margin-bottom: 12px; color: var(--accent); }
-  .modal label { display: block; font-size: 11px; color: var(--sub); margin-bottom: 10px; }
-  .modal input, .modal select {
+  .modal h3 { font-size: 16px; margin-bottom: 14px; color: var(--accent); }
+  .modal label { display: block; font-size: 11px; color: var(--sub); margin-bottom: 11px; }
+  .modal input {
     display: block;
     width: 100%;
-    margin-top: 3px;
-    background: #11141a;
+    margin-top: 4px;
+    background: var(--inset);
     border: 1px solid #3a4150;
     border-radius: 8px;
     color: var(--text);
     font-size: 15px;
-    padding: 8px 9px;
+    padding: 9px 10px;
     font-family: inherit;
   }
-  .modal input:focus, .modal select:focus { outline: none; border-color: var(--accent); }
+  .modal input:focus { outline: none; border-color: var(--accent); }
+  .modal .sectlabel {
+    font-size: 11px; font-weight: 700; margin: 14px 0 6px;
+  }
+  .modal .sectlabel.s { color: var(--slot); }
+  .modal .sectlabel.p { color: var(--pachi); }
   .frow { display: flex; gap: 10px; }
   .frow label { flex: 1; }
-  .modal .btn { margin-top: 4px; }
+  .modal .btnrow { display: flex; gap: 8px; margin-top: 16px; }
+  .modal .btn { margin-top: 0; }
 </style>
 </head>
 <body>
@@ -235,54 +272,68 @@
 
 <div class="toolbar">
   <button class="btn primary" id="addStore">＋ 店舗を追加</button>
-  <button class="btn" id="resetRates">レートを初期値に戻す</button>
-  <button class="btn" id="clearBalances">全店の残高を0にする</button>
-  <button class="btn danger" id="deleteAll">全店舗を削除</button>
-  <button class="btn" id="restoreDefault">初期25店舗を再読込</button>
+  <button class="btn" id="toggleRates">レート設定を表示</button>
 </div>
 
 <div id="list"></div>
 
+<details class="settings">
+  <summary>設定・一括操作</summary>
+  <div class="setbtns">
+    <button class="btn" id="resetRates">全店のレートを初期値に戻す</button>
+    <button class="btn" id="clearBalances">全店の残高を0にする</button>
+    <button class="btn danger" id="deleteAll">全店舗を削除（空にする）</button>
+    <button class="btn" id="restoreDefault">初期25店舗を再読込</button>
+  </div>
+</details>
+
 <details class="notes">
   <summary>確認メモ・使い方</summary>
   <ul>
-    <li><b>残高の入力</b>：各店の入力欄に当日の貯メダル（スロット）／貯玉（パチンコ）の枚数・玉数を入力すると、換金額と合計が自動計算されます。入力内容はこの端末のブラウザに自動保存されます。</li>
-    <li><b>レート修正</b>：貸／交換の数字は直接書き換えできます。「↺ 初期」ボタンで登録時の初期値に戻せます（修正済みはオレンジ表示）。</li>
-    <li><b>店舗の追加・削除</b>：上部「＋ 店舗を追加」で新しい店を登録（スロット／パチンコを選択）、各カード右上の「✕」で削除。「全店舗を削除」で空に、「初期25店舗を再読込」で最初の25店舗（スロット）に戻せます。</li>
-    <li>初期登録の交換率はみんパチ調査値。記録と不一致だった店：ベラジオ住之江（記録52／みんパチ50）、123玉出（記録52／みんパチ56）、天王寺ホール（記録52／みんパチ53）。店頭表示で要確認。</li>
+    <li><b>残高の入力</b>：各店のスロット（貯メダル／枚）・パチンコ（貯玉／玉）の欄に当日の数を入力すると、換金額と合計が自動計算されます。未記入は0として扱います。入力内容はこの端末のブラウザに自動保存されます。</li>
+    <li><b>レート修正</b>：上部「レート設定を表示」を押すと、各店の貸／交換を編集できます。「↺」で初期値に戻せます（修正済みはオレンジ）。</li>
+    <li><b>店舗の追加</b>：「＋ 店舗を追加」で登録。店舗名は入力中に候補が表示されます。</li>
+    <li><b>リンク</b>：各店「店舗情報↗」はみんパチの店舗ページに飛びます（公式サイトが無いため）。</li>
+    <li>初期登録の交換率はみんパチ調査値（スロット20円・パチンコ4円）。マルハン北加賀屋はみんパチに記載が無く他マルハン店と同レートで暫定設定。店頭表示で要確認。</li>
     <li>換金額は理論値。ベラジオは5,000円交換ごとに-100円のギャップあり。再プレイ利用なら貸しレート相当でこれより有利。</li>
   </ul>
 </details>
+
+<datalist id="storeNames"></datalist>
 
 <div class="modal-bg" id="modalBg">
   <div class="modal">
     <h3>店舗を追加</h3>
     <label>店舗名 <span style="color:#e9605f">*</span>
-      <input id="f-name" type="text" placeholder="例：マルハン〇〇店">
+      <input id="f-name" type="text" list="storeNames" placeholder="入力すると候補が出ます" autocomplete="off">
     </label>
-    <label>種別
-      <select id="f-type">
-        <option value="slot">スロット（メダル）</option>
-        <option value="pachinko">パチンコ（玉）</option>
-      </select>
-    </label>
-    <div class="frow">
-      <label>貸 <span style="color:#e9605f">*</span>
-        <input id="f-lend" type="number" inputmode="decimal" value="50">
-      </label>
-      <label>交換率 <span style="color:#e9605f">*</span>
-        <input id="f-ex" type="number" inputmode="decimal" placeholder="例：56">
-      </label>
-    </div>
-    <label>みんパチ等のURL（任意）
+    <label>店舗ページのURL（任意）
       <input id="f-url" type="text" placeholder="https://...">
     </label>
-    <label>メモ（任意）
+    <div class="sectlabel s">スロット（20円・メダル）</div>
+    <div class="frow">
+      <label>貸 <span style="color:#e9605f">*</span>
+        <input id="f-slot-lend" type="number" inputmode="decimal" value="50">
+      </label>
+      <label>交換率 <span style="color:#e9605f">*</span>
+        <input id="f-slot-ex" type="number" inputmode="decimal" value="50">
+      </label>
+    </div>
+    <div class="sectlabel p">パチンコ（4円・玉）</div>
+    <div class="frow">
+      <label>貸 <span style="color:#e9605f">*</span>
+        <input id="f-pachi-lend" type="number" inputmode="decimal" value="250">
+      </label>
+      <label>交換率 <span style="color:#e9605f">*</span>
+        <input id="f-pachi-ex" type="number" inputmode="decimal" value="250">
+      </label>
+    </div>
+    <label style="margin-top:14px">メモ（任意）
       <input id="f-memo" type="text">
     </label>
-    <div class="frow">
+    <div class="btnrow">
       <button class="btn" id="f-cancel">キャンセル</button>
-      <button class="btn primary" id="f-add">追加</button>
+      <button class="btn primary" id="f-add">追加する</button>
     </div>
   </div>
 </div>
@@ -300,43 +351,71 @@
   }
 
   try {
-    var STORE_KEY = 'chodama_v2';
+    var STORE_KEY = 'chodama_v3';
 
-    var DEFAULT_STORES = [
-      { id:'maruhan-oriono', name:'マルハン遠里小野', type:'slot', url:'https://minpachi.com/maruhan-oriono/', defLend:46, defEx:47, balance:0, memo:'' },
-      { id:'maruhan-kitakagaya', name:'マルハン北加賀屋', type:'slot', url:'', defLend:46, defEx:47, balance:0, memo:'みんパチに数値記載なし（暫定で47交換に設定）' },
-      { id:'maruhan-shinsekai', name:'マルハン新世界', type:'slot', url:'https://minpachi.com/maruhan-shinsekai/', defLend:46, defEx:47, balance:174, memo:'⇧pw → 3830' },
-      { id:'kicona-sakai', name:'キコーナ堺', type:'slot', url:'https://minpachi.com/grankicona-2/', defLend:46, defEx:47, balance:0, memo:'グランキコーナ堺店として確認' },
+    var KIND = {
+      slot:     { label:'スロット', unit:'枚', cls:'tag-slot',  vcls:'slotc' },
+      pachinko: { label:'パチンコ', unit:'玉', cls:'tag-pachi', vcls:'pachic' }
+    };
 
-      { id:'bellagio-suminoe', name:'ベラジオ住之江', type:'slot', url:'https://minpachi.com/bellagio-b-5/', defLend:46, defEx:50, balance:1800, memo:'記録は52交換／みんパチ50交換。5k交換で-100円のギャップあり' },
-      { id:'bellagio-nishinaka', name:'ベラジオ西中島', type:'slot', url:'https://minpachi.com/bellagio-nishinaka/', defLend:46, defEx:51.6, balance:0, memo:'5k交換で-100円のギャップあり' },
-      { id:'hyper-ms', name:'ハイパーエムズ', type:'slot', url:'https://minpachi.com/as-ms/', defLend:46, defEx:51.6, balance:0, memo:'' },
-      { id:'kicona-nishitanabe', name:'キコーナ西田辺', type:'slot', url:'https://minpachi.com/kicona-nishitanabe/', defLend:46, defEx:51.6, balance:0, memo:'20円専用機1台のみ・通常非稼働との口コミ' },
-      { id:'tamade123', name:'123玉出', type:'slot', url:'https://minpachi.com/tamade123/', defLend:46, defEx:56, balance:472, memo:'記録は52交換／みんパチ56交換。口コミでは実際5.1〜5.2との指摘も' },
-      { id:'nagai123', name:'123長居', type:'slot', url:'https://minpachi.com/nagai123/', defLend:46, defEx:52, balance:0, memo:'' },
-      { id:'proots-suminoe', name:'p-root 住之江', type:'slot', url:'https://minpachi.com/proots-s/', defLend:46, defEx:52, balance:null, memo:'残高が未記入' },
-      { id:'kikuya', name:'キクヤ', type:'slot', url:'https://minpachi.com/kikuyasakaihonten/', defLend:46, defEx:51.5, balance:0, memo:'キクヤ堺本店として確認' },
-      { id:'richwell', name:'リッチウェル', type:'slot', url:'https://minpachi.com/richwell/', defLend:46, defEx:52, balance:0, memo:'リッチウエル本店（住之江区）として確認' },
-      { id:'tennoji-hall', name:'天王寺ホール', type:'slot', url:'https://minpachi.com/tennoji-hall/', defLend:46, defEx:53, balance:0, memo:'記録は52交換／みんパチ53交換。「換金率が大阪一悪い」との口コミあり' },
-      { id:'super-hall', name:'スーパーホール', type:'slot', url:'https://minpachi.com/super-hall/', defLend:46, defEx:51.5, balance:0, memo:'' },
-      { id:'matsubara-123n', name:'123N松原', type:'slot', url:'https://minpachi.com/123-matsubara/', defLend:46, defEx:51.6, balance:0, memo:'' },
-      { id:'slot123-matsubara', name:'スロット123松原', type:'slot', url:'https://minpachi.com/slot123matsubara/', defLend:46, defEx:52, balance:0, memo:'2019年に123+N松原店へ改名済み・123N松原と実質同一の可能性' },
-      { id:'cosmo-sakai', name:'スーパーコスモプレミアム堺', type:'slot', url:'https://minpachi.com/s-cosmo-city-acty/', defLend:46, defEx:52, balance:0, memo:'' },
-
-      { id:'sigma', name:'シグマ本店', type:'slot', url:'https://minpachi.com/siguma/', defLend:50, defEx:56, balance:450, memo:'280枚（=5,000円）単位で交換' },
-      { id:'proots-mandore', name:'p-root MANDORE', type:'slot', url:'https://minpachi.com/prootsmandore/', defLend:50, defEx:56, balance:500, memo:'280枚（=5,000円）単位で交換' },
-      { id:'amuse-minami', name:'アミューズ南住吉', type:'slot', url:'https://minpachi.com/amuse-minami/', defLend:50, defEx:56, balance:0, memo:'280枚（=5,000円）単位で交換' },
-
-      { id:'daiichi-suminoe', name:'ダイチ', type:'slot', url:'https://minpachi.com/daiichi-suminoe/', defLend:50, defEx:60, balance:1070, memo:'大いち住之江店として確認' },
-      { id:'j-story', name:'J story', type:'slot', url:'https://minpachi.com/j-story/', defLend:50, defEx:60, balance:0, memo:'2026/3/31閉店予定の記載 → 現在は閉店の可能性' },
-
-      { id:'monroe', name:'モンロー', type:'slot', url:'https://minpachi.com/monroe/', defLend:46, defEx:50, balance:null, memo:'残高が未記入' },
-      { id:'tenichi', name:'テンイチ', type:'slot', url:'https://minpachi.com/tenichi-nishinari/', defLend:46, defEx:50, balance:0, memo:'TENICHI西成店として確認（生野店は5.2枚で別レート）' }
+    // [id, 正式名称, URL, スロット貸, スロット交換, スロット残高, パチンコ貸, パチンコ交換, メモ]
+    var D = [
+      ['maruhan-oriono','マルハン堺遠里小野店','https://minpachi.com/maruhan-oriono/',46,47,0,250,255,0,''],
+      ['maruhan-kitakagaya','マルハン北加賀屋店','https://minpachi.com/%E3%83%9E%E3%83%AB%E3%83%8F%E3%83%B3%E5%8C%97%E5%8A%A0%E8%B3%80%E5%B1%8B%E5%BA%97/',46,47,0,250,255,0,'みんパチに交換率の記載なし。他マルハン店と同レートで暫定設定'],
+      ['maruhan-shinsekai','マルハン新世界店','https://minpachi.com/maruhan-shinsekai/',46,47,174,250,255,0,'⇧pw → 3830'],
+      ['kicona-sakai','グランキコーナ堺店','https://minpachi.com/grankicona-2/',46,47,0,250,255,0,''],
+      ['bellagio-suminoe','ベラジオ住之江店','https://minpachi.com/bellagio-b-5/',46,50,1800,250,250,0,'スロット専門店（パチンコ取扱なし）。5k交換で-100円のギャップあり'],
+      ['bellagio-nishinaka','ベラジオ西中島店','https://minpachi.com/bellagio-nishinaka/',46,51.6,0,250,280,0,'5k交換で-100円のギャップあり'],
+      ['hyper-ms',"HYPER M's",'https://minpachi.com/as-ms/',46,51.6,0,250,280,0,''],
+      ['kicona-nishitanabe','キコーナ西田辺店','https://minpachi.com/kicona-nishitanabe/',46,51.6,0,250,280,0,'20円スロット専用機は1台のみ・通常非稼働との口コミ'],
+      ['tamade123','123玉出店','https://minpachi.com/tamade123/',46,56,472,250,280,0,'口コミではスロット実際5.1〜5.2との指摘も'],
+      ['nagai123','123長居店','https://minpachi.com/nagai123/',46,52,0,250,280,0,''],
+      ['proots-suminoe','P-ROOTs住之江店','https://minpachi.com/proots-s/',46,52,0,250,280,0,'「46枚貸47枚交換に変更」との口コミ報告あり'],
+      ['kikuya','キクヤ堺本店','https://minpachi.com/kikuyasakaihonten/',46,51.5,0,250,280,0,''],
+      ['richwell','リッチウエル本店','https://minpachi.com/richwell/',46,52,0,250,256,0,'パチンコは4.38円貸の特殊レート'],
+      ['tennoji-hall','天王寺ホール本館','https://minpachi.com/tennoji-hall/',46,53,0,250,280,0,'「換金率が大阪一悪い」との口コミあり'],
+      ['super-hall','スーパーホール','https://minpachi.com/super-hall/',46,51.5,0,250,280,0,''],
+      ['matsubara-123n','123+N松原店','https://minpachi.com/123-matsubara/',46,51.6,0,250,280,0,''],
+      ['slot123-matsubara','スロット123松原店','https://minpachi.com/slot123matsubara/',46,52,0,250,250,0,'スロット専門店（パチンコ取扱なし）'],
+      ['cosmo-sakai','SUPER COSMO PREMIUM堺店','https://minpachi.com/s-cosmo-city-acty/',46,52,0,250,280,0,''],
+      ['sigma','シグマ本店','https://minpachi.com/siguma/',50,56,450,250,280,0,'スロットは280枚（=5,000円）単位で交換'],
+      ['proots-mandore','P-ROOTs MANDORE','https://minpachi.com/prootsmandore/',50,56,500,250,280,0,'スロットは280枚（=5,000円）単位で交換'],
+      ['amuse-minami','アミューズ南住吉','https://minpachi.com/amuse-minami/',50,56,0,250,280,0,'スロットは280枚（=5,000円）単位で交換'],
+      ['daiichi-suminoe','大いち住之江店','https://minpachi.com/daiichi-suminoe/',50,60,1070,250,300,0,''],
+      ['j-story','J-STORY','https://minpachi.com/j-story/',50,60,0,250,300,0,'2026/3/31閉店予定の記載 → 現在は閉店の可能性'],
+      ['monroe','Monroe','https://minpachi.com/monroe/',46,50,0,250,271,0,''],
+      ['tenichi','TENICHI西成店','https://minpachi.com/tenichi-nishinari/',46,50,0,250,270,0,'生野店は別レート']
     ];
 
-    var TYPES = [
-      { key:'slot', label:'スロット', unit:'枚', balLabel:'貯メダル' },
-      { key:'pachinko', label:'パチンコ', unit:'玉', balLabel:'貯玉' }
+    function buildSeed() {
+      var stores = [];
+      for (var i = 0; i < D.length; i++) {
+        var r = D[i];
+        stores.push({
+          id: r[0], name: r[1], url: r[2], memo: r[8], updated: null,
+          slot:     { defLend:r[3], defEx:r[4], lend:r[3], exchange:r[4], balance:r[5] },
+          pachinko: { defLend:r[6], defEx:r[7], lend:r[6], exchange:r[7], balance:0 }
+        });
+      }
+      return { stores: stores };
+    }
+
+    // オートコンプリート用 店舗名候補
+    var NAME_SUGGEST = [
+      'マルハン堺遠里小野店','マルハン北加賀屋店','マルハン新世界店','グランキコーナ堺店','ベラジオ住之江店',
+      'ベラジオ西中島店',"HYPER M's",'キコーナ西田辺店','123玉出店','123長居店','P-ROOTs住之江店',
+      'キクヤ堺本店','リッチウエル本店','天王寺ホール本館','スーパーホール','123+N松原店','スロット123松原店',
+      'SUPER COSMO PREMIUM堺店','シグマ本店','P-ROOTs MANDORE','アミューズ南住吉','大いち住之江店','J-STORY',
+      'Monroe','TENICHI西成店',
+      'マルハン日本橋店','マルハン梅田店','マルハン難波本店','マルハン都島店','マルハン東大阪店','マルハン泉佐野店',
+      'マルハン茨木店','マルハン高槻店','マルハン布施駅前店','キコーナ梅田店','キコーナ難波店','キコーナ十三店',
+      'キコーナ大正店','キコーナ住道店','キコーナ寝屋川店','キコーナ吹田店','キコーナ堺市駅前店','グランキコーナ大阪本店',
+      'グランキコーナ吹田店','グランキコーナ岸和田店','グランキコーナ茨木店','ベラジオ十三店','ベラジオ千日前店',
+      'ベラジオ平野店','ベラジオ堺中央店','ベラジオ岸和田店','123+N大阪本店','123+N梅田店','123+N布施店',
+      '123なんば店','123平野店','123堺東店','ピーアークなんば店','ダイナム大阪松原店','ダイナム大阪泉佐野店',
+      '楽園大阪店','エスパス日拓なんば店','やすだ日本橋店','やすだ千日前店','キング観光なんば店','KING OF KINGS梅田店',
+      'スーパーコスモ寝屋川店','スーパーコスモ枚方店','スーパーコスモ高石店','スーパーコスモ富田林店',
+      'プレイランドハッピー梅田店','ガイア難波店','ベガスベガス大阪店'
     ];
 
     function todayStr() {
@@ -348,18 +427,9 @@
       return d.getFullYear() + '-' + m + '-' + day;
     }
 
-    function buildSeed() {
-      var stores = [];
-      for (var i = 0; i < DEFAULT_STORES.length; i++) {
-        var s = DEFAULT_STORES[i];
-        stores.push({
-          id: s.id, name: s.name, type: s.type, url: s.url,
-          defLend: s.defLend, defEx: s.defEx,
-          lend: s.defLend, exchange: s.defEx,
-          balance: s.balance, memo: s.memo, updated: null
-        });
-      }
-      return { stores: stores };
+    function num(v) {
+      var n = Number(v);
+      return (isNaN(n) || n < 0) ? 0 : n;
     }
 
     function load() {
@@ -369,8 +439,11 @@
         try {
           var parsed = JSON.parse(raw);
           if (parsed && parsed.stores && Object.prototype.toString.call(parsed.stores) === '[object Array]') {
+            // 念のため構造を補正
             for (var i = 0; i < parsed.stores.length; i++) {
-              if (parsed.stores[i].type !== 'pachinko') parsed.stores[i].type = 'slot';
+              var s = parsed.stores[i];
+              if (!s.slot) s.slot = { defLend:50, defEx:50, lend:50, exchange:50, balance:0 };
+              if (!s.pachinko) s.pachinko = { defLend:250, defEx:250, lend:250, exchange:250, balance:0 };
             }
             return parsed;
           }
@@ -397,152 +470,109 @@
 
     var store = load();
 
+    function refreshKind(card, s, kind) {
+      var k = s[kind];
+      var v = calcValue(k.balance, k.exchange);
+      var valEl = card.querySelector('.value[data-kind="' + kind + '"]');
+      valEl.textContent = yen(v);
+      valEl.className = 'value ' + (v === 0 ? 'z' : KIND[kind].vcls);
+      var rb = card.querySelector('.reset[data-kind="' + kind + '"]');
+      rb.textContent = '↺ ' + k.defLend + '/' + k.defEx;
+      rb.className = (k.lend != k.defLend || k.exchange != k.defEx) ? 'reset edited' : 'reset';
+      return v;
+    }
+
     function refreshCard(card, s) {
-      var valEl = card.querySelector('.value');
-      var val = calcValue(s.balance, s.exchange);
-      if (s.balance == null) {
-        valEl.textContent = '未記入';
-        valEl.className = 'value zero';
-      } else {
-        valEl.textContent = yen(val);
-        valEl.className = val === 0 ? 'value zero' : 'value';
-      }
-      card.className = (s.balance && s.balance > 0) ? 'store has-balance' : 'store';
-
-      var resetBtn = card.querySelector('.reset');
-      resetBtn.textContent = '↺ 初期 ' + s.defLend + '/' + s.defEx;
-      resetBtn.className = (s.lend != s.defLend || s.exchange != s.defEx) ? 'reset edited' : 'reset';
-
-      card.querySelector('.updated').textContent = s.updated ? '更新: ' + s.updated : '';
+      var sv = refreshKind(card, s, 'slot');
+      var pv = refreshKind(card, s, 'pachinko');
+      card.querySelector('.cardfoot b').textContent = yen(sv + pv);
+      card.querySelector('.cardfoot .upd').textContent = s.updated ? '更新 ' + s.updated : '';
+      card.className = (s.slot.balance > 0 || s.pachinko.balance > 0) ? 'store has-balance' : 'store';
     }
 
     function refreshTotal() {
-      var total = 0, count = 0;
+      var total = 0, slotT = 0, pacT = 0, count = 0;
       for (var i = 0; i < store.stores.length; i++) {
         var s = store.stores[i];
-        if (s.balance && s.balance > 0) {
-          total += calcValue(s.balance, s.exchange);
-          count++;
-        }
+        var sv = calcValue(s.slot.balance, s.slot.exchange);
+        var pv = calcValue(s.pachinko.balance, s.pachinko.exchange);
+        slotT += sv; pacT += pv; total += sv + pv;
+        if (s.slot.balance > 0 || s.pachinko.balance > 0) count++;
       }
       document.getElementById('totalAmount').textContent = yen(total);
       document.getElementById('totalNote').textContent =
-        '残高あり ' + count + '店舗 ／ 登録 ' + store.stores.length + '店舗';
+        'スロット ' + yen(slotT) + ' ／ パチンコ ' + yen(pacT) +
+        ' ／ 残高あり ' + count + ' ／ 登録 ' + store.stores.length + '店舗';
     }
 
-    function sumHtml(t) {
-      var sub = 0, units = 0;
-      for (var j = 0; j < store.stores.length; j++) {
-        var s = store.stores[j];
-        if (s.type !== t.key) continue;
-        if (s.balance && s.balance > 0) {
-          sub += calcValue(s.balance, s.exchange);
-          units += s.balance;
-        }
-      }
-      return esc(t.label) +
-        '<span class="gsum">' + yen(sub) + '（' + units.toLocaleString('ja-JP') + t.unit + '）</span>';
+    function segHtml(kind, k) {
+      var c = KIND[kind];
+      return '<div class="seg">' +
+        '<div class="segmain">' +
+          '<span class="tag ' + c.cls + '">' + c.label + '</span>' +
+          '<input class="bal" data-kind="' + kind + '" inputmode="numeric" pattern="[0-9]*" value="' + k.balance + '" placeholder="0">' +
+          '<span class="unit">' + c.unit + '</span>' +
+          '<span class="value z" data-kind="' + kind + '">¥0</span>' +
+        '</div>' +
+        '<div class="raterow">' +
+          '<span class="lbl">貸</span><input class="rate lend" data-kind="' + kind + '" inputmode="decimal" value="' + k.lend + '">' +
+          '<span class="lbl">交換</span><input class="rate ex" data-kind="' + kind + '" inputmode="decimal" value="' + k.exchange + '">' +
+          '<button class="reset" data-kind="' + kind + '">↺</button>' +
+        '</div>' +
+      '</div>';
     }
 
-    function refreshSums() {
-      var headers = document.getElementById('list').getElementsByTagName('h2');
-      var hi = 0;
-      for (var ti = 0; ti < TYPES.length; ti++) {
-        var t = TYPES[ti];
-        var has = false;
-        for (var j = 0; j < store.stores.length; j++) {
-          if (store.stores[j].type === t.key) { has = true; break; }
-        }
-        if (!has) continue;
-        if (headers[hi]) headers[hi].innerHTML = sumHtml(t);
-        hi++;
-      }
+    function bindKind(card, s, kind) {
+      var bal = card.querySelector('.bal[data-kind="' + kind + '"]');
+      var lend = card.querySelector('.lend[data-kind="' + kind + '"]');
+      var ex = card.querySelector('.ex[data-kind="' + kind + '"]');
+      var rb = card.querySelector('.reset[data-kind="' + kind + '"]');
+
+      bal.addEventListener('input', function () {
+        var v = bal.value.replace(/[^0-9.]/g, '');
+        s[kind].balance = (v === '') ? 0 : num(v);
+        s.updated = todayStr();
+        save(); refreshCard(card, s); refreshTotal();
+      });
+      lend.addEventListener('input', function () {
+        var v = lend.value.replace(/[^0-9.]/g, '');
+        s[kind].lend = (v === '') ? 0 : num(v);
+        save(); refreshCard(card, s);
+      });
+      ex.addEventListener('input', function () {
+        var v = ex.value.replace(/[^0-9.]/g, '');
+        s[kind].exchange = (v === '') ? 0 : num(v);
+        save(); refreshCard(card, s); refreshTotal();
+      });
+      rb.addEventListener('click', function () {
+        s[kind].lend = s[kind].defLend;
+        s[kind].exchange = s[kind].defEx;
+        lend.value = s[kind].lend;
+        ex.value = s[kind].exchange;
+        save(); refreshCard(card, s); refreshTotal();
+      });
     }
 
-    function render() {
-      var list = document.getElementById('list');
-      list.innerHTML = '';
-
-      if (!store.stores || store.stores.length === 0) {
-        var empty = document.createElement('div');
-        empty.className = 'empty';
-        empty.textContent = '登録されている店舗がありません。上の「＋ 店舗を追加」から追加するか、「初期25店舗を再読込」を押してください。';
-        list.appendChild(empty);
-        refreshTotal();
-        return;
-      }
-
-      for (var ti = 0; ti < TYPES.length; ti++) {
-        var t = TYPES[ti];
-        var inType = [];
-        for (var j = 0; j < store.stores.length; j++) {
-          if (store.stores[j].type === t.key) inType.push(store.stores[j]);
-        }
-        if (inType.length === 0) continue;
-
-        var h = document.createElement('h2');
-        h.innerHTML = sumHtml(t);
-        list.appendChild(h);
-
-        for (var m = 0; m < inType.length; m++) {
-          renderCard(inType[m], list, t);
-        }
-      }
-      refreshTotal();
-    }
-
-    function renderCard(s, list, t) {
+    function renderCard(s, list) {
       var card = document.createElement('div');
       card.className = 'store';
       card.setAttribute('data-id', s.id);
-      var balVal = (s.balance == null) ? '' : s.balance;
       card.innerHTML =
-        '<div class="row1"><span class="name">' + esc(s.name) + '</span>' +
-          (s.url ? '<a class="mp" href="' + esc(s.url) + '" target="_blank" rel="noopener">みんパチ↗</a>' : '') +
-          '<button class="del" title="この店舗を削除">✕</button></div>' +
-        '<div class="inputrow">' +
-          '<label>' + t.balLabel + '</label>' +
-          '<input class="bal" inputmode="numeric" pattern="[0-9]*" value="' + balVal + '" placeholder="0">' +
-          '<span class="unit">' + t.unit + '</span>' +
-          '<span class="value">—</span>' +
+        '<div class="row1">' +
+          '<span class="name">' + esc(s.name) + '</span>' +
+          (s.url ? '<a class="mp" href="' + esc(s.url) + '" target="_blank" rel="noopener">店舗情報↗</a>' : '') +
+          '<button class="del" title="この店舗を削除">✕</button>' +
         '</div>' +
-        '<div class="raterow">' +
-          '<span class="lbl">貸</span><input class="rate lend" inputmode="decimal" value="' + s.lend + '">' +
-          '<span class="lbl">交換</span><input class="rate ex" inputmode="decimal" value="' + s.exchange + '">' +
-          '<button class="reset">↺</button>' +
-        '</div>' +
+        segHtml('slot', s.slot) +
+        segHtml('pachinko', s.pachinko) +
         (s.memo ? '<div class="memo">' + esc(s.memo) + '</div>' : '') +
-        '<div class="updated"></div>';
+        '<div class="cardfoot">店舗計 <b>¥0</b><span class="upd"></span></div>';
       list.appendChild(card);
 
-      var balInput = card.querySelector('.bal');
-      var lendInput = card.querySelector('.lend');
-      var exInput = card.querySelector('.ex');
-      var resetBtn = card.querySelector('.reset');
-      var delBtn = card.querySelector('.del');
+      bindKind(card, s, 'slot');
+      bindKind(card, s, 'pachinko');
 
-      balInput.addEventListener('input', function () {
-        var v = balInput.value.replace(/[^0-9.]/g, '');
-        s.balance = (v === '') ? null : Number(v);
-        s.updated = todayStr();
-        save(); refreshCard(card, s); refreshTotal(); refreshSums();
-      });
-      lendInput.addEventListener('input', function () {
-        var v = lendInput.value.replace(/[^0-9.]/g, '');
-        s.lend = (v === '') ? 0 : Number(v);
-        save(); refreshCard(card, s); refreshTotal(); refreshSums();
-      });
-      exInput.addEventListener('input', function () {
-        var v = exInput.value.replace(/[^0-9.]/g, '');
-        s.exchange = (v === '') ? 0 : Number(v);
-        save(); refreshCard(card, s); refreshTotal(); refreshSums();
-      });
-      resetBtn.addEventListener('click', function () {
-        s.lend = s.defLend; s.exchange = s.defEx;
-        lendInput.value = s.lend; exInput.value = s.exchange;
-        save(); refreshCard(card, s); refreshTotal(); refreshSums();
-      });
-      delBtn.addEventListener('click', function () {
+      card.querySelector('.del').addEventListener('click', function () {
         if (!confirm('「' + s.name + '」を削除します。よろしいですか？')) return;
         var arr = [];
         for (var k = 0; k < store.stores.length; k++) {
@@ -555,59 +585,95 @@
       refreshCard(card, s);
     }
 
+    function render() {
+      var list = document.getElementById('list');
+      list.innerHTML = '';
+      if (!store.stores || store.stores.length === 0) {
+        var empty = document.createElement('div');
+        empty.className = 'empty';
+        empty.textContent = '登録されている店舗がありません。「＋ 店舗を追加」から追加するか、設定の「初期25店舗を再読込」を押してください。';
+        list.appendChild(empty);
+        refreshTotal();
+        return;
+      }
+      for (var i = 0; i < store.stores.length; i++) {
+        renderCard(store.stores[i], list);
+      }
+      refreshTotal();
+    }
+
+    // ---- オートコンプリート ----
+    (function () {
+      var dl = document.getElementById('storeNames');
+      var html = '';
+      for (var i = 0; i < NAME_SUGGEST.length; i++) {
+        html += '<option value="' + esc(NAME_SUGGEST[i]) + '">';
+      }
+      dl.innerHTML = html;
+    })();
+
+    // ---- レート表示トグル ----
+    var ratesOn = false;
+    document.getElementById('toggleRates').addEventListener('click', function () {
+      ratesOn = !ratesOn;
+      document.body.className = ratesOn ? 'rates-on' : '';
+      this.textContent = ratesOn ? 'レート設定を隠す' : 'レート設定を表示';
+      this.className = ratesOn ? 'btn on' : 'btn';
+    });
+
     // ---- モーダル ----
     var modalBg = document.getElementById('modalBg');
     function openModal() {
       document.getElementById('f-name').value = '';
-      document.getElementById('f-type').value = 'slot';
-      document.getElementById('f-lend').value = '50';
-      document.getElementById('f-ex').value = '';
       document.getElementById('f-url').value = '';
+      document.getElementById('f-slot-lend').value = '50';
+      document.getElementById('f-slot-ex').value = '50';
+      document.getElementById('f-pachi-lend').value = '250';
+      document.getElementById('f-pachi-ex').value = '250';
       document.getElementById('f-memo').value = '';
       modalBg.classList.add('open');
     }
     function closeModal() { modalBg.classList.remove('open'); }
 
-    // ---- イベント登録（描画より先に行う：描画が失敗してもボタンは動く）----
     document.getElementById('addStore').addEventListener('click', openModal);
     document.getElementById('f-cancel').addEventListener('click', closeModal);
     modalBg.addEventListener('click', function (e) { if (e.target === modalBg) closeModal(); });
-    document.getElementById('f-type').addEventListener('change', function () {
-      document.getElementById('f-lend').value =
-        (document.getElementById('f-type').value === 'pachinko') ? '250' : '50';
-    });
+
     document.getElementById('f-add').addEventListener('click', function () {
       var name = document.getElementById('f-name').value.replace(/^\s+|\s+$/g, '');
-      var type = document.getElementById('f-type').value === 'pachinko' ? 'pachinko' : 'slot';
-      var lend = Number(document.getElementById('f-lend').value);
-      var ex = Number(document.getElementById('f-ex').value);
       var url = document.getElementById('f-url').value.replace(/^\s+|\s+$/g, '');
       var memo = document.getElementById('f-memo').value.replace(/^\s+|\s+$/g, '');
+      var sl = num(document.getElementById('f-slot-lend').value);
+      var se = num(document.getElementById('f-slot-ex').value);
+      var pl = num(document.getElementById('f-pachi-lend').value);
+      var pe = num(document.getElementById('f-pachi-ex').value);
       if (!name) { alert('店舗名を入力してください'); return; }
-      if (!lend || lend <= 0) { alert('貸を正しく入力してください'); return; }
-      if (!ex || ex <= 0) { alert('交換率を正しく入力してください'); return; }
+      if (!sl || !se) { alert('スロットの貸・交換率を入力してください'); return; }
+      if (!pl || !pe) { alert('パチンコの貸・交換率を入力してください'); return; }
       store.stores.push({
         id: 'custom-' + Date.now(),
-        name: name, type: type, url: url,
-        defLend: lend, defEx: ex,
-        lend: lend, exchange: ex,
-        balance: 0, memo: memo, updated: null
+        name: name, url: url, memo: memo, updated: null,
+        slot:     { defLend:sl, defEx:se, lend:sl, exchange:se, balance:0 },
+        pachinko: { defLend:pl, defEx:pe, lend:pl, exchange:pe, balance:0 }
       });
       save(); closeModal(); render();
     });
 
+    // ---- 一括操作 ----
     document.getElementById('resetRates').addEventListener('click', function () {
       if (!confirm('全店のレートを初期値に戻します。残高の入力は消えません。よろしいですか？')) return;
       for (var i = 0; i < store.stores.length; i++) {
-        store.stores[i].lend = store.stores[i].defLend;
-        store.stores[i].exchange = store.stores[i].defEx;
+        var s = store.stores[i];
+        s.slot.lend = s.slot.defLend; s.slot.exchange = s.slot.defEx;
+        s.pachinko.lend = s.pachinko.defLend; s.pachinko.exchange = s.pachinko.defEx;
       }
       save(); render();
     });
     document.getElementById('clearBalances').addEventListener('click', function () {
-      if (!confirm('全店の残高を0にします。よろしいですか？')) return;
+      if (!confirm('全店の残高（スロット・パチンコ両方）を0にします。よろしいですか？')) return;
       for (var i = 0; i < store.stores.length; i++) {
-        store.stores[i].balance = 0;
+        store.stores[i].slot.balance = 0;
+        store.stores[i].pachinko.balance = 0;
         store.stores[i].updated = todayStr();
       }
       save(); render();
@@ -618,7 +684,7 @@
       save(); render();
     });
     document.getElementById('restoreDefault').addEventListener('click', function () {
-      if (!confirm('初期の25店舗（スロット）を読み込みます。今の店舗リストは置き換わります。よろしいですか？')) return;
+      if (!confirm('初期の25店舗を読み込みます。今の店舗リストは置き換わります。よろしいですか？')) return;
       store = buildSeed();
       save(); render();
     });

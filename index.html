@@ -126,12 +126,20 @@
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
   }
   .chart-head {
-    display: flex; align-items: center; gap: 10px;
+    display: flex; align-items: center; gap: 8px;
     margin-bottom: 6px; flex-wrap: wrap;
   }
   .chart-label {
     font-size: 10px; color: var(--sub); letter-spacing: 1px; text-transform: uppercase;
   }
+  .back-btn {
+    background: var(--card2); border: 1px solid var(--line2); color: var(--sub);
+    border-radius: 6px; padding: 2px 9px; font-size: 11px; cursor: pointer;
+    font-family: inherit;
+    display: none;
+  }
+  .back-btn.show { display: inline-block; }
+  .back-btn:active { opacity: 0.5; }
   .chart-year {
     margin-left: auto;
     display: flex; align-items: center; gap: 4px;
@@ -146,7 +154,7 @@
   .chart-year button:not(:disabled):active { opacity: 0.5; }
   .chart-year .yr {
     font-size: 12px; color: var(--accent); font-weight: 700;
-    min-width: 42px; text-align: center;
+    min-width: 64px; text-align: center;
   }
   .chart-legend {
     display: flex; gap: 12px; font-size: 10px; color: var(--sub);
@@ -195,6 +203,11 @@
     border-color: var(--accent-d);
     color: var(--accent);
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+  .btn.share {
+    background: linear-gradient(180deg, #1a3a55, #122538);
+    border-color: var(--blue);
+    color: var(--blue);
   }
   .btn.on { background: #173a44; border-color: var(--slot); color: var(--slot); }
   .btn.session { background: #2a1a35; border-color: var(--pachi); color: var(--pachi); }
@@ -438,12 +451,6 @@
     letter-spacing: -0.2px;
   }
   .cardfoot .upd { font-size: 10px; color: var(--dim); white-space: nowrap; }
-  .spark {
-    display: none;
-    width: 70px; height: 22px;
-    flex-shrink: 0;
-  }
-  .spark.show { display: inline-block; }
   .commit {
     display: none;
     background: linear-gradient(180deg, #5a2a4a, #3a1a32);
@@ -554,11 +561,12 @@
 
 <div class="chart-card" id="chartCard">
   <div class="chart-head">
-    <span class="chart-label">月別推移</span>
+    <span class="chart-label" id="chartLabel">月別推移</span>
+    <button class="back-btn" id="backToYear">← 年表示</button>
     <div class="chart-year">
-      <button id="yearPrev" title="前の年">◀</button>
+      <button id="yearPrev" title="前へ">◀</button>
       <span class="yr" id="yearLabel">—</span>
-      <button id="yearNext" title="次の年">▶</button>
+      <button id="yearNext" title="次へ">▶</button>
     </div>
   </div>
   <div class="chart-legend">
@@ -573,6 +581,7 @@
 
 <div class="toolbar">
   <button class="btn primary" id="addStore">＋ 店舗を追加</button>
+  <button class="btn share" id="shareBtn">SNSにシェア</button>
   <button class="btn" id="toggleRates">レート設定</button>
   <button class="btn" id="toggleSession">稼働モード</button>
 </div>
@@ -609,8 +618,8 @@
     <li><b>店舗を追加</b>：上部「＋ 店舗を追加」から登録。スロットとパチンコの貸／交換率もここで設定します。</li>
     <li><b>残高入力</b>：各店のスロット（貯メダル/枚）・パチンコ（貯玉/玉）の欄に当日の数を入力。換金額と合計が自動計算され、この端末のブラウザに自動保存されます。</li>
     <li><b>稼働モード</b>：上部「稼働モード」を押すと「使用」「回収」の入力が出ます。「転記」を押すと残高に反映されます。</li>
-    <li><b>月別推移グラフ</b>：選択した年の1〜12月の折線グラフを表示。スロット（水色）・パチンコ（ピンク）・合計（金色）の3本線で増減を可視化。◀▶で年を切替。</li>
-    <li><b>各店のミニグラフ</b>：店舗カード下部に過去12週間の推移をスパークラインで表示（伸びていれば緑、落ちていれば赤）。</li>
+    <li><b>月別推移グラフ</b>：選択した年の1〜12月の折線（スロット/パチンコ/合計）。月をタップするとその月の日別グラフが見られます。◀▶で年・月を切替。</li>
+    <li><b>SNSシェア</b>：上部「SNSにシェア」ボタンで合計とグラフの画像を生成して、X/LINE/Instagram等にシェアできます（端末のシェア機能が使えない場合はテキストをクリップボードコピー）。</li>
     <li><b>お気に入り★</b>：常にリスト先頭に固定されます。</li>
     <li><b>フィルタ・並び替え</b>：店舗名検索、法人、並び順、「残高あり」のみ表示が可能。</li>
     <li><b>データ移行</b>：設定の「エクスポート」でJSON保存、別端末で「インポート」で復元できます。</li>
@@ -695,6 +704,7 @@
 
   try {
     var STORE_KEY = 'chodama_v3';
+    var APP_URL = 'https://uma0123.github.io/chodama-tracker/';
     var SLOT_COLOR = '#62cee0';
     var PACHI_COLOR = '#ee94b1';
     var TOTAL_COLOR = '#ffd45c';
@@ -713,12 +723,17 @@
     function buildSeed() {
       return {
         stores: [],
-        filter: { corp:'all', sort:'default', onlyBalance:false, search:'', chartType:'line', chartYear: (new Date()).getFullYear() },
+        filter: {
+          corp:'all', sort:'default', onlyBalance:false, search:'',
+          chartType:'line',
+          chartYear: (new Date()).getFullYear(),
+          chartMode: 'year',
+          chartMonth: (new Date()).getMonth() + 1
+        },
         history: {}
       };
     }
 
-    // 入力候補（参考用。任意のテキストも入力可）
     var NAME_SUGGEST = [
       'マルハン日本橋店','マルハン梅田店','マルハン難波本店','マルハン都島店','マルハン東大阪店','マルハン泉佐野店',
       'マルハン茨木店','マルハン高槻店','マルハン布施駅前店','マルハン新世界店','マルハン北加賀屋店','マルハン堺遠里小野店',
@@ -742,11 +757,6 @@
     function pad2(n) { var s = String(n); return s.length < 2 ? '0' + s : s; }
     function todayStr() {
       var d = new Date();
-      return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
-    }
-    function dateOffset(days) {
-      var d = new Date();
-      d.setDate(d.getDate() - days);
       return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
     }
     function num(v) { var n = Number(v); return (isNaN(n) || n < 0) ? 0 : n; }
@@ -810,6 +820,8 @@
             }
             if (!p.filter) p.filter = { corp:'all', sort:'default', onlyBalance:false, search:'', chartType:'line' };
             if (typeof p.filter.chartYear !== 'number') p.filter.chartYear = (new Date()).getFullYear();
+            if (p.filter.chartMode !== 'year' && p.filter.chartMode !== 'month') p.filter.chartMode = 'year';
+            if (typeof p.filter.chartMonth !== 'number') p.filter.chartMonth = (new Date()).getMonth() + 1;
             if (!p.history || typeof p.history !== 'object') p.history = {};
             return p;
           }
@@ -830,9 +842,11 @@
       }
       store.history[date] = snap;
     }
-
     function save() {
       snapshot();
+      try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch (e) {}
+    }
+    function saveQuiet() {
       try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch (e) {}
     }
 
@@ -874,7 +888,6 @@
       var rb = card.querySelector('.reset[data-kind="' + kind + '"]');
       rb.textContent = '↺ ' + k.defLend + '/' + k.defEx;
       rb.className = (k.lend != k.defLend || k.exchange != k.defEx) ? 'reset edited' : 'reset';
-
       var netEl = card.querySelector('.net[data-kind="' + kind + '"]');
       var netDelta = (k.collected || 0) - (k.used || 0);
       var yenDelta = (k.exchange > 0) ? Math.round(netDelta / k.exchange * 1000) : 0;
@@ -894,7 +907,6 @@
       if (s.favorite) cls += ' fav-on';
       if (hasSession(s)) cls += ' has-session';
       card.className = cls;
-      renderStoreSpark(card, s);
     }
 
     function refreshTotal() {
@@ -948,20 +960,6 @@
       return { slot: slotT, pachinko: pacT };
     }
 
-    function storeSnapshotValueAtOrBefore(storeObj, dateStr) {
-      if (!store.history) return 0;
-      var dates = Object.keys(store.history).sort();
-      var latest = null;
-      for (var i = 0; i < dates.length; i++) {
-        if (dates[i] <= dateStr) latest = dates[i]; else break;
-      }
-      if (!latest) return 0;
-      var snap = store.history[latest];
-      if (!snap[storeObj.id]) return 0;
-      return calcValue(snap[storeObj.id].s, storeObj.slot.exchange) +
-             calcValue(snap[storeObj.id].p, storeObj.pachinko.exchange);
-    }
-
     function getMonthlySeries(year) {
       var nowYear = (new Date()).getFullYear();
       var months = [];
@@ -992,21 +990,48 @@
       return months;
     }
 
-    // ---- グラフ描画 ----
-    function renderChart() {
-      renderMonthlyLine();
+    function getDailySeries(year, month) {
+      var lastDay = new Date(year, month, 0).getDate();
+      var days = [];
+      for (var d = 1; d <= lastDay; d++) {
+        var ds = year + '-' + pad2(month) + '-' + pad2(d);
+        days.push({ day: d, ds: ds, slot: 0, pachinko: 0, total: 0 });
+      }
+      for (var i = 0; i < days.length; i++) {
+        var br = snapshotBreakdownAtOrBefore(days[i].ds);
+        if (br) {
+          days[i].slot = br.slot;
+          days[i].pachinko = br.pachinko;
+          days[i].total = br.slot + br.pachinko;
+        }
+      }
+      var today = new Date();
+      if (year === today.getFullYear() && month === today.getMonth() + 1) {
+        var todayDay = today.getDate();
+        var live = liveBreakdown();
+        if (todayDay <= days.length) {
+          days[todayDay - 1].slot = live.slot;
+          days[todayDay - 1].pachinko = live.pachinko;
+          days[todayDay - 1].total = live.slot + live.pachinko;
+        }
+      }
+      return days;
     }
 
-    function setupYearControls(year, nowYear) {
-      document.getElementById('yearLabel').textContent = year + '年';
-      document.getElementById('yearNext').disabled = (year >= nowYear);
-      document.getElementById('yearPrev').disabled = false;
+    // ---- グラフ描画 ----
+    function renderChart() {
+      if (store.filter.chartMode === 'month') renderDailyLine();
+      else renderMonthlyLine();
     }
 
     function renderMonthlyLine() {
       var year = (store.filter.chartYear) || (new Date()).getFullYear();
       var nowYear = (new Date()).getFullYear();
-      setupYearControls(year, nowYear);
+      document.getElementById('yearLabel').textContent = year + '年';
+      document.getElementById('yearNext').disabled = (year >= nowYear);
+      document.getElementById('yearPrev').disabled = false;
+      document.getElementById('backToYear').classList.remove('show');
+      document.getElementById('chartLabel').textContent = '月別推移';
 
       var series = getMonthlySeries(year);
       var body = document.getElementById('chartBody');
@@ -1048,21 +1073,6 @@
       var svg = '<svg viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none">';
       svg += '<line x1="' + pad + '" y1="' + botY + '" x2="' + (w-pad) + '" y2="' + botY + '" stroke="#2a2f3a" stroke-width="1"/>';
 
-      function drawSeries(pts, color, width, dotR) {
-        if (pts.length < 1) return '';
-        var out = '';
-        if (pts.length >= 2) {
-          var lineD = '';
-          for (var lp = 0; lp < pts.length; lp++) lineD += (lp === 0 ? 'M ' : 'L ') + pts[lp][0].toFixed(1) + ',' + pts[lp][1].toFixed(1) + ' ';
-          out += '<path d="' + lineD + '" fill="none" stroke="' + color + '" stroke-width="' + width + '" stroke-linejoin="round" stroke-linecap="round"/>';
-        }
-        for (var dp = 0; dp < pts.length; dp++) {
-          var r = (dp === pts.length - 1) ? dotR + 0.5 : dotR;
-          out += '<circle cx="' + pts[dp][0].toFixed(1) + '" cy="' + pts[dp][1].toFixed(1) + '" r="' + r + '" fill="' + color + '"/>';
-        }
-        return out;
-      }
-      // 合計の面塗り
       if (totPts.length >= 2) {
         svg += '<defs><linearGradient id="totFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="' + TOTAL_COLOR + '" stop-opacity="0.22"/><stop offset="100%" stop-color="' + TOTAL_COLOR + '" stop-opacity="0"/></linearGradient></defs>';
         var areaD = 'M ' + totPts[0][0].toFixed(1) + ',' + botY.toFixed(1) + ' ';
@@ -1070,23 +1080,141 @@
         areaD += 'L ' + totPts[totPts.length-1][0].toFixed(1) + ',' + botY.toFixed(1) + ' Z';
         svg += '<path d="' + areaD + '" fill="url(#totFill)"/>';
       }
-      // 描画: スロット → パチンコ → 合計（合計を最前面）
-      svg += drawSeries(slotPts, SLOT_COLOR, 1.8, 2);
-      svg += drawSeries(pacPts, PACHI_COLOR, 1.8, 2);
-      svg += drawSeries(totPts, TOTAL_COLOR, 2.4, 2.4);
+      svg += drawLineSvg(slotPts, SLOT_COLOR, 1.8, 2);
+      svg += drawLineSvg(pacPts, PACHI_COLOR, 1.8, 2);
+      svg += drawLineSvg(totPts, TOTAL_COLOR, 2.4, 2.4);
 
+      // 月ラベル＋クリック領域
       for (var lx = 0; lx < n; lx++) {
         var lxv = pad + lx * stepX;
         svg += '<text x="' + lxv.toFixed(1) + '" y="' + (h - 7) + '" font-size="9" text-anchor="middle" fill="#9098a4">' + (lx+1) + '</text>';
       }
+      // 透明オーバーレイ（タップで日別へ）
+      for (var ox = 0; ox < n; ox++) {
+        var orx = pad + ox * stepX - stepX/2;
+        svg += '<rect x="' + orx.toFixed(1) + '" y="0" width="' + stepX.toFixed(1) + '" height="' + (h - 18) + '" fill="transparent" data-month="' + (ox + 1) + '" style="cursor:pointer"/>';
+      }
       svg += '</svg>';
       body.innerHTML = svg;
 
-      renderTrend(series, year, nowYear);
-      note.textContent = '折線: ' + year + '年のスロット／パチンコ／合計（月末残高）';
+      // クリック → 日別ドリルダウン
+      var svgEl = body.querySelector('svg');
+      if (svgEl) {
+        svgEl.addEventListener('click', function (e) {
+          var t = e.target;
+          var m = (t && t.getAttribute) ? t.getAttribute('data-month') : null;
+          if (m) {
+            store.filter.chartMode = 'month';
+            store.filter.chartMonth = parseInt(m, 10);
+            saveQuiet();
+            renderChart();
+          }
+        });
+      }
+
+      renderMonthlyTrend(series, year, nowYear);
+      note.textContent = '月をタップするとその月の日別グラフを表示';
     }
 
-    function renderTrend(series, year, nowYear) {
+    function renderDailyLine() {
+      var year = (store.filter.chartYear) || (new Date()).getFullYear();
+      var month = (store.filter.chartMonth) || ((new Date()).getMonth() + 1);
+      var nowYear = (new Date()).getFullYear();
+      var nowMonth = (new Date()).getMonth() + 1;
+      document.getElementById('yearLabel').textContent = year + '年' + month + '月';
+      document.getElementById('yearNext').disabled = (year > nowYear || (year === nowYear && month >= nowMonth));
+      document.getElementById('yearPrev').disabled = false;
+      document.getElementById('backToYear').classList.add('show');
+      document.getElementById('chartLabel').textContent = '日別推移';
+
+      var series = getDailySeries(year, month);
+      var body = document.getElementById('chartBody');
+      var trend = document.getElementById('chartTrend');
+      var note = document.getElementById('chartModeNote');
+
+      var hasAny = false;
+      for (var i = 0; i < series.length; i++) if (series[i].total > 0) { hasAny = true; break; }
+      if (!hasAny) {
+        body.innerHTML = '<div class="chart-empty">' + year + '年' + month + '月の履歴はまだありません</div>';
+        trend.innerHTML = '';
+        note.textContent = '';
+        return;
+      }
+
+      var w = 320, h = 150;
+      var pad = 12;
+      var topY = 14, botY = h - 22;
+      var availH = botY - topY;
+      var n = series.length;
+      var max = 0;
+      for (var mi = 0; mi < n; mi++) if (series[mi].total > max) max = series[mi].total;
+      if (max === 0) max = 1;
+      function toY(v) { return botY - (v / max) * availH; }
+      var stepX = (w - pad*2) / (n - 1);
+
+      var lastIdx;
+      if (year < nowYear || (year === nowYear && month < nowMonth)) {
+        lastIdx = n - 1;
+      } else if (year === nowYear && month === nowMonth) {
+        lastIdx = (new Date()).getDate() - 1;
+        if (lastIdx >= n) lastIdx = n - 1;
+      } else {
+        lastIdx = -1;
+      }
+
+      var slotPts = [], pacPts = [], totPts = [];
+      for (var pi = 0; pi <= lastIdx; pi++) {
+        var x = pad + pi * stepX;
+        slotPts.push([x, toY(series[pi].slot)]);
+        pacPts.push([x, toY(series[pi].pachinko)]);
+        totPts.push([x, toY(series[pi].total)]);
+      }
+
+      var svg = '<svg viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none">';
+      svg += '<line x1="' + pad + '" y1="' + botY + '" x2="' + (w-pad) + '" y2="' + botY + '" stroke="#2a2f3a" stroke-width="1"/>';
+
+      if (totPts.length >= 2) {
+        svg += '<defs><linearGradient id="totFillD" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="' + TOTAL_COLOR + '" stop-opacity="0.22"/><stop offset="100%" stop-color="' + TOTAL_COLOR + '" stop-opacity="0"/></linearGradient></defs>';
+        var areaD = 'M ' + totPts[0][0].toFixed(1) + ',' + botY.toFixed(1) + ' ';
+        for (var ai = 0; ai < totPts.length; ai++) areaD += 'L ' + totPts[ai][0].toFixed(1) + ',' + totPts[ai][1].toFixed(1) + ' ';
+        areaD += 'L ' + totPts[totPts.length-1][0].toFixed(1) + ',' + botY.toFixed(1) + ' Z';
+        svg += '<path d="' + areaD + '" fill="url(#totFillD)"/>';
+      }
+      svg += drawLineSvg(slotPts, SLOT_COLOR, 1.5, 1.6);
+      svg += drawLineSvg(pacPts, PACHI_COLOR, 1.5, 1.6);
+      svg += drawLineSvg(totPts, TOTAL_COLOR, 2.2, 2);
+
+      // 日ラベル（5日おき）
+      for (var lx = 0; lx < n; lx++) {
+        var dayNo = lx + 1;
+        if (dayNo === 1 || dayNo % 5 === 0 || dayNo === n) {
+          var lxv = pad + lx * stepX;
+          svg += '<text x="' + lxv.toFixed(1) + '" y="' + (h - 7) + '" font-size="9" text-anchor="middle" fill="#9098a4">' + dayNo + '</text>';
+        }
+      }
+      svg += '</svg>';
+      body.innerHTML = svg;
+
+      renderDailyTrend(series, year, month, lastIdx);
+      note.textContent = year + '年' + month + '月の日別残高（◀▶で月を切替・「年表示」で戻る）';
+    }
+
+    function drawLineSvg(pts, color, width, dotR) {
+      if (pts.length < 1) return '';
+      var out = '';
+      if (pts.length >= 2) {
+        var lineD = '';
+        for (var lp = 0; lp < pts.length; lp++) lineD += (lp === 0 ? 'M ' : 'L ') + pts[lp][0].toFixed(1) + ',' + pts[lp][1].toFixed(1) + ' ';
+        out += '<path d="' + lineD + '" fill="none" stroke="' + color + '" stroke-width="' + width + '" stroke-linejoin="round" stroke-linecap="round"/>';
+      }
+      for (var dp = 0; dp < pts.length; dp++) {
+        var r = (dp === pts.length - 1) ? dotR + 0.5 : dotR;
+        out += '<circle cx="' + pts[dp][0].toFixed(1) + '" cy="' + pts[dp][1].toFixed(1) + '" r="' + r + '" fill="' + color + '"/>';
+      }
+      return out;
+    }
+
+    function renderMonthlyTrend(series, year, nowYear) {
       var trend = document.getElementById('chartTrend');
       var labelMonth = (year === nowYear) ? ((new Date()).getMonth() + 1) : 12;
       var labelText = (year === nowYear) ? '今月' : '12月末';
@@ -1110,55 +1238,20 @@
       trend.innerHTML = html;
     }
 
-    // ---- 店舗別スパークライン（過去12週間）----
-    function renderStoreSpark(card, s) {
-      var sparkEl = card.querySelector('.spark');
-      if (!sparkEl) return;
-      var weeklyVals = [];
-      for (var w = 11; w >= 0; w--) {
-        var weekEnd = dateOffset(w * 7);
-        weeklyVals.push(storeSnapshotValueAtOrBefore(s, weekEnd));
+    function renderDailyTrend(series, year, month, lastIdx) {
+      var trend = document.getElementById('chartTrend');
+      if (lastIdx < 0) { trend.innerHTML = ''; return; }
+      var cur = series[lastIdx];
+      var labelText = (lastIdx + 1) + '日';
+      var html = labelText + ' <b>' + yen(cur.total) + '</b>';
+      html += '<span><b class="slotc">' + yen(cur.slot) + '</b>＋<b class="pachic">' + yen(cur.pachinko) + '</b></span>';
+      if (lastIdx >= 1) {
+        var prev = series[0];
+        var diff = cur.total - prev.total;
+        var dcls = diff > 0 ? 'up' : (diff < 0 ? 'down' : '');
+        html += '<span>月初比 <b class="' + dcls + '">' + yenSigned(diff) + '</b></span>';
       }
-      weeklyVals[weeklyVals.length - 1] = storeValueEff(s);
-
-      var hasData = false;
-      for (var hi = 0; hi < weeklyVals.length; hi++) if (weeklyVals[hi] > 0) { hasData = true; break; }
-      if (!hasData) {
-        sparkEl.classList.remove('show');
-        sparkEl.innerHTML = '';
-        return;
-      }
-      sparkEl.classList.add('show');
-
-      var minV = Infinity, maxV = -Infinity;
-      for (var mi = 0; mi < weeklyVals.length; mi++) {
-        if (weeklyVals[mi] < minV) minV = weeklyVals[mi];
-        if (weeklyVals[mi] > maxV) maxV = weeklyVals[mi];
-      }
-      var rng = maxV - minV;
-      if (rng === 0) rng = 1;
-
-      var sw = 70, sh = 22, ipad = 2;
-      var stepX = (sw - ipad*2) / (weeklyVals.length - 1);
-      var pts = [];
-      for (var pi = 0; pi < weeklyVals.length; pi++) {
-        var x = ipad + pi * stepX;
-        var y = (sh - ipad) - ((weeklyVals[pi] - minV) / rng) * (sh - ipad*2);
-        pts.push([x, y]);
-      }
-      var first = 0;
-      for (var fi2 = 0; fi2 < weeklyVals.length; fi2++) if (weeklyVals[fi2] > 0) { first = weeklyVals[fi2]; break; }
-      var last = weeklyVals[weeklyVals.length - 1];
-      var color = '#ffd45c';
-      if (last > first) color = '#6ed59d';
-      else if (last < first) color = '#ec6b6a';
-
-      var d = '';
-      for (var li = 0; li < pts.length; li++) d += (li === 0 ? 'M ' : 'L ') + pts[li][0].toFixed(1) + ',' + pts[li][1].toFixed(1) + ' ';
-
-      sparkEl.innerHTML =
-        '<path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>' +
-        '<circle cx="' + pts[pts.length-1][0].toFixed(1) + '" cy="' + pts[pts.length-1][1].toFixed(1) + '" r="2" fill="' + color + '"/>';
+      trend.innerHTML = html;
     }
 
     function segHtml(kind, k) {
@@ -1249,7 +1342,6 @@
         (s.memo ? '<div class="memo">' + esc(s.memo) + '</div>' : '') +
         '<div class="cardfoot">' +
           '<span class="ftxt">店舗計 <b class="stotal">¥0</b><span class="upd"></span></span>' +
-          '<svg class="spark" viewBox="0 0 70 22" width="70" height="22"></svg>' +
           '<button class="commit" title="使用・回収を残高に反映">転記</button>' +
         '</div>';
       list.appendChild(card);
@@ -1353,18 +1445,41 @@
       dl1.innerHTML = h;
     })();
 
-    // ---- 年セレクタ ----
+    // ---- 年/月セレクタ ----
     document.getElementById('yearPrev').addEventListener('click', function () {
-      store.filter.chartYear = (store.filter.chartYear || (new Date()).getFullYear()) - 1;
-      try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch (e) {}
+      if (store.filter.chartMode === 'month') {
+        store.filter.chartMonth--;
+        if (store.filter.chartMonth < 1) {
+          store.filter.chartMonth = 12;
+          store.filter.chartYear--;
+        }
+      } else {
+        store.filter.chartYear--;
+      }
+      saveQuiet();
       renderChart();
     });
     document.getElementById('yearNext').addEventListener('click', function () {
       var nowY = (new Date()).getFullYear();
-      var ny = (store.filter.chartYear || nowY) + 1;
-      if (ny > nowY) ny = nowY;
-      store.filter.chartYear = ny;
-      try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch (e) {}
+      var nowM = (new Date()).getMonth() + 1;
+      if (store.filter.chartMode === 'month') {
+        var ny = store.filter.chartYear;
+        var nm = store.filter.chartMonth + 1;
+        if (nm > 12) { nm = 1; ny++; }
+        if (ny > nowY || (ny === nowY && nm > nowM)) { ny = nowY; nm = nowM; }
+        store.filter.chartYear = ny;
+        store.filter.chartMonth = nm;
+      } else {
+        var nyy = (store.filter.chartYear || nowY) + 1;
+        if (nyy > nowY) nyy = nowY;
+        store.filter.chartYear = nyy;
+      }
+      saveQuiet();
+      renderChart();
+    });
+    document.getElementById('backToYear').addEventListener('click', function () {
+      store.filter.chartMode = 'year';
+      saveQuiet();
       renderChart();
     });
 
@@ -1399,24 +1514,24 @@
       if (searchTimer) clearTimeout(searchTimer);
       searchTimer = setTimeout(function () {
         store.filter.search = v;
-        try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch (e) {}
+        saveQuiet();
         render();
       }, 120);
     });
     document.getElementById('f-corp').addEventListener('change', function () {
       store.filter.corp = this.value;
-      try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch (e) {}
+      saveQuiet();
       render();
     });
     document.getElementById('f-sort').addEventListener('change', function () {
       store.filter.sort = this.value;
-      try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch (e) {}
+      saveQuiet();
       render();
     });
     document.getElementById('f-onlybal').addEventListener('change', function () {
       store.filter.onlyBalance = this.checked;
       document.getElementById('onlyBalLbl').classList.toggle('on', this.checked);
-      try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch (e) {}
+      saveQuiet();
       render();
     });
 
@@ -1499,13 +1614,231 @@
         store = p;
         if (!store.filter) store.filter = { corp:'all', sort:'default', onlyBalance:false, search:'', chartType:'line', chartYear:(new Date()).getFullYear() };
         if (typeof store.filter.chartYear !== 'number') store.filter.chartYear = (new Date()).getFullYear();
+        if (store.filter.chartMode !== 'year' && store.filter.chartMode !== 'month') store.filter.chartMode = 'year';
+        if (typeof store.filter.chartMonth !== 'number') store.filter.chartMonth = (new Date()).getMonth() + 1;
         if (!store.history) store.history = {};
-        try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch (e) {}
+        saveQuiet();
         render();
         alert('インポートしました。');
       } catch (e) {
         alert('読み込めませんでした: ' + (e && e.message ? e.message : e));
       }
+    });
+
+    // ---- SNSシェア ----
+    function generateShareImage(callback) {
+      try {
+        var canvas = document.createElement('canvas');
+        var W = 1080, H = 1080;
+        canvas.width = W; canvas.height = H;
+        var ctx = canvas.getContext('2d');
+
+        // 背景
+        var grad = ctx.createLinearGradient(0, 0, 0, H);
+        grad.addColorStop(0, '#2a1f12');
+        grad.addColorStop(1, '#0b0d12');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, W, H);
+
+        // 枠
+        ctx.strokeStyle = '#5a4a1f';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(40, 40, W - 80, H - 80);
+
+        // タイトル
+        ctx.font = '600 32px -apple-system, "Hiragino Sans", sans-serif';
+        ctx.fillStyle = '#9098a4';
+        ctx.textAlign = 'center';
+        ctx.fillText('PACHI BANK', W / 2, 130);
+
+        ctx.font = 'bold 60px "Helvetica Neue", sans-serif';
+        ctx.fillStyle = '#ffd45c';
+        ctx.fillText('7 7 7', W / 2, 215);
+
+        // ラベル
+        ctx.font = '24px -apple-system, "Hiragino Sans", sans-serif';
+        ctx.fillStyle = '#9098a4';
+        ctx.fillText('TOTAL BALANCE  ·  ' + todayStr(), W / 2, 290);
+
+        // 合計
+        var live = liveBreakdown();
+        var total = live.slot + live.pachinko;
+        ctx.font = 'bold 140px -apple-system, "Hiragino Sans", sans-serif';
+        ctx.fillStyle = '#ffd45c';
+        ctx.shadowColor = 'rgba(255,212,92,0.35)';
+        ctx.shadowBlur = 30;
+        ctx.fillText(yen(total), W / 2, 420);
+        ctx.shadowBlur = 0;
+
+        // スロット/パチンコ内訳
+        ctx.font = '28px -apple-system, "Hiragino Sans", sans-serif';
+        ctx.fillStyle = SLOT_COLOR;
+        ctx.fillText('スロット ' + yen(live.slot), W / 2 - 200, 490);
+        ctx.fillStyle = PACHI_COLOR;
+        ctx.fillText('パチンコ ' + yen(live.pachinko), W / 2 + 200, 490);
+
+        // 月別グラフ
+        var year = (new Date()).getFullYear();
+        var series = getMonthlySeries(year);
+        drawShareChart(ctx, series, year, 80, 560, W - 160, 360);
+
+        // 年ラベル
+        ctx.font = 'bold 30px -apple-system, "Hiragino Sans", sans-serif';
+        ctx.fillStyle = '#ecedf1';
+        ctx.textAlign = 'left';
+        ctx.fillText(year + '年の推移', 100, 555);
+
+        // フッター
+        ctx.font = '20px -apple-system, "Hiragino Sans", sans-serif';
+        ctx.fillStyle = '#9098a4';
+        ctx.textAlign = 'center';
+        ctx.fillText('uma0123.github.io/chodama-tracker', W / 2, 1010);
+
+        if (canvas.toBlob) {
+          canvas.toBlob(function (blob) { callback(blob); }, 'image/png');
+        } else {
+          callback(null);
+        }
+      } catch (e) {
+        callback(null);
+      }
+    }
+
+    function drawShareChart(ctx, series, year, x, y, w, h) {
+      var nowYear = (new Date()).getFullYear();
+      var lastIdx = (year === nowYear) ? (new Date()).getMonth() : 11;
+      var max = 0;
+      for (var i = 0; i < series.length; i++) if (series[i].total > max) max = series[i].total;
+      if (max === 0) max = 1;
+
+      var pad = 20;
+      var botY = y + h - 50;
+      var topY = y + 10;
+      var availH = botY - topY;
+      var stepX = (w - pad * 2) / 11;
+      function toY(v) { return botY - (v / max) * availH; }
+
+      // 軸
+      ctx.strokeStyle = '#2a2f3a';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(x + pad, botY);
+      ctx.lineTo(x + w - pad, botY);
+      ctx.stroke();
+
+      function drawLine(getter, color, width, dotR) {
+        ctx.strokeStyle = color;
+        ctx.fillStyle = color;
+        ctx.lineWidth = width;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        var started = false;
+        for (var i = 0; i <= lastIdx; i++) {
+          var px = x + pad + i * stepX;
+          var py = toY(getter(series[i]));
+          if (!started) { ctx.moveTo(px, py); started = true; }
+          else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+        for (var j = 0; j <= lastIdx; j++) {
+          ctx.beginPath();
+          ctx.arc(x + pad + j * stepX, toY(getter(series[j])), dotR, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // 合計の面塗り
+      if (lastIdx >= 1) {
+        ctx.fillStyle = 'rgba(255, 212, 92, 0.18)';
+        ctx.beginPath();
+        ctx.moveTo(x + pad, botY);
+        for (var k = 0; k <= lastIdx; k++) {
+          ctx.lineTo(x + pad + k * stepX, toY(series[k].total));
+        }
+        ctx.lineTo(x + pad + lastIdx * stepX, botY);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      drawLine(function (d) { return d.slot; }, SLOT_COLOR, 4, 6);
+      drawLine(function (d) { return d.pachinko; }, PACHI_COLOR, 4, 6);
+      drawLine(function (d) { return d.total; }, TOTAL_COLOR, 6, 8);
+
+      // 月ラベル
+      ctx.font = '22px -apple-system, "Hiragino Sans", sans-serif';
+      ctx.fillStyle = '#9098a4';
+      ctx.textAlign = 'center';
+      for (var m = 0; m < 12; m++) {
+        ctx.fillText((m + 1) + '月', x + pad + m * stepX, botY + 32);
+      }
+
+      // 凡例
+      ctx.font = '20px -apple-system, "Hiragino Sans", sans-serif';
+      ctx.textAlign = 'left';
+      var lx = x + 20, ly = y + h - 6;
+      ctx.fillStyle = SLOT_COLOR; ctx.fillRect(lx, ly - 14, 16, 14);
+      ctx.fillStyle = '#ecedf1'; ctx.fillText('スロット', lx + 24, ly);
+      ctx.fillStyle = PACHI_COLOR; ctx.fillRect(lx + 140, ly - 14, 16, 14);
+      ctx.fillStyle = '#ecedf1'; ctx.fillText('パチンコ', lx + 164, ly);
+      ctx.fillStyle = TOTAL_COLOR; ctx.fillRect(lx + 290, ly - 14, 16, 14);
+      ctx.fillStyle = '#ecedf1'; ctx.fillText('合計', lx + 314, ly);
+    }
+
+    function buildShareText() {
+      var live = liveBreakdown();
+      var total = live.slot + live.pachinko;
+      var t = 'PACHI BANK｜貯玉・貯メダル管理\n';
+      t += '現在の合計: ' + yen(total) + '\n';
+      t += 'スロット ' + yen(live.slot) + ' ／ パチンコ ' + yen(live.pachinko) + '\n';
+      t += '#PACHIBANK #貯玉 #貯メダル';
+      return t;
+    }
+
+    function fallbackShare(text) {
+      var full = text + '\n' + APP_URL;
+      try {
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(full).then(function () {
+            alert('共有内容をクリップボードにコピーしました。SNSに貼り付けてください。\n\n' + full);
+          }, function () {
+            window.prompt('下記をコピーしてSNSに貼り付けてください:', full);
+          });
+        } else {
+          window.prompt('下記をコピーしてSNSに貼り付けてください:', full);
+        }
+      } catch (e) {
+        window.prompt('下記をコピーしてSNSに貼り付けてください:', full);
+      }
+    }
+
+    document.getElementById('shareBtn').addEventListener('click', function () {
+      var text = buildShareText();
+      generateShareImage(function (blob) {
+        var shared = false;
+        try {
+          if (blob && typeof File !== 'undefined' && navigator.canShare) {
+            var file = new File([blob], 'pachi-bank.png', { type: 'image/png' });
+            if (navigator.canShare({ files: [file] })) {
+              navigator.share({
+                title: 'PACHI BANK',
+                text: text,
+                url: APP_URL,
+                files: [file]
+              }).then(function () { shared = true; }, function () {});
+              return;
+            }
+          }
+          if (navigator.share) {
+            navigator.share({ title: 'PACHI BANK', text: text, url: APP_URL })
+              .then(function () { shared = true; }, function () { fallbackShare(text); });
+            return;
+          }
+          fallbackShare(text);
+        } catch (e) {
+          fallbackShare(text);
+        }
+      });
     });
 
     try { document.getElementById('today').textContent = '本日: ' + todayStr(); } catch (e) {}

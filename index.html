@@ -132,14 +132,6 @@
   .chart-label {
     font-size: 10px; color: var(--sub); letter-spacing: 1px; text-transform: uppercase;
   }
-  .chart-tabs { display: flex; gap: 4px; }
-  .chart-tab {
-    background: transparent; border: 1px solid var(--line); color: var(--sub);
-    border-radius: 7px; padding: 3px 11px; font-size: 11px; cursor: pointer;
-    font-family: inherit;
-  }
-  .chart-tab.active { background: var(--card2); border-color: var(--accent-d); color: var(--accent); }
-  .chart-tab:active { opacity: 0.6; }
   .chart-year {
     margin-left: auto;
     display: flex; align-items: center; gap: 4px;
@@ -563,10 +555,6 @@
 <div class="chart-card" id="chartCard">
   <div class="chart-head">
     <span class="chart-label">月別推移</span>
-    <div class="chart-tabs">
-      <button class="chart-tab" data-type="bar">棒</button>
-      <button class="chart-tab" data-type="line">折線</button>
-    </div>
     <div class="chart-year">
       <button id="yearPrev" title="前の年">◀</button>
       <span class="yr" id="yearLabel">—</span>
@@ -576,6 +564,7 @@
   <div class="chart-legend">
     <span class="lg"><span class="sw" style="background:var(--slot)"></span>スロット</span>
     <span class="lg"><span class="sw" style="background:var(--pachi)"></span>パチンコ</span>
+    <span class="lg"><span class="sw" style="background:var(--accent)"></span>合計</span>
   </div>
   <div class="chart-body" id="chartBody"></div>
   <div class="chart-trend" id="chartTrend"></div>
@@ -617,12 +606,14 @@
 <details class="notes">
   <summary>確認メモ・使い方</summary>
   <ul>
+    <li><b>店舗を追加</b>：上部「＋ 店舗を追加」から登録。スロットとパチンコの貸／交換率もここで設定します。</li>
     <li><b>残高入力</b>：各店のスロット（貯メダル/枚）・パチンコ（貯玉/玉）の欄に当日の数を入力。換金額と合計が自動計算され、この端末のブラウザに自動保存されます。</li>
     <li><b>稼働モード</b>：上部「稼働モード」を押すと「使用」「回収」の入力が出ます。「転記」を押すと残高に反映されます。</li>
-    <li><b>月別推移グラフ</b>：選択した年の1〜12月で表示。<b>棒</b>はスロット（水色）＋パチンコ（ピンク）の積み上げで合計を可視化、<b>折線</b>はスロット／パチンコの2本線で月ごとの増減を可視化します。◀▶で年を切替。</li>
+    <li><b>月別推移グラフ</b>：選択した年の1〜12月の折線グラフを表示。スロット（水色）・パチンコ（ピンク）・合計（金色）の3本線で増減を可視化。◀▶で年を切替。</li>
     <li><b>各店のミニグラフ</b>：店舗カード下部に過去12週間の推移をスパークラインで表示（伸びていれば緑、落ちていれば赤）。</li>
     <li><b>お気に入り★</b>：常にリスト先頭に固定されます。</li>
     <li><b>フィルタ・並び替え</b>：店舗名検索、法人、並び順、「残高あり」のみ表示が可能。</li>
+    <li><b>データ移行</b>：設定の「エクスポート」でJSON保存、別端末で「インポート」で復元できます。</li>
     <li><b>ホーム画面に追加</b>：iPhoneのSafariで「共有 → ホーム画面に追加」でアプリのように起動・オフライン動作。</li>
   </ul>
 </details>
@@ -633,7 +624,7 @@
   <div class="modal">
     <h3>店舗を追加</h3>
     <label>店舗名 <span style="color:#ec6b6a">*</span>
-      <input id="f-name" type="text" list="storeNames" placeholder="入力で候補が出ます" autocomplete="off">
+      <input id="f-name" type="text" list="storeNames" placeholder="店舗名を入力" autocomplete="off">
     </label>
     <label>法人・チェーン
       <select id="f-corp-in">
@@ -706,6 +697,7 @@
     var STORE_KEY = 'chodama_v3';
     var SLOT_COLOR = '#62cee0';
     var PACHI_COLOR = '#ee94b1';
+    var TOTAL_COLOR = '#ffd45c';
 
     var KIND = {
       slot:     { label:'スロット', unit:'枚', cls:'tag-slot',  vcls:'slotc' },
@@ -718,70 +710,31 @@
       'エスパス日拓','やすだ','プレイランドハッピー','その他'
     ];
 
-    var D = [
-      ['maruhan-oriono','マルハン堺遠里小野店','マルハン','https://minpachi.com/maruhan-oriono/','https://www.p-world.co.jp/osaka/maruhan-oriono.htm',46,47,0,250,255,''],
-      ['maruhan-kitakagaya','マルハン北加賀屋店','マルハン','https://minpachi.com/%E3%83%9E%E3%83%AB%E3%83%8F%E3%83%B3%E5%8C%97%E5%8A%A0%E8%B3%80%E5%B1%8B%E5%BA%97/','https://www.p-world.co.jp/osaka/maruhan-kita.htm',46,47,0,250,255,'みんパチに交換率の記載なし。他マルハン店と同レートで暫定設定'],
-      ['maruhan-shinsekai','マルハン新世界店','マルハン','https://minpachi.com/maruhan-shinsekai/','https://www.p-world.co.jp/osaka/maruhan-shinsekai.htm',46,47,174,250,255,'⇧pw → 3830'],
-      ['kicona-sakai','グランキコーナ堺店','キコーナ','https://minpachi.com/grankicona-2/','https://www.p-world.co.jp/osaka/grankicona.htm',46,47,0,250,255,''],
-      ['bellagio-suminoe','ベラジオ住之江店','ベラジオ','https://minpachi.com/bellagio-b-5/','https://www.p-world.co.jp/osaka/bellagio-b-5.htm',46,50,1800,250,250,'スロット専門店（パチンコ取扱なし）。5k交換で-100円のギャップあり'],
-      ['bellagio-nishinaka','ベラジオ西中島店','ベラジオ','https://minpachi.com/bellagio-nishinaka/','https://www.p-world.co.jp/osaka/bellagio-nishinaka.htm',46,51.6,0,250,280,'5k交換で-100円のギャップあり'],
-      ['hyper-ms',"HYPER M's",'その他','https://minpachi.com/as-ms/','https://www.p-world.co.jp/osaka/as-ms.htm',46,51.6,0,250,280,''],
-      ['kicona-nishitanabe','キコーナ西田辺店','キコーナ','https://minpachi.com/kicona-nishitanabe/','https://www.p-world.co.jp/osaka/kicona-nishitanabe.htm',46,51.6,0,250,280,'20円スロット専用機は1台のみ・通常非稼働との口コミ'],
-      ['tamade123','123玉出店','123','https://minpachi.com/tamade123/','https://www.p-world.co.jp/osaka/tamade123.htm',46,56,472,250,280,'口コミではスロット実際5.1〜5.2との指摘も'],
-      ['nagai123','123長居店','123','https://minpachi.com/nagai123/','https://www.p-world.co.jp/osaka/nagai123.htm',46,52,0,250,280,''],
-      ['proots-suminoe','P-ROOTs住之江店','P-ROOTs','https://minpachi.com/proots-s/','https://www.p-world.co.jp/osaka/proots-s.htm',46,52,0,250,280,'「46枚貸47枚交換に変更」との口コミ報告あり'],
-      ['kikuya','キクヤ堺本店','その他','https://minpachi.com/kikuyasakaihonten/','https://www.p-world.co.jp/osaka/kikuyasakaihonten.htm',46,51.5,0,250,280,''],
-      ['richwell','リッチウエル本店','その他','https://minpachi.com/richwell/','https://www.p-world.co.jp/osaka/richwell.htm',46,52,0,250,256,'パチンコは4.38円貸の特殊レート'],
-      ['tennoji-hall','天王寺ホール本館','その他','https://minpachi.com/tennoji-hall/','https://www.p-world.co.jp/osaka/tennoji-hall.htm',46,53,0,250,280,'「換金率が大阪一悪い」との口コミあり'],
-      ['super-hall','スーパーホール','その他','https://minpachi.com/super-hall/','https://www.p-world.co.jp/osaka/super-hall.htm',46,51.5,0,250,280,''],
-      ['matsubara-123n','123+N松原店','123','https://minpachi.com/123-matsubara/','https://www.p-world.co.jp/osaka/123-matsubara.htm',46,51.6,0,250,280,''],
-      ['slot123-matsubara','スロット123松原店','123','https://minpachi.com/slot123matsubara/','https://www.p-world.co.jp/osaka/slot123matsubara.htm',46,52,0,250,250,'スロット専門店（パチンコ取扱なし）'],
-      ['cosmo-sakai','SUPER COSMO PREMIUM堺店','SUPER COSMO','https://minpachi.com/s-cosmo-city-acty/','https://www.p-world.co.jp/osaka/s-cosmo-city-acty.htm',46,52,0,250,280,''],
-      ['sigma','シグマ本店','その他','https://minpachi.com/siguma/','https://www.p-world.co.jp/osaka/siguma.htm',50,56,450,250,280,'スロットは280枚（=5,000円）単位で交換'],
-      ['proots-mandore','P-ROOTs MANDORE','P-ROOTs','https://minpachi.com/prootsmandore/','https://www.p-world.co.jp/osaka/prootsmandore.htm',50,56,500,250,280,'スロットは280枚（=5,000円）単位で交換'],
-      ['amuse-minami','アミューズ南住吉','その他','https://minpachi.com/amuse-minami/','https://www.p-world.co.jp/osaka/amuse-minami.htm',50,56,0,250,280,'スロットは280枚（=5,000円）単位で交換'],
-      ['daiichi-suminoe','大いち住之江店','その他','https://minpachi.com/daiichi-suminoe/','https://www.p-world.co.jp/osaka/daiichi-suminoe.htm',50,60,1070,250,300,''],
-      ['j-story','J-STORY','その他','https://minpachi.com/j-story/','',50,60,0,250,300,'2026/3/31閉店予定の記載 → 現在は閉店の可能性'],
-      ['monroe','Monroe','その他','https://minpachi.com/%EF%BD%8Donroe/','https://www.p-world.co.jp/osaka/monroe.htm',46,50,0,250,271,''],
-      ['tenichi','TENICHI西成店','その他','https://minpachi.com/tenichi-nishinari/','https://www.p-world.co.jp/osaka/tenichi-nishinari.htm',46,50,0,250,270,'生野店は別レート']
-    ];
-
-    var DEFAULT_CORP_MAP = {};
-    for (var di = 0; di < D.length; di++) DEFAULT_CORP_MAP[D[di][0]] = D[di][2];
-
     function buildSeed() {
-      var stores = [];
-      for (var i = 0; i < D.length; i++) {
-        var r = D[i];
-        stores.push({
-          id: r[0], name: r[1], corp: r[2], url: r[3], pworld: r[4],
-          memo: r[10], updated: null, favorite: false,
-          slot:     { defLend:r[5], defEx:r[6], lend:r[5], exchange:r[6], balance:r[7], used:0, collected:0 },
-          pachinko: { defLend:r[8], defEx:r[9], lend:r[8], exchange:r[9], balance:0,  used:0, collected:0 }
-        });
-      }
       return {
-        stores: stores,
-        filter: { corp:'all', sort:'default', onlyBalance:false, search:'', chartType:'bar', chartYear: (new Date()).getFullYear() },
+        stores: [],
+        filter: { corp:'all', sort:'default', onlyBalance:false, search:'', chartType:'line', chartYear: (new Date()).getFullYear() },
         history: {}
       };
     }
 
+    // 入力候補（参考用。任意のテキストも入力可）
     var NAME_SUGGEST = [
-      'マルハン堺遠里小野店','マルハン北加賀屋店','マルハン新世界店','グランキコーナ堺店','ベラジオ住之江店',
-      'ベラジオ西中島店',"HYPER M's",'キコーナ西田辺店','123玉出店','123長居店','P-ROOTs住之江店',
-      'キクヤ堺本店','リッチウエル本店','天王寺ホール本館','スーパーホール','123+N松原店','スロット123松原店',
-      'SUPER COSMO PREMIUM堺店','シグマ本店','P-ROOTs MANDORE','アミューズ南住吉','大いち住之江店','J-STORY',
-      'Monroe','TENICHI西成店',
       'マルハン日本橋店','マルハン梅田店','マルハン難波本店','マルハン都島店','マルハン東大阪店','マルハン泉佐野店',
-      'マルハン茨木店','マルハン高槻店','マルハン布施駅前店','キコーナ梅田店','キコーナ難波店','キコーナ十三店',
-      'キコーナ大正店','キコーナ住道店','キコーナ寝屋川店','キコーナ吹田店','キコーナ堺市駅前店','グランキコーナ大阪本店',
-      'グランキコーナ吹田店','グランキコーナ岸和田店','グランキコーナ茨木店','ベラジオ十三店','ベラジオ千日前店',
-      'ベラジオ平野店','ベラジオ堺中央店','ベラジオ岸和田店','123+N大阪本店','123+N梅田店','123+N布施店',
-      '123なんば店','123平野店','123堺東店','ピーアークなんば店','ダイナム大阪松原店','ダイナム大阪泉佐野店',
-      '楽園大阪店','エスパス日拓なんば店','やすだ日本橋店','やすだ千日前店','キング観光なんば店','KING OF KINGS梅田店',
-      'スーパーコスモ寝屋川店','スーパーコスモ枚方店','スーパーコスモ高石店','スーパーコスモ富田林店',
-      'プレイランドハッピー梅田店','ガイア難波店','ベガスベガス大阪店'
+      'マルハン茨木店','マルハン高槻店','マルハン布施駅前店','マルハン新世界店','マルハン北加賀屋店','マルハン堺遠里小野店',
+      'キコーナ梅田店','キコーナ難波店','キコーナ十三店','キコーナ大正店','キコーナ住道店','キコーナ寝屋川店',
+      'キコーナ吹田店','キコーナ西田辺店','キコーナ堺市駅前店','グランキコーナ大阪本店','グランキコーナ吹田店',
+      'グランキコーナ岸和田店','グランキコーナ茨木店','グランキコーナ堺店',
+      'ベラジオ十三店','ベラジオ千日前店','ベラジオ平野店','ベラジオ堺中央店','ベラジオ岸和田店',
+      'ベラジオ住之江店','ベラジオ西中島店',
+      '123+N大阪本店','123+N梅田店','123+N布施店','123+N松原店','123なんば店','123平野店','123堺東店',
+      '123玉出店','123長居店','スロット123松原店',
+      'P-ROOTs住之江店','P-ROOTs MANDORE','SUPER COSMO PREMIUM堺店','スーパーコスモ寝屋川店','スーパーコスモ枚方店',
+      'スーパーコスモ高石店','スーパーコスモ富田林店','ピーアークなんば店','ダイナム大阪松原店','ダイナム大阪泉佐野店',
+      '楽園大阪店','エスパス日拓なんば店','やすだ日本橋店','やすだ千日前店','キング観光なんば店',
+      'KING OF KINGS梅田店','プレイランドハッピー梅田店','ガイア難波店','ベガスベガス大阪店',
+      'シグマ本店','アミューズ南住吉','大いち住之江店','キクヤ堺本店','リッチウエル本店',
+      '天王寺ホール本館','スーパーホール',"HYPER M's",'Monroe','TENICHI西成店','J-STORY'
     ];
 
     var STAR_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6l2.84 6.31 6.86.6-5.2 4.6 1.56 6.79L12 17.34l-6.06 3.56 1.56-6.79-5.2-4.6 6.86-.6L12 2.6z"/></svg>';
@@ -819,9 +772,6 @@
     function storeValueEff(s) {
       return calcValue(effBal(s.slot), s.slot.exchange) + calcValue(effBal(s.pachinko), s.pachinko.exchange);
     }
-    function storeValue(s) {
-      return calcValue(s.slot.balance, s.slot.exchange) + calcValue(s.pachinko.balance, s.pachinko.exchange);
-    }
     function findStore(id) {
       for (var i = 0; i < store.stores.length; i++) if (store.stores[i].id === id) return store.stores[i];
       return null;
@@ -854,13 +804,11 @@
               if (typeof s.pachinko.used !== 'number') s.pachinko.used = 0;
               if (typeof s.pachinko.collected !== 'number') s.pachinko.collected = 0;
               if (typeof s.corp !== 'string') s.corp = 'その他';
-              if (DEFAULT_CORP_MAP[s.id]) s.corp = DEFAULT_CORP_MAP[s.id];
               if (MAJOR_CHAINS.indexOf(s.corp) === -1) s.corp = 'その他';
               if (typeof s.pworld !== 'string') s.pworld = '';
               if (typeof s.favorite !== 'boolean') s.favorite = false;
             }
-            if (!p.filter) p.filter = { corp:'all', sort:'default', onlyBalance:false, search:'', chartType:'bar' };
-            if (typeof p.filter.chartType !== 'string') p.filter.chartType = 'bar';
+            if (!p.filter) p.filter = { corp:'all', sort:'default', onlyBalance:false, search:'', chartType:'line' };
             if (typeof p.filter.chartYear !== 'number') p.filter.chartYear = (new Date()).getFullYear();
             if (!p.history || typeof p.history !== 'object') p.history = {};
             return p;
@@ -1014,7 +962,6 @@
              calcValue(snap[storeObj.id].p, storeObj.pachinko.exchange);
     }
 
-    // ---- 月別データ（選択年の1〜12月）----
     function getMonthlySeries(year) {
       var nowYear = (new Date()).getFullYear();
       var months = [];
@@ -1047,72 +994,13 @@
 
     // ---- グラフ描画 ----
     function renderChart() {
-      var type = (store.filter.chartType === 'line') ? 'line' : 'bar';
-      if (type === 'bar') renderMonthlyBar();
-      else renderMonthlyLine();
+      renderMonthlyLine();
     }
 
     function setupYearControls(year, nowYear) {
       document.getElementById('yearLabel').textContent = year + '年';
       document.getElementById('yearNext').disabled = (year >= nowYear);
       document.getElementById('yearPrev').disabled = false;
-    }
-
-    function renderMonthlyBar() {
-      var year = (store.filter.chartYear) || (new Date()).getFullYear();
-      var nowYear = (new Date()).getFullYear();
-      setupYearControls(year, nowYear);
-
-      var series = getMonthlySeries(year);
-      var body = document.getElementById('chartBody');
-      var trend = document.getElementById('chartTrend');
-      var note = document.getElementById('chartModeNote');
-
-      var hasAny = false;
-      for (var i = 0; i < series.length; i++) if (series[i].total > 0) { hasAny = true; break; }
-      if (!hasAny) {
-        body.innerHTML = '<div class="chart-empty">' + year + '年の履歴はまだありません</div>';
-        trend.innerHTML = '';
-        note.textContent = '';
-        return;
-      }
-
-      var w = 320, h = 150;
-      var pad = 10, gap = 3;
-      var n = series.length;
-      var max = 0;
-      for (var bi = 0; bi < n; bi++) if (series[bi].total > max) max = series[bi].total;
-      if (max === 0) max = 1;
-      var availH = h - 40;
-      var bottomY = h - 22;
-      var barW = (w - pad*2 - gap*(n-1)) / n;
-      var nowMonth = (year === nowYear) ? (new Date()).getMonth() + 1 : 12;
-
-      var svg = '<svg viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none">';
-      svg += '<line x1="' + pad + '" y1="' + bottomY + '" x2="' + (w-pad) + '" y2="' + bottomY + '" stroke="#2a2f3a" stroke-width="1"/>';
-      for (var j = 0; j < n; j++) {
-        var slotH = (series[j].slot / max) * availH;
-        var pacH = (series[j].pachinko / max) * availH;
-        if (series[j].slot > 0 && slotH < 1) slotH = 1;
-        if (series[j].pachinko > 0 && pacH < 1) pacH = 1;
-        var bx = pad + j * (barW + gap);
-        var isCurrent = (year === nowYear && (j + 1) === nowMonth);
-        var opacity = isCurrent ? '1' : '0.7';
-        // スロット（下）
-        if (slotH > 0) {
-          svg += '<rect x="' + bx + '" y="' + (bottomY - slotH) + '" width="' + barW + '" height="' + slotH + '" rx="1.5" fill="' + SLOT_COLOR + '" opacity="' + opacity + '"/>';
-        }
-        // パチンコ（上）
-        if (pacH > 0) {
-          svg += '<rect x="' + bx + '" y="' + (bottomY - slotH - pacH) + '" width="' + barW + '" height="' + pacH + '" rx="1.5" fill="' + PACHI_COLOR + '" opacity="' + opacity + '"/>';
-        }
-        svg += '<text x="' + (bx + barW/2) + '" y="' + (h - 7) + '" font-size="9" text-anchor="middle" fill="#9098a4">' + (j+1) + '</text>';
-      }
-      svg += '</svg>';
-      body.innerHTML = svg;
-
-      renderTrend(series, year, nowYear);
-      note.textContent = '棒: ' + year + '年の月末残高（スロット＋パチンコ積み上げ）';
     }
 
     function renderMonthlyLine() {
@@ -1141,44 +1029,52 @@
       var n = series.length;
       var max = 0;
       for (var mi = 0; mi < n; mi++) {
-        if (series[mi].slot > max) max = series[mi].slot;
-        if (series[mi].pachinko > max) max = series[mi].pachinko;
+        if (series[mi].total > max) max = series[mi].total;
       }
       if (max === 0) max = 1;
       function toY(v) { return botY - (v / max) * availH; }
       var stepX = (w - pad*2) / (n - 1);
 
-      // 最新有効月（今年なら今月、過去年なら12月）以降は点・線を描かない
       var lastIdx = (year === nowYear) ? ((new Date()).getMonth()) : 11;
 
-      var slotPts = [], pacPts = [];
+      var slotPts = [], pacPts = [], totPts = [];
       for (var pi = 0; pi <= lastIdx; pi++) {
         var x = pad + pi * stepX;
         slotPts.push([x, toY(series[pi].slot)]);
         pacPts.push([x, toY(series[pi].pachinko)]);
+        totPts.push([x, toY(series[pi].total)]);
       }
 
       var svg = '<svg viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none">';
       svg += '<line x1="' + pad + '" y1="' + botY + '" x2="' + (w-pad) + '" y2="' + botY + '" stroke="#2a2f3a" stroke-width="1"/>';
 
-      function drawSeries(pts, color) {
+      function drawSeries(pts, color, width, dotR) {
         if (pts.length < 1) return '';
         var out = '';
         if (pts.length >= 2) {
           var lineD = '';
           for (var lp = 0; lp < pts.length; lp++) lineD += (lp === 0 ? 'M ' : 'L ') + pts[lp][0].toFixed(1) + ',' + pts[lp][1].toFixed(1) + ' ';
-          out += '<path d="' + lineD + '" fill="none" stroke="' + color + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+          out += '<path d="' + lineD + '" fill="none" stroke="' + color + '" stroke-width="' + width + '" stroke-linejoin="round" stroke-linecap="round"/>';
         }
         for (var dp = 0; dp < pts.length; dp++) {
-          var r = (dp === pts.length - 1) ? 3 : 2;
+          var r = (dp === pts.length - 1) ? dotR + 0.5 : dotR;
           out += '<circle cx="' + pts[dp][0].toFixed(1) + '" cy="' + pts[dp][1].toFixed(1) + '" r="' + r + '" fill="' + color + '"/>';
         }
         return out;
       }
-      svg += drawSeries(slotPts, SLOT_COLOR);
-      svg += drawSeries(pacPts, PACHI_COLOR);
+      // 合計の面塗り
+      if (totPts.length >= 2) {
+        svg += '<defs><linearGradient id="totFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="' + TOTAL_COLOR + '" stop-opacity="0.22"/><stop offset="100%" stop-color="' + TOTAL_COLOR + '" stop-opacity="0"/></linearGradient></defs>';
+        var areaD = 'M ' + totPts[0][0].toFixed(1) + ',' + botY.toFixed(1) + ' ';
+        for (var ai = 0; ai < totPts.length; ai++) areaD += 'L ' + totPts[ai][0].toFixed(1) + ',' + totPts[ai][1].toFixed(1) + ' ';
+        areaD += 'L ' + totPts[totPts.length-1][0].toFixed(1) + ',' + botY.toFixed(1) + ' Z';
+        svg += '<path d="' + areaD + '" fill="url(#totFill)"/>';
+      }
+      // 描画: スロット → パチンコ → 合計（合計を最前面）
+      svg += drawSeries(slotPts, SLOT_COLOR, 1.8, 2);
+      svg += drawSeries(pacPts, PACHI_COLOR, 1.8, 2);
+      svg += drawSeries(totPts, TOTAL_COLOR, 2.4, 2.4);
 
-      // 月ラベル
       for (var lx = 0; lx < n; lx++) {
         var lxv = pad + lx * stepX;
         svg += '<text x="' + lxv.toFixed(1) + '" y="' + (h - 7) + '" font-size="9" text-anchor="middle" fill="#9098a4">' + (lx+1) + '</text>';
@@ -1187,7 +1083,7 @@
       body.innerHTML = svg;
 
       renderTrend(series, year, nowYear);
-      note.textContent = '折線: ' + year + '年のスロット／パチンコ別の月末残高';
+      note.textContent = '折線: ' + year + '年のスロット／パチンコ／合計（月末残高）';
     }
 
     function renderTrend(series, year, nowYear) {
@@ -1413,7 +1309,7 @@
       if (!store.stores.length) {
         var empty = document.createElement('div');
         empty.className = 'empty';
-        empty.textContent = '登録されている店舗がありません。「＋ 店舗を追加」から追加してください。';
+        empty.textContent = '登録されている店舗がありません。上の「＋ 店舗を追加」から登録してください。';
         list.appendChild(empty);
       } else if (!visible.length) {
         var none = document.createElement('div');
@@ -1456,25 +1352,6 @@
       for (var i = 0; i < NAME_SUGGEST.length; i++) h += '<option value="' + esc(NAME_SUGGEST[i]) + '">';
       dl1.innerHTML = h;
     })();
-
-    // ---- チャートタブ ----
-    var chartTabs = document.getElementsByClassName('chart-tab');
-    function updateChartTabUI() {
-      for (var i = 0; i < chartTabs.length; i++) {
-        chartTabs[i].className = 'chart-tab' + (chartTabs[i].getAttribute('data-type') === store.filter.chartType ? ' active' : '');
-      }
-    }
-    for (var ci = 0; ci < chartTabs.length; ci++) {
-      (function (btn) {
-        btn.addEventListener('click', function () {
-          store.filter.chartType = btn.getAttribute('data-type');
-          updateChartTabUI();
-          try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch (e) {}
-          renderChart();
-        });
-      })(chartTabs[ci]);
-    }
-    updateChartTabUI();
 
     // ---- 年セレクタ ----
     document.getElementById('yearPrev').addEventListener('click', function () {
@@ -1620,7 +1497,7 @@
         var p = JSON.parse(json);
         if (!p || !p.stores) throw new Error('構造が不正');
         store = p;
-        if (!store.filter) store.filter = { corp:'all', sort:'default', onlyBalance:false, search:'', chartType:'bar', chartYear:(new Date()).getFullYear() };
+        if (!store.filter) store.filter = { corp:'all', sort:'default', onlyBalance:false, search:'', chartType:'line', chartYear:(new Date()).getFullYear() };
         if (typeof store.filter.chartYear !== 'number') store.filter.chartYear = (new Date()).getFullYear();
         if (!store.history) store.history = {};
         try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch (e) {}

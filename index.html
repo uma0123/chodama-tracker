@@ -127,7 +127,7 @@
   }
   .chart-head {
     display: flex; align-items: center; gap: 10px;
-    margin-bottom: 6px;
+    margin-bottom: 6px; flex-wrap: wrap;
   }
   .chart-label {
     font-size: 10px; color: var(--sub); letter-spacing: 1px; text-transform: uppercase;
@@ -140,7 +140,22 @@
   }
   .chart-tab.active { background: var(--card2); border-color: var(--accent-d); color: var(--accent); }
   .chart-tab:active { opacity: 0.6; }
-  .chart-period { font-size: 10px; color: var(--dim); margin-left: auto; }
+  .chart-year {
+    margin-left: auto;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .chart-year button {
+    background: transparent; border: 1px solid var(--line); color: var(--sub);
+    border-radius: 6px; padding: 2px 8px; font-size: 11px; cursor: pointer;
+    font-family: inherit;
+    min-width: 24px;
+  }
+  .chart-year button:disabled { opacity: 0.25; cursor: default; }
+  .chart-year button:not(:disabled):active { opacity: 0.5; }
+  .chart-year .yr {
+    font-size: 12px; color: var(--accent); font-weight: 700;
+    min-width: 42px; text-align: center;
+  }
   .chart-body { width: 100%; }
   .chart-body svg { display: block; width: 100%; height: 140px; }
   .chart-empty {
@@ -154,6 +169,9 @@
   .chart-trend b { color: var(--text); font-weight: 700; margin-left: 2px; }
   .chart-trend b.up { color: var(--green); }
   .chart-trend b.down { color: var(--red); }
+  .chart-mode-note {
+    margin-top: 2px; font-size: 10px; color: var(--dim);
+  }
 
   .toolbar { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
   .btn {
@@ -336,7 +354,6 @@
   .value.pachic { color: var(--pachi); }
   .value.z { color: var(--dim); font-weight: 400; }
 
-  /* 稼働モードの行 */
   .sessionrow {
     display: none;
     align-items: center;
@@ -413,12 +430,18 @@
     margin-top: 8px; padding: 0 2px;
     font-size: 12px; color: var(--sub);
   }
-  .cardfoot .ftxt { display: flex; align-items: baseline; gap: 8px; flex: 1; }
+  .cardfoot .ftxt { display: flex; align-items: baseline; gap: 8px; flex: 1; min-width: 0; }
   .cardfoot b {
     color: var(--accent); font-size: 16px; font-weight: 700;
     letter-spacing: -0.2px;
   }
-  .cardfoot .upd { font-size: 10px; color: var(--dim); }
+  .cardfoot .upd { font-size: 10px; color: var(--dim); white-space: nowrap; }
+  .spark {
+    display: none;
+    width: 70px; height: 22px;
+    flex-shrink: 0;
+  }
+  .spark.show { display: inline-block; }
   .commit {
     display: none;
     background: linear-gradient(180deg, #5a2a4a, #3a1a32);
@@ -534,10 +557,15 @@
       <button class="chart-tab" data-type="bar">棒</button>
       <button class="chart-tab" data-type="line">折線</button>
     </div>
-    <span class="chart-period" id="chartPeriod"></span>
+    <div class="chart-year">
+      <button id="yearPrev" title="前の年">◀</button>
+      <span class="yr" id="yearLabel">—</span>
+      <button id="yearNext" title="次の年">▶</button>
+    </div>
   </div>
   <div class="chart-body" id="chartBody"></div>
   <div class="chart-trend" id="chartTrend"></div>
+  <div class="chart-mode-note" id="chartModeNote"></div>
 </div>
 
 <div class="toolbar">
@@ -576,11 +604,11 @@
   <summary>確認メモ・使い方</summary>
   <ul>
     <li><b>残高入力</b>：各店のスロット（貯メダル/枚）・パチンコ（貯玉/玉）の欄に当日の数を入力。換金額と合計が自動計算され、この端末のブラウザに自動保存されます。</li>
-    <li><b>稼働モード</b>：上部「稼働モード」を押すと各店に「使用」「回収」の入力が出ます。差引枚数・差引金額がリアルタイムで表示され、稼働終了時にカード下の「転記」を押すと残高に反映されます。</li>
-    <li><b>月次推移</b>：直近12ヶ月分を棒/折線で表示。今月は自動で現在の残高、過去はその月末の最新スナップショット。</li>
-    <li><b>お気に入り★</b>：店舗の星をタップでお気に入り。常にリスト先頭に固定されます。</li>
-    <li><b>フィルタ・並び替え</b>：店舗名検索、法人で絞り込み、並び順、「残高あり」のみ表示が可能。</li>
-    <li><b>レート修正</b>：上部「レート設定」で各店の貸／交換を編集。「↺」で初期値に戻せます。</li>
+    <li><b>稼働モード</b>：上部「稼働モード」を押すと「使用」「回収」の入力が出ます。「転記」を押すと残高に反映されます。</li>
+    <li><b>月次推移グラフ</b>：右上の◀▶で年を切替。棒＝月ごとの残高、折線＝年初からの累計収支（年初比でどれだけ増減したか）。</li>
+    <li><b>各店のミニグラフ</b>：店舗カード下部に過去12週間の推移をスパークラインで表示（伸びていれば緑、落ちていれば赤）。</li>
+    <li><b>お気に入り★</b>：常にリスト先頭に固定されます。</li>
+    <li><b>フィルタ・並び替え</b>：店舗名検索、法人、並び順、「残高あり」のみ表示が可能。</li>
     <li><b>ホーム画面に追加</b>：iPhoneのSafariで「共有 → ホーム画面に追加」でアプリのように起動・オフライン動作。</li>
   </ul>
 </details>
@@ -718,7 +746,7 @@
       }
       return {
         stores: stores,
-        filter: { corp:'all', sort:'default', onlyBalance:false, search:'', chartType:'bar' },
+        filter: { corp:'all', sort:'default', onlyBalance:false, search:'', chartType:'bar', chartYear: (new Date()).getFullYear() },
         history: {}
       };
     }
@@ -742,13 +770,15 @@
 
     var STAR_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6l2.84 6.31 6.86.6-5.2 4.6 1.56 6.79L12 17.34l-6.06 3.56 1.56-6.79-5.2-4.6 6.86-.6L12 2.6z"/></svg>';
 
+    function pad2(n) { var s = String(n); return s.length < 2 ? '0' + s : s; }
     function todayStr() {
       var d = new Date();
-      var m = String(d.getMonth() + 1);
-      var day = String(d.getDate());
-      if (m.length < 2) m = '0' + m;
-      if (day.length < 2) day = '0' + day;
-      return d.getFullYear() + '-' + m + '-' + day;
+      return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+    }
+    function dateOffset(days) {
+      var d = new Date();
+      d.setDate(d.getDate() - days);
+      return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
     }
     function num(v) { var n = Number(v); return (isNaN(n) || n < 0) ? 0 : n; }
     function calcValue(b, e) { return (!b || b <= 0 || !e || e <= 0) ? 0 : Math.round(b / e * 1000); }
@@ -769,9 +799,7 @@
         return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
       });
     }
-    function effBal(k) {
-      return Math.max(0, (k.balance || 0) - (k.used || 0) + (k.collected || 0));
-    }
+    function effBal(k) { return Math.max(0, (k.balance || 0) - (k.used || 0) + (k.collected || 0)); }
     function storeValueEff(s) {
       return calcValue(effBal(s.slot), s.slot.exchange) + calcValue(effBal(s.pachinko), s.pachinko.exchange);
     }
@@ -809,6 +837,7 @@
             }
             if (!p.filter) p.filter = { corp:'all', sort:'default', onlyBalance:false, search:'', chartType:'bar' };
             if (typeof p.filter.chartType !== 'string') p.filter.chartType = 'bar';
+            if (typeof p.filter.chartYear !== 'number') p.filter.chartYear = (new Date()).getFullYear();
             if (!p.history || typeof p.history !== 'object') p.history = {};
             return p;
           }
@@ -893,6 +922,7 @@
       if (s.favorite) cls += ' fav-on';
       if (hasSession(s)) cls += ' has-session';
       card.className = cls;
+      renderStoreSpark(card, s);
     }
 
     function refreshTotal() {
@@ -925,59 +955,105 @@
       renderChart();
     }
 
-    // ---- 月次推移グラフ（その年の1〜12月）----
-    function getMonthlySeries() {
-      var now = new Date();
-      var year = now.getFullYear();
+    // ---- 履歴ユーティリティ ----
+    function snapshotValueAtOrBefore(dateStr) {
+      // dateStr時点で最新のスナップショットの合計金額（現在の交換率を使用）
+      if (!store.history) return null;
+      var dates = Object.keys(store.history).sort();
+      var latest = null;
+      for (var i = 0; i < dates.length; i++) {
+        if (dates[i] <= dateStr) latest = dates[i]; else break;
+      }
+      if (!latest) return null;
+      var snap = store.history[latest];
+      var total = 0;
+      for (var id in snap) {
+        if (!Object.prototype.hasOwnProperty.call(snap, id)) continue;
+        var s = findStore(id);
+        if (!s) continue;
+        total += calcValue(snap[id].s, s.slot.exchange);
+        total += calcValue(snap[id].p, s.pachinko.exchange);
+      }
+      return total;
+    }
+
+    function storeSnapshotValueAtOrBefore(storeObj, dateStr) {
+      if (!store.history) return 0;
+      var dates = Object.keys(store.history).sort();
+      var latest = null;
+      for (var i = 0; i < dates.length; i++) {
+        if (dates[i] <= dateStr) latest = dates[i]; else break;
+      }
+      if (!latest) return 0;
+      var snap = store.history[latest];
+      if (!snap[storeObj.id]) return 0;
+      return calcValue(snap[storeObj.id].s, storeObj.slot.exchange) +
+             calcValue(snap[storeObj.id].p, storeObj.pachinko.exchange);
+    }
+
+    // ---- 月次推移グラフ ----
+    function getMonthlySeries(year) {
+      var nowYear = (new Date()).getFullYear();
       var months = [];
       for (var m = 1; m <= 12; m++) {
-        var ym = year + '-' + (m < 10 ? '0' : '') + m;
+        var ym = year + '-' + pad2(m);
         months.push({ ym: ym, value: 0 });
       }
-      var snapshotDates = store.history ? Object.keys(store.history).sort() : [];
+      // 各月末時点の最新スナップショット合計
       for (var j = 0; j < months.length; j++) {
         var monthEnd = months[j].ym + '-31';
-        var latest = null;
-        for (var k = 0; k < snapshotDates.length; k++) {
-          if (snapshotDates[k] <= monthEnd) latest = snapshotDates[k];
-          else break;
-        }
-        if (latest) {
-          var snap = store.history[latest];
-          var total = 0;
-          for (var id in snap) {
-            if (!Object.prototype.hasOwnProperty.call(snap, id)) continue;
-            var s = findStore(id);
-            if (!s) continue;
-            total += calcValue(snap[id].s, s.slot.exchange);
-            total += calcValue(snap[id].p, s.pachinko.exchange);
-          }
-          months[j].value = total;
-        }
+        var v = snapshotValueAtOrBefore(monthEnd);
+        if (v !== null) months[j].value = v;
       }
-      // 現在月は最新の残高（稼働中の暫定値も反映）で上書き
-      var nowYm = todayStr().substring(0, 7);
-      var liveTotal = 0;
-      for (var x = 0; x < store.stores.length; x++) liveTotal += storeValueEff(store.stores[x]);
-      for (var y = 0; y < months.length; y++) {
-        if (months[y].ym === nowYm) months[y].value = liveTotal;
+      // 表示年が今年なら、現在月は最新（稼働反映後）残高で上書き
+      if (year === nowYear) {
+        var nowMonth = (new Date()).getMonth() + 1;
+        var liveTotal = 0;
+        for (var x = 0; x < store.stores.length; x++) liveTotal += storeValueEff(store.stores[x]);
+        for (var y = 0; y < months.length; y++) {
+          if (months[y].ym === year + '-' + pad2(nowMonth)) months[y].value = liveTotal;
+        }
       }
       return months;
     }
 
     function renderChart() {
-      var series = getMonthlySeries();
+      var year = (store.filter.chartYear) || (new Date()).getFullYear();
+      var nowYear = (new Date()).getFullYear();
+      document.getElementById('yearLabel').textContent = year + '年';
+      document.getElementById('yearNext').disabled = (year >= nowYear);
+      document.getElementById('yearPrev').disabled = false;
+
+      var series = getMonthlySeries(year);
       var body = document.getElementById('chartBody');
-      var period = document.getElementById('chartPeriod');
       var trend = document.getElementById('chartTrend');
+      var note = document.getElementById('chartModeNote');
       var type = (store.filter.chartType === 'line') ? 'line' : 'bar';
 
-      var max = 0;
-      for (var i = 0; i < series.length; i++) if (series[i].value > max) max = series[i].value;
-      if (max === 0) {
-        body.innerHTML = '<div class="chart-empty">残高を入力すると履歴が蓄積されます</div>';
-        period.textContent = '';
+      var hasAny = false;
+      for (var i = 0; i < series.length; i++) if (series[i].value > 0) { hasAny = true; break; }
+
+      // 年初時点のベースライン（前年12月末以前の最新値）
+      var baseline = snapshotValueAtOrBefore(year + '-01-01') || 0;
+      // 年初を切るために前年最終日の値を使う場合の補正
+      var baseAtYearStart = snapshotValueAtOrBefore((year - 1) + '-12-31') || 0;
+
+      // 折線用の累計収支（各月末の残高 - 年初基準）
+      var cumSeries = [];
+      for (var ci = 0; ci < series.length; ci++) {
+        cumSeries.push({ ym: series[ci].ym, value: series[ci].value === 0 && !hasAny ? 0 : (series[ci].value - baseAtYearStart) });
+      }
+      // 残高がゼロのままだった月（データが入る前）は0表示にする
+      var firstDataIdx = -1;
+      for (var fi = 0; fi < series.length; fi++) if (series[fi].value > 0) { firstDataIdx = fi; break; }
+      if (firstDataIdx >= 0) {
+        for (var ck = 0; ck < firstDataIdx; ck++) cumSeries[ck].value = 0;
+      }
+
+      if (!hasAny) {
+        body.innerHTML = '<div class="chart-empty">' + year + '年の履歴はまだありません</div>';
         trend.innerHTML = '';
+        note.textContent = '';
         return;
       }
 
@@ -985,66 +1061,141 @@
       var pad = 10, gap = 3;
       var n = series.length;
       var svg = '<svg viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none">';
-      svg += '<line x1="' + pad + '" y1="' + (h-22) + '" x2="' + (w-pad) + '" y2="' + (h-22) + '" stroke="#2a2f3a" stroke-width="1"/>';
 
       if (type === 'bar') {
+        var max = 0;
+        for (var bi = 0; bi < n; bi++) if (series[bi].value > max) max = series[bi].value;
+        if (max === 0) max = 1;
+        svg += '<line x1="' + pad + '" y1="' + (h-22) + '" x2="' + (w-pad) + '" y2="' + (h-22) + '" stroke="#2a2f3a" stroke-width="1"/>';
         var barW = (w - pad*2 - gap*(n-1)) / n;
+        var nowMonth = (year === nowYear) ? (new Date()).getMonth() + 1 : 12;
         for (var j = 0; j < n; j++) {
           var v = series[j].value;
           var bh = (v / max) * (h - 40);
           if (v > 0 && bh < 1) bh = 1;
           var by = h - 22 - bh;
           var bx = pad + j * (barW + gap);
-          var isLast = (j === n - 1);
-          var fill = isLast ? '#ffd45c' : '#7a6428';
+          var isCurrent = (year === nowYear && (j + 1) === nowMonth);
+          var fill = isCurrent ? '#ffd45c' : '#7a6428';
           if (v > 0) svg += '<rect x="' + bx + '" y="' + by + '" width="' + barW + '" height="' + bh + '" rx="2" fill="' + fill + '"/>';
-          var monthNum = parseInt(series[j].ym.substring(5), 10);
-          svg += '<text x="' + (bx + barW/2) + '" y="' + (h - 7) + '" font-size="9" text-anchor="middle" fill="#9098a4">' + monthNum + '</text>';
+          svg += '<text x="' + (bx + barW/2) + '" y="' + (h - 7) + '" font-size="9" text-anchor="middle" fill="#9098a4">' + (j+1) + '</text>';
         }
+        note.textContent = '棒: 各月末の残高合計';
       } else {
-        // 折線
+        // 折線：年初比の累計収支
+        var vmin = 0, vmax = 0;
+        for (var li = 0; li < n; li++) {
+          if (cumSeries[li].value > vmax) vmax = cumSeries[li].value;
+          if (cumSeries[li].value < vmin) vmin = cumSeries[li].value;
+        }
+        if (vmax - vmin === 0) { vmax = vmin + 1; }
+        var topY = 10, botY = h - 22;
+        var availH = botY - topY;
+        function toY(val) { return topY + (vmax - val) / (vmax - vmin) * availH; }
+        var zeroY = toY(0);
         var stepX = (w - pad*2) / (n - 1);
         var pts = [];
-        for (var jj = 0; jj < n; jj++) {
-          var px = pad + jj * stepX;
-          var py = (h - 22) - (series[jj].value / max) * (h - 40);
-          pts.push([px, py]);
-        }
-        // 塗り（面）
-        var areaD = 'M ' + pts[0][0] + ',' + (h - 22) + ' ';
-        for (var jp = 0; jp < n; jp++) areaD += 'L ' + pts[jp][0] + ',' + pts[jp][1] + ' ';
-        areaD += 'L ' + pts[n-1][0] + ',' + (h - 22) + ' Z';
+        for (var pi = 0; pi < n; pi++) pts.push([pad + pi * stepX, toY(cumSeries[pi].value)]);
+        // ゼロ基準線
+        svg += '<line x1="' + pad + '" y1="' + zeroY.toFixed(1) + '" x2="' + (w-pad) + '" y2="' + zeroY.toFixed(1) + '" stroke="#3a4150" stroke-width="1" stroke-dasharray="2 3"/>';
+        // 面塗り
         svg += '<defs><linearGradient id="lineFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffd45c" stop-opacity="0.35"/><stop offset="100%" stop-color="#ffd45c" stop-opacity="0"/></linearGradient></defs>';
+        var areaD = 'M ' + pts[0][0].toFixed(1) + ',' + zeroY.toFixed(1) + ' ';
+        for (var ai = 0; ai < n; ai++) areaD += 'L ' + pts[ai][0].toFixed(1) + ',' + pts[ai][1].toFixed(1) + ' ';
+        areaD += 'L ' + pts[n-1][0].toFixed(1) + ',' + zeroY.toFixed(1) + ' Z';
         svg += '<path d="' + areaD + '" fill="url(#lineFill)"/>';
         // 折線
         var lineD = '';
-        for (var jl = 0; jl < n; jl++) lineD += (jl === 0 ? 'M ' : 'L ') + pts[jl][0] + ',' + pts[jl][1] + ' ';
+        for (var lp = 0; lp < n; lp++) lineD += (lp === 0 ? 'M ' : 'L ') + pts[lp][0].toFixed(1) + ',' + pts[lp][1].toFixed(1) + ' ';
         svg += '<path d="' + lineD + '" fill="none" stroke="#ffd45c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
         // 点
-        for (var jd = 0; jd < n; jd++) {
-          var r = (jd === n - 1) ? 3.2 : 2;
-          svg += '<circle cx="' + pts[jd][0] + '" cy="' + pts[jd][1] + '" r="' + r + '" fill="#ffd45c"/>';
+        for (var dp = 0; dp < n; dp++) {
+          var r = ((year === nowYear) && (dp + 1) === ((new Date()).getMonth() + 1)) ? 3.2 : 2;
+          svg += '<circle cx="' + pts[dp][0].toFixed(1) + '" cy="' + pts[dp][1].toFixed(1) + '" r="' + r + '" fill="#ffd45c"/>';
         }
         // ラベル
-        for (var jx = 0; jx < n; jx++) {
-          var mn = parseInt(series[jx].ym.substring(5), 10);
-          svg += '<text x="' + pts[jx][0] + '" y="' + (h - 7) + '" font-size="9" text-anchor="middle" fill="#9098a4">' + mn + '</text>';
+        for (var lx = 0; lx < n; lx++) {
+          svg += '<text x="' + pts[lx][0].toFixed(1) + '" y="' + (h - 7) + '" font-size="9" text-anchor="middle" fill="#9098a4">' + (lx+1) + '</text>';
         }
+        note.textContent = '折線: ' + year + '年の累計収支（年初比）';
       }
       svg += '</svg>';
       body.innerHTML = svg;
 
-      period.textContent = series[0].ym + ' 〜 ' + series[n - 1].ym;
-
-      var cur = series[n - 1].value;
-      var prev = (n >= 2) ? series[n - 2].value : 0;
-      var diff = cur - prev;
-      var html = '今月 <b>' + yen(cur) + '</b>';
-      if (n >= 2) {
-        var cls = diff > 0 ? 'up' : (diff < 0 ? 'down' : '');
-        html += '<span>先月比 <b class="' + cls + '">' + yenSigned(diff) + '</b></span>';
+      // トレンド表示
+      var html = '';
+      var lastVal = series[n - 1].value;
+      var prevVal = (n >= 2) ? series[n - 2].value : 0;
+      // 現在年の場合は当月、それ以外の年の場合は12月末を表示
+      var labelMonth = (year === nowYear) ? ((new Date()).getMonth() + 1) : 12;
+      var labelText = (year === nowYear) ? '今月' : '12月末';
+      html += labelText + ' <b>' + yen(series[labelMonth - 1].value) + '</b>';
+      if (labelMonth >= 2 && series[labelMonth - 2].value > 0) {
+        var diff = series[labelMonth - 1].value - series[labelMonth - 2].value;
+        var dcls = diff > 0 ? 'up' : (diff < 0 ? 'down' : '');
+        html += '<span>前月比 <b class="' + dcls + '">' + yenSigned(diff) + '</b></span>';
       }
+      // 年間累計収支（現時点 - 年初基準）
+      var nowMonthIdx = (year === nowYear) ? (new Date()).getMonth() : 11;
+      var yearPL = series[nowMonthIdx].value - baseAtYearStart;
+      if (series[nowMonthIdx].value === 0 && baseAtYearStart === 0) yearPL = 0;
+      var ycls = yearPL > 0 ? 'up' : (yearPL < 0 ? 'down' : '');
+      html += '<span>' + year + '年 収支 <b class="' + ycls + '">' + yenSigned(yearPL) + '</b></span>';
       trend.innerHTML = html;
+    }
+
+    // ---- 店舗別スパークライン（過去12週間）----
+    function renderStoreSpark(card, s) {
+      var sparkEl = card.querySelector('.spark');
+      if (!sparkEl) return;
+      var dates = store.history ? Object.keys(store.history).sort() : [];
+      var weeklyVals = [];
+      for (var w = 11; w >= 0; w--) {
+        var weekEnd = dateOffset(w * 7);
+        weeklyVals.push(storeSnapshotValueAtOrBefore(s, weekEnd));
+      }
+      // 直近は現在の残高を使用
+      weeklyVals[weeklyVals.length - 1] = storeValueEff(s);
+
+      var hasData = false;
+      for (var hi = 0; hi < weeklyVals.length; hi++) if (weeklyVals[hi] > 0) { hasData = true; break; }
+      if (!hasData) { sparkEl.className = 'spark'; sparkEl.innerHTML = ''; return; }
+      sparkEl.className = 'spark show';
+
+      var minV = Infinity, maxV = -Infinity;
+      for (var mi = 0; mi < weeklyVals.length; mi++) {
+        if (weeklyVals[mi] < minV) minV = weeklyVals[mi];
+        if (weeklyVals[mi] > maxV) maxV = weeklyVals[mi];
+      }
+      var rng = maxV - minV;
+      if (rng === 0) rng = 1;
+
+      var sw = 70, sh = 22, ipad = 2;
+      var stepX = (sw - ipad*2) / (weeklyVals.length - 1);
+      var pts = [];
+      for (var pi = 0; pi < weeklyVals.length; pi++) {
+        var x = ipad + pi * stepX;
+        var y = (sh - ipad) - ((weeklyVals[pi] - minV) / rng) * (sh - ipad*2);
+        pts.push([x, y]);
+      }
+      // 傾向判定（最初の非ゼロから最後）
+      var first = 0;
+      for (var fi2 = 0; fi2 < weeklyVals.length; fi2++) if (weeklyVals[fi2] > 0) { first = weeklyVals[fi2]; break; }
+      var last = weeklyVals[weeklyVals.length - 1];
+      var color = '#ffd45c';
+      if (last > first) color = '#6ed59d';
+      else if (last < first) color = '#ec6b6a';
+
+      var d = '';
+      for (var li = 0; li < pts.length; li++) d += (li === 0 ? 'M ' : 'L ') + pts[li][0].toFixed(1) + ',' + pts[li][1].toFixed(1) + ' ';
+      var svg = '<svg viewBox="0 0 ' + sw + ' ' + sh + '" width="' + sw + '" height="' + sh + '">';
+      svg += '<path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>';
+      svg += '<circle cx="' + pts[pts.length-1][0].toFixed(1) + '" cy="' + pts[pts.length-1][1].toFixed(1) + '" r="2" fill="' + color + '"/>';
+      svg += '</svg>';
+      sparkEl.outerHTML = '<svg class="spark show" viewBox="0 0 ' + sw + ' ' + sh + '" width="' + sw + '" height="' + sh + '">' +
+        '<path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>' +
+        '<circle cx="' + pts[pts.length-1][0].toFixed(1) + '" cy="' + pts[pts.length-1][1].toFixed(1) + '" r="2" fill="' + color + '"/>' +
+        '</svg>';
     }
 
     function segHtml(kind, k) {
@@ -1135,6 +1286,7 @@
         (s.memo ? '<div class="memo">' + esc(s.memo) + '</div>' : '') +
         '<div class="cardfoot">' +
           '<span class="ftxt">店舗計 <b class="stotal">¥0</b><span class="upd"></span></span>' +
+          '<svg class="spark" viewBox="0 0 70 22" width="70" height="22"></svg>' +
           '<button class="commit" title="使用・回収を残高に反映">転記</button>' +
         '</div>';
       list.appendChild(card);
@@ -1256,6 +1408,21 @@
       })(chartTabs[ci]);
     }
     updateChartTabUI();
+
+    // ---- 年セレクタ ----
+    document.getElementById('yearPrev').addEventListener('click', function () {
+      store.filter.chartYear = (store.filter.chartYear || (new Date()).getFullYear()) - 1;
+      try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch (e) {}
+      renderChart();
+    });
+    document.getElementById('yearNext').addEventListener('click', function () {
+      var nowY = (new Date()).getFullYear();
+      var ny = (store.filter.chartYear || nowY) + 1;
+      if (ny > nowY) ny = nowY;
+      store.filter.chartYear = ny;
+      try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch (e) {}
+      renderChart();
+    });
 
     // ---- レート/稼働モードトグル ----
     function applyModes() {
@@ -1386,7 +1553,8 @@
         var p = JSON.parse(json);
         if (!p || !p.stores) throw new Error('構造が不正');
         store = p;
-        if (!store.filter) store.filter = { corp:'all', sort:'default', onlyBalance:false, search:'', chartType:'bar' };
+        if (!store.filter) store.filter = { corp:'all', sort:'default', onlyBalance:false, search:'', chartType:'bar', chartYear:(new Date()).getFullYear() };
+        if (typeof store.filter.chartYear !== 'number') store.filter.chartYear = (new Date()).getFullYear();
         if (!store.history) store.history = {};
         try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch (e) {}
         render();

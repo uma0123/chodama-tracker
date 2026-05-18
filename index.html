@@ -1718,9 +1718,9 @@
       var lines = [];
       var headline;
       if (store.filter.chartMode === 'month') {
-        headline = '今日の貯金まとめ｜' + store.filter.chartYear + '年' + store.filter.chartMonth + '月';
+        headline = 'パチスロ貯メダル・貯玉まとめ｜' + store.filter.chartYear + '年' + store.filter.chartMonth + '月';
       } else {
-        headline = '今日の貯金まとめ｜' + store.filter.chartYear + '年';
+        headline = 'パチスロ貯メダル・貯玉まとめ｜' + store.filter.chartYear + '年';
       }
       lines.push(headline);
       var showTotal = v.total || (v.slot && v.pachi);
@@ -1773,7 +1773,7 @@
         } else {
           subPeriod = store.filter.chartYear + '年の推移';
         }
-        ctx.fillText('パチンコ・スロット 貯玉まとめ', W / 2, 270);
+        ctx.fillText('パチスロ貯メダル・貯玉まとめ', W / 2, 270);
 
         // 区切り線
         ctx.strokeStyle = '#3b3520';

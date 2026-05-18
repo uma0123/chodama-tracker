@@ -925,14 +925,13 @@
       renderChart();
     }
 
-    // ---- 月次推移グラフ ----
+    // ---- 月次推移グラフ（その年の1〜12月）----
     function getMonthlySeries() {
       var now = new Date();
+      var year = now.getFullYear();
       var months = [];
-      for (var i = 11; i >= 0; i--) {
-        var d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        var m = d.getMonth() + 1;
-        var ym = d.getFullYear() + '-' + (m < 10 ? '0' : '') + m;
+      for (var m = 1; m <= 12; m++) {
+        var ym = year + '-' + (m < 10 ? '0' : '') + m;
         months.push({ ym: ym, value: 0 });
       }
       var snapshotDates = store.history ? Object.keys(store.history).sort() : [];

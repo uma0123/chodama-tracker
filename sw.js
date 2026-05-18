@@ -1,5 +1,5 @@
 // PACHI BANK Service Worker
-const CACHE = 'pachibank-v2';
+const CACHE = 'pachibank-v3';
 const ASSETS = [
   './',
   './index.html',

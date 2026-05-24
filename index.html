@@ -878,9 +878,11 @@
     <p class="pw-sub">毎月の解錠パスワードは <b>noteメンバーシップの限定記事</b> で配布されます。月をまたぐと自動的に再ロックされ、新しい月のパスワードが必要になります。</p>
     <div class="pw-status" id="pwStatus"></div>
     <div class="pw-msg" id="pwMsg"></div>
-    <label>今月のパスワード
-      <input type="text" id="pwInput" autocomplete="off" placeholder="例: PB-MAY-2026">
-    </label>
+    <div id="pwInputWrap">
+      <label>今月のパスワード
+        <input type="text" id="pwInput" autocomplete="off" placeholder="例: PB-MAY-2026">
+      </label>
+    </div>
     <div class="pw-features">
       <b>メンバー特典</b>
       <ul>
@@ -893,7 +895,6 @@
       <button class="btn" id="pwClose">閉じる</button>
       <button class="btn primary" id="pwUnlock">解錠する</button>
     </div>
-    <a class="pw-link" id="pwRelock" style="display:none">→ 手動でロックする</a>
   </div>
 </div>
 
@@ -1126,7 +1127,7 @@
         badge.className = 'member-badge unlocked';
         badge.innerHTML = '<span class="mb-mark">🔓</span>' +
           '<span class="mb-status">メンバー解錠中（' + currentMonthKey() + '）</span>' +
-          '<span class="mb-cta">管理 →</span>';
+          '<span class="mb-cta">詳細 →</span>';
       } else {
         badge.className = 'member-badge';
         badge.innerHTML = '<span class="mb-mark">🔒</span>' +
@@ -2364,9 +2365,12 @@
     // ===== Paywall / Membership UI =====
     var paywallBg = document.getElementById('paywallBg');
     var pwInput = document.getElementById('pwInput');
+    var pwInputWrap = document.getElementById('pwInputWrap');
     var pwMsg = document.getElementById('pwMsg');
     var pwStatus = document.getElementById('pwStatus');
-    var pwRelock = document.getElementById('pwRelock');
+    var pwUnlockBtn = document.getElementById('pwUnlock');
+    var pwTitle = document.querySelector('#paywallBg .paywall h3');
+    var pwSub = document.querySelector('#paywallBg .paywall .pw-sub');
 
     function setPwMsg(msg, ok) {
       if (!msg) { pwMsg.className = 'pw-msg'; pwMsg.textContent = ''; return; }
@@ -2376,11 +2380,18 @@
     function refreshPwStatus() {
       if (isMember()) {
         var m = loadMembership();
-        pwStatus.innerHTML = '現在のステータス：<b>メンバー解錠中</b>（' + (m ? m.month : currentMonthKey()) + '）<br>月をまたぐと自動で再ロックされ、新しい月のパスワードが必要になります。';
-        pwRelock.style.display = 'inline-block';
+        pwStatus.innerHTML = '現在のステータス：<b>メンバー解錠中</b>（' + (m ? m.month : currentMonthKey()) + '）<br>月をまたぐと自動的に再ロックされ、新しい月のパスワードが必要になります。';
+        // 解錠中は入力欄と解錠ボタンを非表示
+        if (pwInputWrap) pwInputWrap.style.display = 'none';
+        if (pwUnlockBtn) pwUnlockBtn.style.display = 'none';
+        if (pwTitle) pwTitle.textContent = 'メンバーシップ';
+        if (pwSub) pwSub.style.display = 'none';
       } else {
         pwStatus.innerHTML = '現在のステータス：<b>無料プラン</b>（' + FREE_STORE_LIMIT + '店舗まで）';
-        pwRelock.style.display = 'none';
+        if (pwInputWrap) pwInputWrap.style.display = '';
+        if (pwUnlockBtn) pwUnlockBtn.style.display = '';
+        if (pwTitle) pwTitle.textContent = 'メンバーシップ解錠';
+        if (pwSub) pwSub.style.display = '';
       }
     }
     function openPaywall(prefixMsg) {
@@ -2388,7 +2399,9 @@
       pwInput.value = '';
       setPwMsg(prefixMsg || '', false);
       paywallBg.classList.add('open');
-      setTimeout(function () { try { pwInput.focus(); } catch (e) {} }, 50);
+      if (!isMember()) {
+        setTimeout(function () { try { pwInput.focus(); } catch (e) {} }, 50);
+      }
     }
     function closePaywall() {
       paywallBg.classList.remove('open');
@@ -2397,7 +2410,7 @@
     document.getElementById('memberBadge').addEventListener('click', function () { openPaywall(); });
     document.getElementById('pwClose').addEventListener('click', closePaywall);
     paywallBg.addEventListener('click', function (e) { if (e.target === paywallBg) closePaywall(); });
-    document.getElementById('pwUnlock').addEventListener('click', function () {
+    pwUnlockBtn.addEventListener('click', function () {
       var res = tryUnlock(pwInput.value);
       if (res.ok) {
         setPwMsg('解錠しました。メンバー機能が使えるようになりました。', true);
@@ -2409,16 +2422,7 @@
       }
     });
     pwInput.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') { e.preventDefault(); document.getElementById('pwUnlock').click(); }
-    });
-    pwRelock.addEventListener('click', function (e) {
-      e.preventDefault();
-      if (!confirm('メンバー解錠を手動でロックします。再度使うには今月のパスワードが必要です。よろしいですか？')) return;
-      lockMember();
-      refreshPwStatus();
-      refreshMemberBadge();
-      render();
-      setPwMsg('ロックしました。', true);
+      if (e.key === 'Enter') { e.preventDefault(); pwUnlockBtn.click(); }
     });
 
     try { document.getElementById('today').textContent = '本日: ' + todayStr(); } catch (e) {}

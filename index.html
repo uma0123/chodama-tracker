@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>PACHI BANK</title>
+<title>P&amp;S BANK</title>
 <meta name="theme-color" content="#ffd45c">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="PACHI BANK">
+<meta name="apple-mobile-web-app-title" content="P&amp;S BANK">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
@@ -104,6 +104,14 @@
     text-shadow: 0 0 24px rgba(255,212,92,0.25);
     margin-top: 2px;
   }
+  .total .cash-line {
+    display: flex; gap: 14px; flex-wrap: wrap; align-items: baseline;
+    margin-top: 6px; font-size: 12px; color: var(--sub);
+  }
+  .total .cash-line .cash-lbl { color: var(--sub); font-size: 11px; }
+  .total .cash-line b { color: var(--text); font-weight: 700; margin-left: 4px; font-variant-numeric: tabular-nums; }
+  .total .cash-line .grand b { color: var(--accent); }
+  .total .cash-line .sep { color: var(--dim); margin: 0 2px; }
   .total .breakdown {
     display: flex; gap: 14px; flex-wrap: wrap;
     margin-top: 8px; font-size: 11px; color: var(--sub);
@@ -111,6 +119,44 @@
   .total .breakdown b { color: var(--text); font-weight: 600; margin-left: 4px; }
   .total .breakdown .s b { color: var(--slot); }
   .total .breakdown .p b { color: var(--pachi); }
+  .cashrow {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 2px 0;
+    border-top: 1px dashed var(--line);
+    margin-top: 8px;
+  }
+  .cashrow .cashed-lbl { color: var(--accent); font-weight: 600; font-size: 11px; }
+  .cashrow .lbl { color: var(--sub); font-size: 11px; }
+  .cashrow .cashed {
+    background: var(--card); color: var(--text);
+    border: 1px solid var(--line2); border-radius: 6px;
+    padding: 5px 8px; font-size: 13px; width: 110px;
+    font-variant-numeric: tabular-nums;
+  }
+  .cashrow .cashed:focus { outline: none; border-color: var(--accent); }
+
+  /* グラフのツールチップ */
+  .chart-tip {
+    position: absolute;
+    background: rgba(20,22,28,0.96);
+    border: 1px solid var(--line2);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 11px;
+    color: var(--text);
+    pointer-events: none;
+    z-index: 10;
+    white-space: nowrap;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+    display: none;
+    transform: translate(-50%, -110%);
+  }
+  .chart-tip.show { display: block; }
+  .chart-tip .tt-label { color: var(--accent); font-weight: 700; margin-right: 6px; }
+  .chart-tip .tt-tot { color: var(--accent); font-weight: 700; }
+  .chart-tip .tt-slot { color: var(--slot); }
+  .chart-tip .tt-pachi { color: var(--pachi); }
+  .chart-body { position: relative; }
   .total .filt {
     margin-top: 6px; font-size: 11px; color: var(--accent);
     display: none;
@@ -745,7 +791,7 @@
 </head>
 <body>
 
-<h1>PACHI BANK</h1>
+<h1>P&amp;S BANK</h1>
 <div class="updated-head" id="today"></div>
 
 <div class="member-badge" id="memberBadge" role="button" tabindex="0">
@@ -759,6 +805,11 @@
 <div class="total">
   <div class="label">total balance · 換金時の概算</div>
   <div class="amount" id="totalAmount">¥0</div>
+  <div class="cash-line">
+    <span><span class="cash-lbl">換金済 累計</span><b id="cashedTotal">¥0</b></span>
+    <span class="sep">／</span>
+    <span class="grand"><span class="cash-lbl">換金＋貯玉 合計</span><b id="grandTotal">¥0</b></span>
+  </div>
   <div class="breakdown">
     <span class="s">スロット<b id="slotTotal">¥0</b></span>
     <span class="p">パチンコ<b id="pacTotal">¥0</b></span>
@@ -1077,6 +1128,8 @@
               if (typeof s.slot.collected !== 'number') s.slot.collected = 0;
               if (typeof s.pachinko.used !== 'number') s.pachinko.used = 0;
               if (typeof s.pachinko.collected !== 'number') s.pachinko.collected = 0;
+              if (typeof s.slot.cashedOut !== 'number') s.slot.cashedOut = 0;
+              if (typeof s.pachinko.cashedOut !== 'number') s.pachinko.cashedOut = 0;
               if (typeof s.corp !== 'string') s.corp = 'その他';
               if (MAJOR_CHAINS.indexOf(s.corp) === -1) s.corp = 'その他';
               if (typeof s.pworld !== 'string') s.pworld = '';
@@ -1227,15 +1280,20 @@
     }
 
     function refreshTotal() {
-      var total = 0, slotT = 0, pacT = 0, count = 0;
+      var total = 0, slotT = 0, pacT = 0, count = 0, cashedT = 0;
       for (var i = 0; i < store.stores.length; i++) {
         var s = store.stores[i];
         var sv = calcValue(effBal(s.slot), s.slot.exchange);
         var pv = calcValue(effBal(s.pachinko), s.pachinko.exchange);
         slotT += sv; pacT += pv; total += sv + pv;
+        cashedT += (s.slot.cashedOut || 0) + (s.pachinko.cashedOut || 0);
         if (effBal(s.slot) > 0 || effBal(s.pachinko) > 0) count++;
       }
       document.getElementById('totalAmount').textContent = yen(total);
+      var cEl = document.getElementById('cashedTotal');
+      var gEl = document.getElementById('grandTotal');
+      if (cEl) cEl.textContent = yen(cashedT);
+      if (gEl) gEl.textContent = yen(total + cashedT);
       document.getElementById('slotTotal').textContent = yen(slotT);
       document.getElementById('pacTotal').textContent = yen(pacT);
       document.getElementById('balCount').textContent = count;
@@ -1416,9 +1474,11 @@
         series: series, w: 320, h: 150,
         xValueFn: function(s, i) { return i + 1; },
         labelFn: function(s, i) { return (i + 1); },
+        tipLabelFn: function(s, i) { return year + '年' + (i + 1) + '月'; },
         nowMaxIdx: (year === nowYear) ? ((new Date()).getMonth()) : 11,
         visible: store.filter.visible
       });
+      attachChartTip(body);
 
       renderMonthlyTrend(series, year, nowYear);
       note.textContent = '下の 1月〜12月 ボタンを押すと、その月の日別グラフが見られます';
@@ -1466,9 +1526,11 @@
           if (d === 1 || d % 5 === 0 || d === series.length) return d;
           return '';
         },
+        tipLabelFn: function (s, i) { return year + '年' + month + '月' + (i + 1) + '日'; },
         nowMaxIdx: lastIdx,
         visible: store.filter.visible
       });
+      attachChartTip(body);
 
       renderDailyTrend(series, year, month, lastIdx);
       note.textContent = year + '年' + month + '月の日別残高（◀▶で月切替・「年表示に戻る」で月別へ）';
@@ -1483,6 +1545,7 @@
       var n = series.length;
       var visible = opts.visible || { slot:true, pachi:true, total:true };
       var lastIdx = (typeof opts.nowMaxIdx === 'number') ? opts.nowMaxIdx : n - 1;
+      var tipPrefix = opts.tipPrefix || '';
 
       var max = 0;
       for (var mi = 0; mi <= lastIdx; mi++) {
@@ -1524,8 +1587,78 @@
         var lxv = pad + lx * stepX;
         svg += '<text x="' + lxv.toFixed(1) + '" y="' + (h - 7) + '" font-size="9" text-anchor="middle" fill="#9098a4">' + lab + '</text>';
       }
+
+      // クリック/タップ用の透明 hit-area（各X位置に縦帯。ツールチップ表示）
+      for (var hx = 0; hx <= lastIdx; hx++) {
+        var cx = pad + hx * stepX;
+        var labelRaw = opts.tipLabelFn ? opts.tipLabelFn(series[hx], hx) : (hx + 1);
+        var ttSlot = Math.round(series[hx].slot || 0);
+        var ttPachi = Math.round(series[hx].pachinko || 0);
+        var ttTot = Math.round(series[hx].total || 0);
+        svg += '<rect class="hit" x="' + (cx - stepX/2).toFixed(1) + '" y="' + topY + '" ' +
+          'width="' + stepX.toFixed(1) + '" height="' + (botY - topY).toFixed(1) + '" ' +
+          'fill="transparent" ' +
+          'data-cx="' + cx.toFixed(1) + '" data-cy="' + toY(ttTot).toFixed(1) + '" ' +
+          'data-label="' + esc(String(labelRaw)) + '" ' +
+          'data-slot="' + ttSlot + '" data-pachi="' + ttPachi + '" data-tot="' + ttTot + '" />';
+      }
+
       svg += '</svg>';
       return svg;
+    }
+
+    function attachChartTip(body) {
+      // body 内に1つだけツールチップ要素を用意
+      var tip = body.querySelector('.chart-tip');
+      if (!tip) {
+        tip = document.createElement('div');
+        tip.className = 'chart-tip';
+        body.appendChild(tip);
+      }
+      var hideTimer = null;
+      function showTipAt(hit, evtX, evtY) {
+        var label = hit.getAttribute('data-label') || '';
+        var sV = Number(hit.getAttribute('data-slot') || 0);
+        var pV = Number(hit.getAttribute('data-pachi') || 0);
+        var tV = Number(hit.getAttribute('data-tot') || 0);
+        var v = (store.filter && store.filter.visible) || { slot:true, pachi:true, total:true };
+        var parts = ['<span class="tt-label">' + esc(label) + '</span>'];
+        if (v.total) parts.push('合計 <b class="tt-tot">' + yen(tV) + '</b>');
+        if (v.slot) parts.push('<b class="tt-slot">スロ ' + yen(sV) + '</b>');
+        if (v.pachi) parts.push('<b class="tt-pachi">パチ ' + yen(pV) + '</b>');
+        tip.innerHTML = parts.join(' ');
+        var rect = body.getBoundingClientRect();
+        // SVG座標(0-320,0-150) → body実座標へ変換（svgはwidth:100%）
+        var svg = body.querySelector('svg');
+        var svgRect = svg ? svg.getBoundingClientRect() : rect;
+        var cxAttr = Number(hit.getAttribute('data-cx') || 0);
+        var cyAttr = Number(hit.getAttribute('data-cy') || 0);
+        var vbW = 320, vbH = 150;
+        var scaleX = svgRect.width / vbW;
+        var scaleY = svgRect.height / vbH;
+        var leftPx = (svgRect.left - rect.left) + cxAttr * scaleX;
+        var topPx = (svgRect.top - rect.top) + cyAttr * scaleY;
+        tip.style.left = leftPx + 'px';
+        tip.style.top = topPx + 'px';
+        tip.classList.add('show');
+        if (hideTimer) clearTimeout(hideTimer);
+        hideTimer = setTimeout(function () { tip.classList.remove('show'); }, 3000);
+      }
+      function handleEvt(e) {
+        var t = e.target;
+        if (!t || !t.classList || !t.classList.contains('hit')) return;
+        showTipAt(t, e.clientX, e.clientY);
+      }
+      body.onclick = handleEvt;
+      body.onmouseover = function (e) {
+        var t = e.target;
+        if (!t || !t.classList || !t.classList.contains('hit')) return;
+        showTipAt(t);
+      };
+      body.onmouseleave = function () {
+        if (hideTimer) clearTimeout(hideTimer);
+        hideTimer = setTimeout(function () { tip.classList.remove('show'); }, 400);
+      };
     }
 
     function drawLineSvg(pts, color, width, dotR) {
@@ -1587,6 +1720,7 @@
       var c = KIND[kind];
       var usedVal = (k.used && k.used > 0) ? k.used : '';
       var colVal = (k.collected && k.collected > 0) ? k.collected : '';
+      var cashedVal = (k.cashedOut && k.cashedOut > 0) ? k.cashedOut : '';
       return '<div class="seg">' +
         '<div class="segmain">' +
           '<span class="tag ' + c.cls + '">' + c.label + '</span>' +
@@ -1603,6 +1737,11 @@
           '<span class="lbl">貸</span><input class="rate lend" data-kind="' + kind + '" inputmode="decimal" value="' + k.lend + '">' +
           '<span class="lbl">交換</span><input class="rate ex" data-kind="' + kind + '" inputmode="decimal" value="' + k.exchange + '">' +
           '<button class="reset" data-kind="' + kind + '">↺</button>' +
+        '</div>' +
+        '<div class="cashrow">' +
+          '<span class="lbl cashed-lbl">換金済（累計）</span>' +
+          '<input class="cashed" data-kind="' + kind + '" inputmode="numeric" pattern="[0-9]*" value="' + cashedVal + '" placeholder="0">' +
+          '<span class="lbl">円</span>' +
         '</div>' +
       '</div>';
     }
@@ -1650,6 +1789,15 @@
         s.updated = todayStr();
         save(); refreshCard(card, s); refreshTotal();
       });
+      var cashI = card.querySelector('.cashed[data-kind="' + kind + '"]');
+      if (cashI) {
+        cashI.addEventListener('input', function () {
+          var v = cashI.value.replace(/[^0-9.]/g, '');
+          s[kind].cashedOut = (v === '') ? 0 : num(v);
+          s.updated = todayStr();
+          saveQuiet(); refreshTotal();
+        });
+      }
     }
 
     function replayLimitHtml(s) {
@@ -2090,8 +2238,8 @@
         id: 'custom-' + Date.now(),
         name: name, corp: corp, url: url, pworld: pworld, memo: memo,
         updated: null, favorite: false,
-        slot:     { defLend:sl, defEx:se, lend:sl, exchange:se, balance:0, used:0, collected:0 },
-        pachinko: { defLend:pl, defEx:pe, lend:pl, exchange:pe, balance:0, used:0, collected:0 },
+        slot:     { defLend:sl, defEx:se, lend:sl, exchange:se, balance:0, used:0, collected:0, cashedOut:0 },
+        pachinko: { defLend:pl, defEx:pe, lend:pl, exchange:pe, balance:0, used:0, collected:0, cashedOut:0 },
         replayLimit: { slot:0, pachi:0 }
       });
       save(); closeModal(); render();
@@ -2162,7 +2310,7 @@
       if (showTotal) lines.push('合計 ' + yen(live.slot + live.pachinko));
       if (v.slot) lines.push('スロット ' + yen(live.slot));
       if (v.pachi) lines.push('パチンコ ' + yen(live.pachinko));
-      lines.push('#PACHIBANK #パチンコ #スロット #貯玉 #貯メダル');
+      lines.push('#PSBANK #パチンコ #スロット #貯玉 #貯メダル');
       return lines.join('\n');
     }
 
@@ -2196,7 +2344,7 @@
         ctx.textAlign = 'center';
         ctx.shadowColor = 'rgba(255,212,92,0.45)';
         ctx.shadowBlur = 28;
-        ctx.fillText('PACHI BANK', W / 2, 230);
+        ctx.fillText('P&S BANK', W / 2, 230);
         ctx.shadowBlur = 0;
 
         // 期間サブ
@@ -2427,7 +2575,7 @@
             var file = new File([blob], 'pachi-bank.png', { type: 'image/png' });
             if (navigator.canShare({ files: [file] })) {
               navigator.share({
-                title: 'PACHI BANK',
+                title: 'P&S BANK',
                 text: text,
                 url: APP_URL,
                 files: [file]
@@ -2436,7 +2584,7 @@
             }
           }
           if (navigator.share) {
-            navigator.share({ title: 'PACHI BANK', text: text, url: APP_URL })
+            navigator.share({ title: 'P&S BANK', text: text, url: APP_URL })
               .catch(function () { fallbackShare(text); });
             return;
           }

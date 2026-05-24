@@ -1,7 +1,7 @@
 {
-  "name": "PACHI BANK",
-  "short_name": "PACHI BANK",
-  "description": "貯玉・貯メダルの管理ツール",
+  "name": "P&S BANK",
+  "short_name": "P&S BANK",
+  "description": "パチンコ・スロットの貯玉/貯メダルを口座のように管理",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1c1a14"/>
+      <stop offset="100%" stop-color="#0b0d12"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffe798"/>
+      <stop offset="50%" stop-color="#ffd45c"/>
+      <stop offset="100%" stop-color="#c89a30"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="110" ry="110" fill="url(#bg)"/>
+  <rect x="14" y="14" width="484" height="484" rx="98" ry="98" fill="none" stroke="#3b3520" stroke-width="3"/>
+  <text x="256" y="248" text-anchor="middle"
+        font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif"
+        font-size="200" font-weight="900" fill="url(#gold)"
+        letter-spacing="-4">P&amp;S</text>
+  <text x="256" y="370" text-anchor="middle"
+        font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif"
+        font-size="86" font-weight="700" fill="#c89a30"
+        letter-spacing="14">BANK</text>
+</svg>

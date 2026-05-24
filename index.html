@@ -353,6 +353,11 @@
   .fav.on svg { fill: var(--accent); stroke: var(--accent); filter: drop-shadow(0 0 4px rgba(255,212,92,0.4)); }
   .fav:active { opacity: 0.5; }
 
+  .edit {
+    background: transparent; border: none; color: var(--dim);
+    font-size: 15px; line-height: 1; cursor: pointer; padding: 2px 4px;
+  }
+  .edit:active { color: var(--accent); }
   .del {
     background: transparent; border: none; color: var(--dim);
     font-size: 17px; line-height: 1; cursor: pointer; padding: 2px 4px;
@@ -1649,6 +1654,7 @@
           '<span class="name">' + esc(s.name) + '</span>' +
           (s.corp ? '<span class="chain">' + esc(s.corp) + '</span>' : '') +
           '<button class="fav' + (s.favorite ? ' on' : '') + '" title="お気に入り">' + STAR_SVG + '</button>' +
+          '<button class="edit" title="この店舗を編集">✎</button>' +
           '<button class="del" title="この店舗を削除">✕</button>' +
         '</div>' +
         (linksHtml ? '<div class="links">' + linksHtml + '</div>' : '') +
@@ -1690,6 +1696,9 @@
       card.querySelector('.fav').addEventListener('click', function () {
         s.favorite = !s.favorite;
         save(); render();
+      });
+      card.querySelector('.edit').addEventListener('click', function () {
+        openModal(s.id);
       });
       card.querySelector('.del').addEventListener('click', function () {
         if (!confirm('「' + s.name + '」を削除します。よろしいですか？')) return;
@@ -1891,18 +1900,52 @@
     });
 
     var modalBg = document.getElementById('modalBg');
-    function openModal() {
-      ['f-name','f-url','f-pworld','f-memo'].forEach(function (id) {
-        document.getElementById(id).value = '';
-      });
-      document.getElementById('f-corp-in').value = 'その他';
-      document.getElementById('f-slot-lend').value = '50';
-      document.getElementById('f-slot-ex').value = '50';
-      document.getElementById('f-pachi-lend').value = '250';
-      document.getElementById('f-pachi-ex').value = '250';
+    var editingStoreId = null;
+    function getModalTitleEl() { return document.querySelector('#modalBg .modal h3'); }
+    function getSubmitBtnEl() { return document.getElementById('f-add'); }
+
+    function openModal(editId) {
+      var titleEl = getModalTitleEl();
+      var submitBtn = getSubmitBtnEl();
+      if (editId) {
+        var s = findStore(editId);
+        if (!s) return;
+        editingStoreId = editId;
+        if (titleEl) titleEl.textContent = '店舗を編集';
+        if (submitBtn) submitBtn.textContent = '保存する';
+        document.getElementById('f-name').value = s.name || '';
+        document.getElementById('f-corp-in').value =
+          (MAJOR_CHAINS.indexOf(s.corp) >= 0 ? s.corp : 'その他');
+        document.getElementById('f-url').value = s.url || '';
+        document.getElementById('f-pworld').value = s.pworld || '';
+        document.getElementById('f-memo').value = s.memo || '';
+        document.getElementById('f-slot-lend').value = s.slot.defLend;
+        document.getElementById('f-slot-ex').value = s.slot.defEx;
+        document.getElementById('f-pachi-lend').value = s.pachinko.defLend;
+        document.getElementById('f-pachi-ex').value = s.pachinko.defEx;
+      } else {
+        editingStoreId = null;
+        if (titleEl) titleEl.textContent = '店舗を追加';
+        if (submitBtn) submitBtn.textContent = '追加する';
+        ['f-name','f-url','f-pworld','f-memo'].forEach(function (id) {
+          document.getElementById(id).value = '';
+        });
+        document.getElementById('f-corp-in').value = 'その他';
+        document.getElementById('f-slot-lend').value = '50';
+        document.getElementById('f-slot-ex').value = '50';
+        document.getElementById('f-pachi-lend').value = '250';
+        document.getElementById('f-pachi-ex').value = '250';
+      }
       modalBg.classList.add('open');
     }
-    function closeModal() { modalBg.classList.remove('open'); }
+    function closeModal() {
+      modalBg.classList.remove('open');
+      editingStoreId = null;
+      var titleEl = getModalTitleEl();
+      var submitBtn = getSubmitBtnEl();
+      if (titleEl) titleEl.textContent = '店舗を追加';
+      if (submitBtn) submitBtn.textContent = '追加する';
+    }
 
     document.getElementById('addStore').addEventListener('click', function () {
       if (!isMember() && store.stores.length >= FREE_STORE_LIMIT) {
@@ -1915,7 +1958,8 @@
     modalBg.addEventListener('click', function (e) { if (e.target === modalBg) closeModal(); });
 
     document.getElementById('f-add').addEventListener('click', function () {
-      if (!isMember() && store.stores.length >= FREE_STORE_LIMIT) {
+      // 新規追加時のみ無料プラン上限をチェック（編集は上限と無関係）
+      if (!editingStoreId && !isMember() && store.stores.length >= FREE_STORE_LIMIT) {
         closeModal();
         openPaywall('無料プランで登録できる店舗（口座）は ' + FREE_STORE_LIMIT + ' つまでです。');
         return;
@@ -1933,6 +1977,29 @@
       if (!name) { alert('店舗名を入力してください'); return; }
       if (!sl || !se) { alert('スロットの貸・交換率を入力してください'); return; }
       if (!pl || !pe) { alert('パチンコの貸・交換率を入力してください'); return; }
+
+      if (editingStoreId) {
+        // ===== 編集モード：既存店舗を更新（balance/used/collected/replayLimit/historyは保持） =====
+        var s = findStore(editingStoreId);
+        if (!s) { closeModal(); return; }
+        s.name = name;
+        s.corp = corp;
+        s.url = url;
+        s.pworld = pworld;
+        s.memo = memo;
+        // 当日のレート(lend/exchange)がデフォルトと同値なら追従、ズレてればその場値を尊重
+        if (s.slot.lend === s.slot.defLend) s.slot.lend = sl;
+        if (s.slot.exchange === s.slot.defEx) s.slot.exchange = se;
+        if (s.pachinko.lend === s.pachinko.defLend) s.pachinko.lend = pl;
+        if (s.pachinko.exchange === s.pachinko.defEx) s.pachinko.exchange = pe;
+        s.slot.defLend = sl; s.slot.defEx = se;
+        s.pachinko.defLend = pl; s.pachinko.defEx = pe;
+        s.updated = todayStr();
+        save(); closeModal(); render();
+        return;
+      }
+
+      // ===== 新規追加モード =====
       store.stores.push({
         id: 'custom-' + Date.now(),
         name: name, corp: corp, url: url, pworld: pworld, memo: memo,

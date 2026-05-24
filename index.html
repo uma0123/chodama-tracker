@@ -652,6 +652,37 @@
     padding: 4px 10px; font-size: 11px; font-weight: 700; cursor: pointer;
   }
 
+  /* 非メンバー時のロック済み店舗カード */
+  .store.locked-store {
+    background:
+      linear-gradient(135deg, rgba(255,212,92,0.04), transparent),
+      var(--card);
+    border-style: dashed;
+    padding: 10px 12px;
+  }
+  .locked-row {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  }
+  .locked-row .l-name { font-weight: 700; color: var(--text); font-size: 13px; }
+  .locked-row .l-chain {
+    font-size: 10px; padding: 2px 6px; border-radius: 4px;
+    background: rgba(255,255,255,0.06); color: var(--sub);
+  }
+  .locked-row .l-mark { color: var(--accent); font-size: 14px; line-height: 1; margin-left: auto; }
+  .locked-foot {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px; margin-top: 8px;
+  }
+  .locked-foot .l-msg { color: var(--sub); font-size: 11px; }
+  .locked-foot .l-cta {
+    background: var(--accent); color: #1a1410; border: none; border-radius: 6px;
+    padding: 5px 12px; font-size: 11px; font-weight: 700; cursor: pointer;
+  }
+  .locked-hint {
+    color: var(--sub); font-size: 11px;
+    text-align: center; padding: 6px 0 4px;
+  }
+
   /* メンバーシップ解錠モーダル */
   .paywall-bg {
     display: none;
@@ -1741,23 +1772,77 @@
       refreshCard(card, s);
     }
 
+    function getTopStoreId() {
+      if (!store.stores.length) return null;
+      var topId = store.stores[0].id;
+      var topVal = storeValueEff(store.stores[0]);
+      for (var i = 1; i < store.stores.length; i++) {
+        var v = storeValueEff(store.stores[i]);
+        if (v > topVal) { topVal = v; topId = store.stores[i].id; }
+      }
+      return topId;
+    }
+
+    function renderLockedCard(s, list) {
+      var card = document.createElement('div');
+      card.className = 'store locked-store';
+      card.setAttribute('data-id', s.id);
+      card.innerHTML =
+        '<div class="locked-row">' +
+          '<span class="l-name">' + esc(s.name) + '</span>' +
+          (s.corp ? '<span class="l-chain">' + esc(s.corp) + '</span>' : '') +
+          '<span class="l-mark">🔒</span>' +
+        '</div>' +
+        '<div class="locked-foot">' +
+          '<span class="l-msg">メンバー限定（解錠で内容を表示・編集可）</span>' +
+          '<button class="l-cta" type="button">解錠</button>' +
+        '</div>';
+      list.appendChild(card);
+      card.querySelector('.l-cta').addEventListener('click', function () {
+        openPaywall('複数店舗の閲覧・編集はメンバー限定です。');
+      });
+    }
+
     function render() {
       refreshCorpOptions();
       var list = document.getElementById('list');
       list.innerHTML = '';
-      var visible = getVisible();
+
+      // 非メンバー時はフィルターバーを非表示（無意味なため）
+      var filterBar = document.querySelector('.filter');
+      if (filterBar) filterBar.style.display = isMember() ? '' : 'none';
+
       if (!store.stores.length) {
         var empty = document.createElement('div');
         empty.className = 'empty';
         empty.textContent = '登録されている店舗がありません。上の「＋ 店舗を追加」から登録してください。';
         list.appendChild(empty);
-      } else if (!visible.length) {
-        var none = document.createElement('div');
-        none.className = 'empty';
-        none.textContent = 'フィルタ条件に合う店舗がありません。';
-        list.appendChild(none);
+      } else if (!isMember()) {
+        // 非メンバー: 貯玉最大の1店舗だけ通常表示、他はロックプレースホルダ
+        var topId = getTopStoreId();
+        var lockedCount = 0;
+        for (var i = 0; i < store.stores.length; i++) {
+          var s = store.stores[i];
+          if (s.id === topId) renderCard(s, list);
+          else { renderLockedCard(s, list); lockedCount++; }
+        }
+        if (lockedCount > 0) {
+          var hint = document.createElement('div');
+          hint.className = 'locked-hint';
+          hint.textContent = '🔒 メンバーになると、上記 ' + lockedCount + ' 店舗の内容も表示・編集できます';
+          list.appendChild(hint);
+        }
       } else {
-        for (var i = 0; i < visible.length; i++) renderCard(visible[i], list);
+        // メンバー: 既存の絞り込み・並び替えを適用
+        var visible = getVisible();
+        if (!visible.length) {
+          var none = document.createElement('div');
+          none.className = 'empty';
+          none.textContent = 'フィルタ条件に合う店舗がありません。';
+          list.appendChild(none);
+        } else {
+          for (var j = 0; j < visible.length; j++) renderCard(visible[j], list);
+        }
       }
       refreshTotal();
       refreshMemberBadge();

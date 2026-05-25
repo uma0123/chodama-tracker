@@ -1316,6 +1316,9 @@
         if (effBal(s.slot) > 0 || effBal(s.pachinko) > 0) count++;
       }
       document.getElementById('totalAmount').textContent = yen(total);
+      // 換金済関連はメンバー限定機能なので非メンバー時は cash-line を非表示に
+      var cashLine = document.querySelector('.total .cash-line');
+      if (cashLine) cashLine.style.display = isMember() ? '' : 'none';
       var cEl = document.getElementById('cashedTotal');
       var gEl = document.getElementById('grandTotal');
       if (cEl) cEl.textContent = yen(cashedT);
@@ -1799,11 +1802,22 @@
           '<span class="lbl">交換</span><input class="rate ex" data-kind="' + kind + '" inputmode="decimal" value="' + k.exchange + '">' +
           '<button class="reset" data-kind="' + kind + '">↺</button>' +
         '</div>' +
-        '<div class="cashrow">' +
-          '<span class="lbl cashed-lbl">換金済（累計）</span>' +
-          '<input class="cashed" data-kind="' + kind + '" inputmode="numeric" pattern="[0-9]*" value="' + cashedVal + '" placeholder="0">' +
-          '<span class="lbl">円</span>' +
-        '</div>' +
+        (isMember() ?
+          '<div class="cashrow">' +
+            '<span class="lbl cashed-lbl">換金済（累計）</span>' +
+            '<input class="cashed" data-kind="' + kind + '" inputmode="numeric" pattern="[0-9]*" value="' + cashedVal + '" placeholder="0">' +
+            '<span class="lbl">円</span>' +
+          '</div>'
+          : '') +
+      '</div>';
+    }
+
+    function cashedLockedHtml(s) {
+      // 非メンバー向け：換金済入力がロックされている表示（カードに1つだけ）
+      if (isMember()) return '';
+      return '<div class="replay-limit locked">' +
+        '<span class="rl-lock">🔒 換金済（累計）の入力（メンバー限定）</span>' +
+        '<button class="rl-cta" type="button">解錠</button>' +
       '</div>';
     }
 
@@ -1902,6 +1916,7 @@
         segHtml('slot', s.slot) +
         segHtml('pachinko', s.pachinko) +
         (s.memo ? '<div class="memo">' + esc(s.memo) + '</div>' : '') +
+        cashedLockedHtml(s) +
         replayLimitHtml(s) +
         '<div class="cardfoot">' +
           '<span class="ftxt">店舗計 <b class="stotal">¥0</b><span class="upd"></span></span>' +
@@ -1927,11 +1942,14 @@
           saveQuiet();
         });
       } else {
-        var rlCta = card.querySelector('.rl-cta');
-        if (rlCta) rlCta.addEventListener('click', function (e) {
-          e.stopPropagation();
-          openPaywall();
-        });
+        // 非メンバー時は再プレイ上限と換金済の両方に解錠ボタンがあるため両方バインド
+        var rlCtas = card.querySelectorAll('.rl-cta');
+        for (var ci = 0; ci < rlCtas.length; ci++) {
+          rlCtas[ci].addEventListener('click', function (e) {
+            e.stopPropagation();
+            openPaywall();
+          });
+        }
       }
 
       card.querySelector('.fav').addEventListener('click', function () {

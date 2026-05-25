@@ -110,7 +110,11 @@
   }
   .total .cash-line .cash-lbl { color: var(--sub); font-size: 11px; }
   .total .cash-line b { color: var(--text); font-weight: 700; margin-left: 4px; font-variant-numeric: tabular-nums; }
-  .total .cash-line .grand b { color: var(--accent); }
+  .total .cash-line .sub { font-size: 11px; color: var(--sub); }
+  .total .cash-line .sub b { font-weight: 600; }
+  .total .cash-line .s b { color: var(--slot); }
+  .total .cash-line .p b { color: var(--pachi); }
+  .total .cash-line .grand b { color: var(--green); }
   .total .cash-line .sep { color: var(--dim); margin: 0 2px; }
   .total .breakdown {
     display: flex; gap: 14px; flex-wrap: wrap;
@@ -825,8 +829,11 @@
   <div class="label">total balance · 貯玉貯メダル残高</div>
   <div class="amount" id="totalAmount">¥0</div>
   <div class="cash-line">
-    <span><span class="cash-lbl">換金済 累計</span><b id="cashedTotal">¥0</b></span>
-    <span class="sep">／</span>
+    <span><span class="cash-lbl">換金済（累計）</span><b id="cashedTotal">¥0</b></span>
+    <span class="s sub">スロット<b id="cashedSlotTotal">¥0</b></span>
+    <span class="p sub">パチンコ<b id="cashedPachiTotal">¥0</b></span>
+  </div>
+  <div class="cash-line">
     <span class="grand"><span class="cash-lbl">換金済み＋貯玉貯メダル残高</span><b id="grandTotal">¥0</b></span>
   </div>
   <div class="breakdown">
@@ -1126,14 +1133,15 @@
       return (s.slot.used > 0) || (s.slot.collected > 0) || (s.pachinko.used > 0) || (s.pachinko.collected > 0);
     }
     function liveBreakdown() {
-      var slotT = 0, pacT = 0, cashedT = 0;
+      var slotT = 0, pacT = 0, cSlot = 0, cPachi = 0;
       for (var i = 0; i < store.stores.length; i++) {
         var s = store.stores[i];
         slotT += calcValue(effBal(s.slot), s.slot.exchange);
         pacT += calcValue(effBal(s.pachinko), s.pachinko.exchange);
-        cashedT += (s.slot.cashedOut || 0) + (s.pachinko.cashedOut || 0);
+        cSlot += (s.slot.cashedOut || 0);
+        cPachi += (s.pachinko.cashedOut || 0);
       }
-      return { slot: slotT, pachinko: pacT, cashed: cashedT };
+      return { slot: slotT, pachinko: pacT, cashed: cSlot + cPachi, cashedSlot: cSlot, cashedPachi: cPachi };
     }
 
     function load() {
@@ -1306,22 +1314,31 @@
     }
 
     function refreshTotal() {
-      var total = 0, slotT = 0, pacT = 0, count = 0, cashedT = 0;
+      var total = 0, slotT = 0, pacT = 0, count = 0;
+      var cashedSlotT = 0, cashedPachiT = 0;
       for (var i = 0; i < store.stores.length; i++) {
         var s = store.stores[i];
         var sv = calcValue(effBal(s.slot), s.slot.exchange);
         var pv = calcValue(effBal(s.pachinko), s.pachinko.exchange);
         slotT += sv; pacT += pv; total += sv + pv;
-        cashedT += (s.slot.cashedOut || 0) + (s.pachinko.cashedOut || 0);
+        cashedSlotT += (s.slot.cashedOut || 0);
+        cashedPachiT += (s.pachinko.cashedOut || 0);
         if (effBal(s.slot) > 0 || effBal(s.pachinko) > 0) count++;
       }
+      var cashedT = cashedSlotT + cashedPachiT;
       document.getElementById('totalAmount').textContent = yen(total);
-      // 換金済関連はメンバー限定機能なので非メンバー時は cash-line を非表示に
-      var cashLine = document.querySelector('.total .cash-line');
-      if (cashLine) cashLine.style.display = isMember() ? '' : 'none';
+      // 換金済関連はメンバー限定機能なので非メンバー時は cash-line(2つとも)を非表示に
+      var cashLines = document.querySelectorAll('.total .cash-line');
+      for (var ci = 0; ci < cashLines.length; ci++) {
+        cashLines[ci].style.display = isMember() ? '' : 'none';
+      }
       var cEl = document.getElementById('cashedTotal');
+      var cSEl = document.getElementById('cashedSlotTotal');
+      var cPEl = document.getElementById('cashedPachiTotal');
       var gEl = document.getElementById('grandTotal');
       if (cEl) cEl.textContent = yen(cashedT);
+      if (cSEl) cSEl.textContent = yen(cashedSlotT);
+      if (cPEl) cPEl.textContent = yen(cashedPachiT);
       if (gEl) gEl.textContent = yen(total + cashedT);
       document.getElementById('slotTotal').textContent = yen(slotT);
       document.getElementById('pacTotal').textContent = yen(pacT);
@@ -1353,16 +1370,17 @@
       }
       if (!latest) return null;
       var snap = store.history[latest];
-      var slotT = 0, pacT = 0, cashedT = 0;
+      var slotT = 0, pacT = 0, cSlot = 0, cPachi = 0;
       for (var id in snap) {
         if (!Object.prototype.hasOwnProperty.call(snap, id)) continue;
         var s = findStore(id);
         if (!s) continue;
         slotT += calcValue(snap[id].s, s.slot.exchange);
         pacT += calcValue(snap[id].p, s.pachinko.exchange);
-        cashedT += (snap[id].sc || 0) + (snap[id].pc || 0);
+        cSlot += (snap[id].sc || 0);
+        cPachi += (snap[id].pc || 0);
       }
-      return { slot: slotT, pachinko: pacT, cashed: cashedT };
+      return { slot: slotT, pachinko: pacT, cashed: cSlot + cPachi, cashedSlot: cSlot, cashedPachi: cPachi };
     }
 
     function getMonthlySeries(year) {
@@ -1370,7 +1388,7 @@
       var months = [];
       for (var m = 1; m <= 12; m++) {
         var ym = year + '-' + pad2(m);
-        months.push({ ym: ym, slot: 0, pachinko: 0, total: 0, cashed: 0, grand: 0 });
+        months.push({ ym: ym, slot: 0, pachinko: 0, total: 0, cashed: 0, cashedSlot: 0, cashedPachi: 0, grand: 0 });
       }
       for (var j = 0; j < months.length; j++) {
         var monthEnd = months[j].ym + '-31';
@@ -1380,6 +1398,8 @@
           months[j].pachinko = br.pachinko;
           months[j].total = br.slot + br.pachinko;
           months[j].cashed = br.cashed || 0;
+          months[j].cashedSlot = br.cashedSlot || 0;
+          months[j].cashedPachi = br.cashedPachi || 0;
           months[j].grand = months[j].total + months[j].cashed;
         }
       }
@@ -1392,6 +1412,8 @@
             months[y].pachinko = live.pachinko;
             months[y].total = live.slot + live.pachinko;
             months[y].cashed = live.cashed || 0;
+            months[y].cashedSlot = live.cashedSlot || 0;
+            months[y].cashedPachi = live.cashedPachi || 0;
             months[y].grand = months[y].total + months[y].cashed;
           }
         }
@@ -1404,7 +1426,7 @@
       var days = [];
       for (var d = 1; d <= lastDay; d++) {
         var ds = year + '-' + pad2(month) + '-' + pad2(d);
-        days.push({ day: d, ds: ds, slot: 0, pachinko: 0, total: 0, cashed: 0, grand: 0 });
+        days.push({ day: d, ds: ds, slot: 0, pachinko: 0, total: 0, cashed: 0, cashedSlot: 0, cashedPachi: 0, grand: 0 });
       }
       for (var i = 0; i < days.length; i++) {
         var br = snapshotBreakdownAtOrBefore(days[i].ds);
@@ -1413,6 +1435,8 @@
           days[i].pachinko = br.pachinko;
           days[i].total = br.slot + br.pachinko;
           days[i].cashed = br.cashed || 0;
+          days[i].cashedSlot = br.cashedSlot || 0;
+          days[i].cashedPachi = br.cashedPachi || 0;
           days[i].grand = days[i].total + days[i].cashed;
         }
       }
@@ -1425,6 +1449,8 @@
           days[todayDay - 1].pachinko = live.pachinko;
           days[todayDay - 1].total = live.slot + live.pachinko;
           days[todayDay - 1].cashed = live.cashed || 0;
+          days[todayDay - 1].cashedSlot = live.cashedSlot || 0;
+          days[todayDay - 1].cashedPachi = live.cashedPachi || 0;
           days[todayDay - 1].grand = days[todayDay - 1].total + days[todayDay - 1].cashed;
         }
       }
@@ -1645,12 +1671,15 @@
         var ttPachi = Math.round(series[hx].pachinko || 0);
         var ttTot = Math.round(series[hx].total || 0);
         var ttGrand = Math.round(series[hx].grand || series[hx].total || 0);
+        var ttCSlot = Math.round(series[hx].cashedSlot || 0);
+        var ttCPachi = Math.round(series[hx].cashedPachi || 0);
         svg += '<rect class="hit" x="' + (cx - stepX/2).toFixed(1) + '" y="' + topY + '" ' +
           'width="' + stepX.toFixed(1) + '" height="' + (botY - topY).toFixed(1) + '" ' +
           'fill="transparent" ' +
           'data-cx="' + cx.toFixed(1) + '" data-cy="' + toY(ttTot).toFixed(1) + '" ' +
           'data-label="' + esc(String(labelRaw)) + '" ' +
-          'data-slot="' + ttSlot + '" data-pachi="' + ttPachi + '" data-tot="' + ttTot + '" data-grand="' + ttGrand + '" />';
+          'data-slot="' + ttSlot + '" data-pachi="' + ttPachi + '" data-tot="' + ttTot + '" data-grand="' + ttGrand + '" ' +
+          'data-cslot="' + ttCSlot + '" data-cpachi="' + ttCPachi + '" />';
       }
 
       svg += '</svg>';
@@ -1672,13 +1701,19 @@
         var pV = Number(hit.getAttribute('data-pachi') || 0);
         var tV = Number(hit.getAttribute('data-tot') || 0);
         var gV = Number(hit.getAttribute('data-grand') || 0);
+        var csV = Number(hit.getAttribute('data-cslot') || 0);
+        var cpV = Number(hit.getAttribute('data-cpachi') || 0);
         var v = getEffectiveVisible();
         // 縦並び：1行1項目で表示（端でも見切れない）
         var html = '<span class="tt-label">' + esc(label) + '</span>';
         if (v.total) html += '<div class="tt-row"><span>残高</span><b class="tt-tot">' + yen(tV) + '</b></div>';
-        if (v.grand) html += '<div class="tt-row"><span>換金＋残高</span><b class="tt-grand">' + yen(gV) + '</b></div>';
-        if (v.slot) html += '<div class="tt-row"><span>スロット</span><b class="tt-slot">' + yen(sV) + '</b></div>';
-        if (v.pachi) html += '<div class="tt-row"><span>パチンコ</span><b class="tt-pachi">' + yen(pV) + '</b></div>';
+        if (v.slot) html += '<div class="tt-row"><span>残高スロ</span><b class="tt-slot">' + yen(sV) + '</b></div>';
+        if (v.pachi) html += '<div class="tt-row"><span>残高パチ</span><b class="tt-pachi">' + yen(pV) + '</b></div>';
+        if (v.grand) {
+          html += '<div class="tt-row"><span>換金スロ</span><b class="tt-slot">' + yen(csV) + '</b></div>';
+          html += '<div class="tt-row"><span>換金パチ</span><b class="tt-pachi">' + yen(cpV) + '</b></div>';
+          html += '<div class="tt-row"><span>換金＋残高</span><b class="tt-grand">' + yen(gV) + '</b></div>';
+        }
         tip.innerHTML = html;
         var rect = body.getBoundingClientRect();
         var svg = body.querySelector('svg');

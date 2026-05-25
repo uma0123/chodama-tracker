@@ -154,6 +154,7 @@
   .chart-tip.show { display: block; }
   .chart-tip .tt-label { color: var(--accent); font-weight: 700; margin-right: 6px; }
   .chart-tip .tt-tot { color: var(--accent); font-weight: 700; }
+  .chart-tip .tt-grand { color: var(--green); font-weight: 700; }
   .chart-tip .tt-slot { color: var(--slot); }
   .chart-tip .tt-pachi { color: var(--pachi); }
   .chart-body { position: relative; }
@@ -803,12 +804,12 @@
 <div id="errbox"></div>
 
 <div class="total">
-  <div class="label">total balance · 換金時の概算</div>
+  <div class="label">total balance · 貯玉貯メダル残高</div>
   <div class="amount" id="totalAmount">¥0</div>
   <div class="cash-line">
     <span><span class="cash-lbl">換金済 累計</span><b id="cashedTotal">¥0</b></span>
     <span class="sep">／</span>
-    <span class="grand"><span class="cash-lbl">換金＋貯玉 合計</span><b id="grandTotal">¥0</b></span>
+    <span class="grand"><span class="cash-lbl">換金済み＋貯玉貯メダル残高</span><b id="grandTotal">¥0</b></span>
   </div>
   <div class="breakdown">
     <span class="s">スロット<b id="slotTotal">¥0</b></span>
@@ -836,7 +837,8 @@
   <div class="chart-legend" id="chartLegend">
     <button type="button" class="lg" data-series="slot"><span class="sw" style="background:var(--slot)"></span>スロット</button>
     <button type="button" class="lg" data-series="pachi"><span class="sw" style="background:var(--pachi)"></span>パチンコ</button>
-    <button type="button" class="lg" data-series="total"><span class="sw" style="background:var(--accent)"></span>合計</button>
+    <button type="button" class="lg" data-series="total"><span class="sw" style="background:var(--accent)"></span>残高</button>
+    <button type="button" class="lg" data-series="grand"><span class="sw" style="background:var(--green)"></span>換金＋残高</button>
   </div>
   <div class="chart-body" id="chartBody"></div>
   <div class="month-chips" id="monthChips"></div>
@@ -999,6 +1001,7 @@
     var SLOT_COLOR = '#62cee0';
     var PACHI_COLOR = '#ee94b1';
     var TOTAL_COLOR = '#ffd45c';
+    var GRAND_COLOR = '#6ed59d';
 
     var FREE_STORE_LIMIT = 1;
     // ★ 月替わりパスワード（YYYY-MM → パスワード）
@@ -1039,7 +1042,7 @@
           chartYear: (new Date()).getFullYear(),
           chartMode: 'year',
           chartMonth: (new Date()).getMonth() + 1,
-          visible: { slot:true, pachi:true, total:true }
+          visible: { slot:true, pachi:true, total:true, grand:true }
         },
         history: {}
       };
@@ -1105,12 +1108,14 @@
       return (s.slot.used > 0) || (s.slot.collected > 0) || (s.pachinko.used > 0) || (s.pachinko.collected > 0);
     }
     function liveBreakdown() {
-      var slotT = 0, pacT = 0;
+      var slotT = 0, pacT = 0, cashedT = 0;
       for (var i = 0; i < store.stores.length; i++) {
-        slotT += calcValue(effBal(store.stores[i].slot), store.stores[i].slot.exchange);
-        pacT += calcValue(effBal(store.stores[i].pachinko), store.stores[i].pachinko.exchange);
+        var s = store.stores[i];
+        slotT += calcValue(effBal(s.slot), s.slot.exchange);
+        pacT += calcValue(effBal(s.pachinko), s.pachinko.exchange);
+        cashedT += (s.slot.cashedOut || 0) + (s.pachinko.cashedOut || 0);
       }
-      return { slot: slotT, pachinko: pacT };
+      return { slot: slotT, pachinko: pacT, cashed: cashedT };
     }
 
     function load() {
@@ -1142,10 +1147,11 @@
             if (typeof p.filter.chartYear !== 'number') p.filter.chartYear = (new Date()).getFullYear();
             if (p.filter.chartMode !== 'year' && p.filter.chartMode !== 'month') p.filter.chartMode = 'year';
             if (typeof p.filter.chartMonth !== 'number') p.filter.chartMonth = (new Date()).getMonth() + 1;
-            if (!p.filter.visible) p.filter.visible = { slot:true, pachi:true, total:true };
+            if (!p.filter.visible) p.filter.visible = { slot:true, pachi:true, total:true, grand:true };
             if (typeof p.filter.visible.slot !== 'boolean') p.filter.visible.slot = true;
             if (typeof p.filter.visible.pachi !== 'boolean') p.filter.visible.pachi = true;
             if (typeof p.filter.visible.total !== 'boolean') p.filter.visible.total = true;
+            if (typeof p.filter.visible.grand !== 'boolean') p.filter.visible.grand = true;
             if (!p.history || typeof p.history !== 'object') p.history = {};
             return p;
           }
@@ -1160,8 +1166,10 @@
       var snap = {};
       for (var i = 0; i < store.stores.length; i++) {
         var s = store.stores[i];
-        if (s.slot.balance > 0 || s.pachinko.balance > 0) {
-          snap[s.id] = { s: s.slot.balance, p: s.pachinko.balance };
+        var sc = s.slot.cashedOut || 0;
+        var pc = s.pachinko.cashedOut || 0;
+        if (s.slot.balance > 0 || s.pachinko.balance > 0 || sc > 0 || pc > 0) {
+          snap[s.id] = { s: s.slot.balance, p: s.pachinko.balance, sc: sc, pc: pc };
         }
       }
       store.history[date] = snap;
@@ -1324,15 +1332,16 @@
       }
       if (!latest) return null;
       var snap = store.history[latest];
-      var slotT = 0, pacT = 0;
+      var slotT = 0, pacT = 0, cashedT = 0;
       for (var id in snap) {
         if (!Object.prototype.hasOwnProperty.call(snap, id)) continue;
         var s = findStore(id);
         if (!s) continue;
         slotT += calcValue(snap[id].s, s.slot.exchange);
         pacT += calcValue(snap[id].p, s.pachinko.exchange);
+        cashedT += (snap[id].sc || 0) + (snap[id].pc || 0);
       }
-      return { slot: slotT, pachinko: pacT };
+      return { slot: slotT, pachinko: pacT, cashed: cashedT };
     }
 
     function getMonthlySeries(year) {
@@ -1340,7 +1349,7 @@
       var months = [];
       for (var m = 1; m <= 12; m++) {
         var ym = year + '-' + pad2(m);
-        months.push({ ym: ym, slot: 0, pachinko: 0, total: 0 });
+        months.push({ ym: ym, slot: 0, pachinko: 0, total: 0, cashed: 0, grand: 0 });
       }
       for (var j = 0; j < months.length; j++) {
         var monthEnd = months[j].ym + '-31';
@@ -1349,6 +1358,8 @@
           months[j].slot = br.slot;
           months[j].pachinko = br.pachinko;
           months[j].total = br.slot + br.pachinko;
+          months[j].cashed = br.cashed || 0;
+          months[j].grand = months[j].total + months[j].cashed;
         }
       }
       if (year === nowYear) {
@@ -1359,6 +1370,8 @@
             months[y].slot = live.slot;
             months[y].pachinko = live.pachinko;
             months[y].total = live.slot + live.pachinko;
+            months[y].cashed = live.cashed || 0;
+            months[y].grand = months[y].total + months[y].cashed;
           }
         }
       }
@@ -1370,7 +1383,7 @@
       var days = [];
       for (var d = 1; d <= lastDay; d++) {
         var ds = year + '-' + pad2(month) + '-' + pad2(d);
-        days.push({ day: d, ds: ds, slot: 0, pachinko: 0, total: 0 });
+        days.push({ day: d, ds: ds, slot: 0, pachinko: 0, total: 0, cashed: 0, grand: 0 });
       }
       for (var i = 0; i < days.length; i++) {
         var br = snapshotBreakdownAtOrBefore(days[i].ds);
@@ -1378,6 +1391,8 @@
           days[i].slot = br.slot;
           days[i].pachinko = br.pachinko;
           days[i].total = br.slot + br.pachinko;
+          days[i].cashed = br.cashed || 0;
+          days[i].grand = days[i].total + days[i].cashed;
         }
       }
       var today = new Date();
@@ -1388,6 +1403,8 @@
           days[todayDay - 1].slot = live.slot;
           days[todayDay - 1].pachinko = live.pachinko;
           days[todayDay - 1].total = live.slot + live.pachinko;
+          days[todayDay - 1].cashed = live.cashed || 0;
+          days[todayDay - 1].grand = days[todayDay - 1].total + days[todayDay - 1].cashed;
         }
       }
       return days;
@@ -1543,12 +1560,12 @@
       var topY = 14, botY = h - 22;
       var availH = botY - topY;
       var n = series.length;
-      var visible = opts.visible || { slot:true, pachi:true, total:true };
+      var visible = opts.visible || { slot:true, pachi:true, total:true, grand:true };
       var lastIdx = (typeof opts.nowMaxIdx === 'number') ? opts.nowMaxIdx : n - 1;
-      var tipPrefix = opts.tipPrefix || '';
 
       var max = 0;
       for (var mi = 0; mi <= lastIdx; mi++) {
+        if (visible.grand && (series[mi].grand || 0) > max) max = series[mi].grand;
         if (visible.total && series[mi].total > max) max = series[mi].total;
         if (visible.slot && series[mi].slot > max) max = series[mi].slot;
         if (visible.pachi && series[mi].pachinko > max) max = series[mi].pachinko;
@@ -1557,12 +1574,13 @@
       function toY(v) { return botY - (v / max) * availH; }
       var stepX = (w - pad*2) / (n - 1);
 
-      var slotPts = [], pacPts = [], totPts = [];
+      var slotPts = [], pacPts = [], totPts = [], grandPts = [];
       for (var pi = 0; pi <= lastIdx; pi++) {
         var x = pad + pi * stepX;
         slotPts.push([x, toY(series[pi].slot)]);
         pacPts.push([x, toY(series[pi].pachinko)]);
         totPts.push([x, toY(series[pi].total)]);
+        grandPts.push([x, toY(series[pi].grand || series[pi].total)]);
       }
 
       var svg = '<svg viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none">';
@@ -1579,6 +1597,7 @@
       if (visible.slot) svg += drawLineSvg(slotPts, SLOT_COLOR, 1.8, 2);
       if (visible.pachi) svg += drawLineSvg(pacPts, PACHI_COLOR, 1.8, 2);
       if (visible.total) svg += drawLineSvg(totPts, TOTAL_COLOR, 2.4, 2.4);
+      if (visible.grand) svg += drawLineSvg(grandPts, GRAND_COLOR, 2, 2.2);
 
       // ラベル
       for (var lx = 0; lx < n; lx++) {
@@ -1595,12 +1614,13 @@
         var ttSlot = Math.round(series[hx].slot || 0);
         var ttPachi = Math.round(series[hx].pachinko || 0);
         var ttTot = Math.round(series[hx].total || 0);
+        var ttGrand = Math.round(series[hx].grand || series[hx].total || 0);
         svg += '<rect class="hit" x="' + (cx - stepX/2).toFixed(1) + '" y="' + topY + '" ' +
           'width="' + stepX.toFixed(1) + '" height="' + (botY - topY).toFixed(1) + '" ' +
           'fill="transparent" ' +
           'data-cx="' + cx.toFixed(1) + '" data-cy="' + toY(ttTot).toFixed(1) + '" ' +
           'data-label="' + esc(String(labelRaw)) + '" ' +
-          'data-slot="' + ttSlot + '" data-pachi="' + ttPachi + '" data-tot="' + ttTot + '" />';
+          'data-slot="' + ttSlot + '" data-pachi="' + ttPachi + '" data-tot="' + ttTot + '" data-grand="' + ttGrand + '" />';
       }
 
       svg += '</svg>';
@@ -1621,9 +1641,11 @@
         var sV = Number(hit.getAttribute('data-slot') || 0);
         var pV = Number(hit.getAttribute('data-pachi') || 0);
         var tV = Number(hit.getAttribute('data-tot') || 0);
-        var v = (store.filter && store.filter.visible) || { slot:true, pachi:true, total:true };
+        var gV = Number(hit.getAttribute('data-grand') || 0);
+        var v = (store.filter && store.filter.visible) || { slot:true, pachi:true, total:true, grand:true };
         var parts = ['<span class="tt-label">' + esc(label) + '</span>'];
-        if (v.total) parts.push('合計 <b class="tt-tot">' + yen(tV) + '</b>');
+        if (v.total) parts.push('残高 <b class="tt-tot">' + yen(tV) + '</b>');
+        if (v.grand) parts.push('換金＋残高 <b class="tt-grand">' + yen(gV) + '</b>');
         if (v.slot) parts.push('<b class="tt-slot">スロ ' + yen(sV) + '</b>');
         if (v.pachi) parts.push('<b class="tt-pachi">パチ ' + yen(pV) + '</b>');
         tip.innerHTML = parts.join(' ');
@@ -2307,7 +2329,8 @@
       }
       lines.push(headline);
       var showTotal = v.total || (v.slot && v.pachi);
-      if (showTotal) lines.push('合計 ' + yen(live.slot + live.pachinko));
+      if (showTotal) lines.push('残高 ' + yen(live.slot + live.pachinko));
+      if (v.grand) lines.push('換金＋残高 ' + yen(live.slot + live.pachinko + (live.cashed || 0)));
       if (v.slot) lines.push('スロット ' + yen(live.slot));
       if (v.pachi) lines.push('パチンコ ' + yen(live.pachinko));
       lines.push('#PSBANK #パチンコ #スロット #貯玉 #貯メダル');
@@ -2420,7 +2443,8 @@
         var lgX = W - 100, lgY = 685;
         ctx.textAlign = 'right';
         var lgItems = [];
-        if (v.total) lgItems.push({color: TOTAL_COLOR, label: '合計'});
+        if (v.total) lgItems.push({color: TOTAL_COLOR, label: '残高'});
+        if (v.grand) lgItems.push({color: GRAND_COLOR, label: '換金＋残高'});
         if (v.pachi) lgItems.push({color: PACHI_COLOR, label: 'パチンコ'});
         if (v.slot) lgItems.push({color: SLOT_COLOR, label: 'スロット'});
         for (var li = 0; li < lgItems.length; li++) {
@@ -2485,6 +2509,7 @@
       var stepX = (w - pad * 2) / (n - 1);
       var max = 0;
       for (var i = 0; i <= lastIdx; i++) {
+        if (visible.grand && (series[i].grand || 0) > max) max = series[i].grand;
         if (visible.total && series[i].total > max) max = series[i].total;
         if (visible.slot && series[i].slot > max) max = series[i].slot;
         if (visible.pachi && series[i].pachinko > max) max = series[i].pachinko;
@@ -2538,6 +2563,7 @@
       if (visible.slot)  drawLine(function (d) { return d.slot; }, SLOT_COLOR, 3.5, 5);
       if (visible.pachi) drawLine(function (d) { return d.pachinko; }, PACHI_COLOR, 3.5, 5);
       if (visible.total) drawLine(function (d) { return d.total; }, TOTAL_COLOR, 5, 7);
+      if (visible.grand) drawLine(function (d) { return d.grand || d.total; }, GRAND_COLOR, 4, 6);
 
       // X軸ラベル
       ctx.font = '20px -apple-system, "Hiragino Sans", sans-serif';

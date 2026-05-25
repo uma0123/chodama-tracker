@@ -75,9 +75,6 @@
   }
 
   .total {
-    position: sticky;
-    top: 8px;
-    z-index: 20;
     background:
       linear-gradient(135deg, rgba(255,212,92,0.10), rgba(255,212,92,0.02) 60%),
       linear-gradient(180deg, #20232c, #161922);
@@ -139,29 +136,36 @@
   }
   .cashrow .cashed:focus { outline: none; border-color: var(--accent); }
 
-  /* グラフのツールチップ（縦並び・四方どこでも見切れない） */
+  /* グラフのツールチップ（縦並び・四方どこでも見切れない・✕で閉じる） */
   .chart-tip {
     --tx: -50%;
     --ty: -110%;
     position: absolute;
-    background: rgba(20,22,28,0.96);
+    background: rgba(20,22,28,0.97);
     border: 1px solid var(--line2);
     border-radius: 8px;
-    padding: 8px 10px;
+    padding: 22px 10px 8px 10px;
     font-size: 11px;
     color: var(--text);
-    pointer-events: none;
+    pointer-events: auto;
     z-index: 10;
     box-shadow: 0 4px 14px rgba(0,0,0,0.5);
     display: none;
-    min-width: 120px;
-    max-width: 170px;
+    min-width: 130px;
+    max-width: 180px;
     transform: translate(var(--tx), var(--ty));
   }
   .chart-tip.show { display: block; }
   .chart-tip.align-l { --tx: -8px; }              /* 左端：左寄せで右へ伸ばす */
   .chart-tip.align-r { --tx: calc(-100% + 8px); } /* 右端：右寄せで左へ伸ばす */
   .chart-tip.align-below { --ty: 16px; }          /* 上の点：下に表示 */
+  .chart-tip .tt-close {
+    position: absolute; top: 2px; right: 4px;
+    background: transparent; border: none; color: var(--sub);
+    font-size: 14px; line-height: 1; cursor: pointer;
+    padding: 4px 6px; border-radius: 4px;
+  }
+  .chart-tip .tt-close:active { color: var(--text); background: rgba(255,255,255,0.08); }
   .chart-tip .tt-label {
     display: block; color: var(--accent); font-weight: 700;
     margin-bottom: 4px; font-size: 11px;
@@ -258,6 +262,14 @@
   .chart-legend .sw {
     display: inline-block; width: 10px; height: 10px; border-radius: 2px;
   }
+  .chart-legend .sw.dashed {
+    background: transparent !important;
+    height: 2px; border-radius: 0;
+    border-top: 2px dashed currentColor;
+    width: 14px; margin-top: 4px;
+  }
+  .chart-legend .lg[data-series="cashedSlot"] .sw.dashed { border-top-color: var(--slot); }
+  .chart-legend .lg[data-series="cashedPachi"] .sw.dashed { border-top-color: var(--pachi); }
   .chart-body { width: 100%; }
   .chart-body svg { display: block; width: 100%; height: 150px; }
   .chart-empty {
@@ -830,15 +842,15 @@
   <div class="amount" id="totalAmount">¥0</div>
   <div class="cash-line">
     <span><span class="cash-lbl">換金済（累計）</span><b id="cashedTotal">¥0</b></span>
-    <span class="s sub">スロット<b id="cashedSlotTotal">¥0</b></span>
-    <span class="p sub">パチンコ<b id="cashedPachiTotal">¥0</b></span>
+    <span class="s sub">貯メダル<b id="cashedSlotTotal">¥0</b></span>
+    <span class="p sub">貯玉<b id="cashedPachiTotal">¥0</b></span>
   </div>
   <div class="cash-line">
     <span class="grand"><span class="cash-lbl">換金済み＋貯玉貯メダル残高</span><b id="grandTotal">¥0</b></span>
   </div>
   <div class="breakdown">
-    <span class="s">スロット<b id="slotTotal">¥0</b></span>
-    <span class="p">パチンコ<b id="pacTotal">¥0</b></span>
+    <span class="s">貯メダル<b id="slotTotal">¥0</b></span>
+    <span class="p">貯玉<b id="pacTotal">¥0</b></span>
     <span>残高あり<b id="balCount">0</b>店舗</span>
     <span>登録<b id="storeCount">0</b>店舗</span>
   </div>
@@ -860,9 +872,11 @@
     </div>
   </div>
   <div class="chart-legend" id="chartLegend">
-    <button type="button" class="lg" data-series="slot"><span class="sw" style="background:var(--slot)"></span>スロット</button>
-    <button type="button" class="lg" data-series="pachi"><span class="sw" style="background:var(--pachi)"></span>パチンコ</button>
+    <button type="button" class="lg" data-series="slot"><span class="sw" style="background:var(--slot)"></span>貯メダル</button>
+    <button type="button" class="lg" data-series="pachi"><span class="sw" style="background:var(--pachi)"></span>貯玉</button>
     <button type="button" class="lg" data-series="total"><span class="sw" style="background:var(--accent)"></span>残高</button>
+    <button type="button" class="lg" data-series="cashedSlot"><span class="sw dashed" style="background:var(--slot)"></span>換金貯メダル</button>
+    <button type="button" class="lg" data-series="cashedPachi"><span class="sw dashed" style="background:var(--pachi)"></span>換金貯玉</button>
     <button type="button" class="lg" data-series="grand"><span class="sw" style="background:var(--green)"></span>換金＋残高</button>
   </div>
   <div class="chart-body" id="chartBody"></div>
@@ -906,11 +920,11 @@
 <details class="notes">
   <summary>確認メモ・使い方</summary>
   <ul>
-    <li><b>店舗を追加</b>：上部「＋ 店舗を追加」から登録。スロットとパチンコの貸／交換率もここで設定します。</li>
-    <li><b>残高入力</b>：各店のスロット（貯メダル/枚）・パチンコ（貯玉/玉）の欄に当日の数を入力。換金額と合計が自動計算され、この端末のブラウザに自動保存されます。</li>
+    <li><b>店舗を追加</b>：上部「＋ 店舗を追加」から登録。貯メダル（スロット）と貯玉（パチンコ）の貸／交換率もここで設定します。</li>
+    <li><b>残高入力</b>：各店の貯メダル（枚）・貯玉（玉）の欄に当日の数を入力。換金額と合計が自動計算され、この端末のブラウザに自動保存されます。</li>
     <li><b>稼働モード</b>：上部「稼働モード」を押すと「使用」「回収」の入力が出ます。「転記」を押すと残高に反映されます。</li>
-    <li><b>月別推移グラフ</b>：選択した年の1〜12月の折線（スロット/パチンコ/合計）。グラフ下の <b>1月〜12月チップ</b> をタップするとその月の日別グラフが見られます。◀▶で年/月を切替、「年表示に戻る」で月別へ戻ります。</li>
-    <li><b>凡例トグル</b>：「スロット」「パチンコ」「合計」のチップをタップすると線の表示／非表示を切替（シェア画像にも反映）。</li>
+    <li><b>月別推移グラフ</b>：選択した年の1〜12月の折線（貯メダル/貯玉/残高合計）。グラフ下の <b>1月〜12月チップ</b> をタップするとその月の日別グラフが見られます。◀▶で年/月を切替、「年表示に戻る」で月別へ戻ります。</li>
+    <li><b>凡例トグル</b>：「貯メダル」「貯玉」「残高」のチップをタップすると線の表示／非表示を切替（シェア画像にも反映）。</li>
     <li><b>シェア</b>：グラフ内「シェア」ボタンで、今表示している内容（年次／月次・選択中の系列）をPNG画像にしてX/LINE/Instagram等にシェアできます。</li>
     <li><b>お気に入り★</b>：常にリスト先頭に固定されます。</li>
     <li><b>フィルタ・並び替え</b>：店舗名検索、法人、並び順、「残高あり」のみ表示が可能。</li>
@@ -953,7 +967,7 @@
         <input id="f-pworld" type="text" placeholder="https://...">
       </label>
     </div>
-    <div class="sectlabel s">スロット（20円・メダル）</div>
+    <div class="sectlabel s">貯メダル（20円スロット）</div>
     <div class="frow">
       <label>貸 <span style="color:#ec6b6a">*</span>
         <input id="f-slot-lend" type="number" inputmode="decimal" value="50">
@@ -962,7 +976,7 @@
         <input id="f-slot-ex" type="number" inputmode="decimal" value="50">
       </label>
     </div>
-    <div class="sectlabel p">パチンコ（4円・玉）</div>
+    <div class="sectlabel p">貯玉（4円パチンコ）</div>
     <div class="frow">
       <label>貸 <span style="color:#ec6b6a">*</span>
         <input id="f-pachi-lend" type="number" inputmode="decimal" value="250">
@@ -1048,8 +1062,8 @@
     };
 
     var KIND = {
-      slot:     { label:'スロット', unit:'枚', cls:'tag-slot',  vcls:'slotc' },
-      pachinko: { label:'パチンコ', unit:'玉', cls:'tag-pachi', vcls:'pachic' }
+      slot:     { label:'貯メダル', unit:'枚', cls:'tag-slot',  vcls:'slotc' },
+      pachinko: { label:'貯玉',     unit:'玉', cls:'tag-pachi', vcls:'pachic' }
     };
 
     var MAJOR_CHAINS = [
@@ -1067,7 +1081,7 @@
           chartYear: (new Date()).getFullYear(),
           chartMode: 'year',
           chartMonth: (new Date()).getMonth() + 1,
-          visible: { slot:true, pachi:true, total:true, grand:true }
+          visible: { slot:true, pachi:true, total:true, grand:true, cashedSlot:true, cashedPachi:true }
         },
         history: {}
       };
@@ -1173,11 +1187,13 @@
             if (typeof p.filter.chartYear !== 'number') p.filter.chartYear = (new Date()).getFullYear();
             if (p.filter.chartMode !== 'year' && p.filter.chartMode !== 'month') p.filter.chartMode = 'year';
             if (typeof p.filter.chartMonth !== 'number') p.filter.chartMonth = (new Date()).getMonth() + 1;
-            if (!p.filter.visible) p.filter.visible = { slot:true, pachi:true, total:true, grand:true };
+            if (!p.filter.visible) p.filter.visible = { slot:true, pachi:true, total:true, grand:true, cashedSlot:true, cashedPachi:true };
             if (typeof p.filter.visible.slot !== 'boolean') p.filter.visible.slot = true;
             if (typeof p.filter.visible.pachi !== 'boolean') p.filter.visible.pachi = true;
             if (typeof p.filter.visible.total !== 'boolean') p.filter.visible.total = true;
             if (typeof p.filter.visible.grand !== 'boolean') p.filter.visible.grand = true;
+            if (typeof p.filter.visible.cashedSlot !== 'boolean') p.filter.visible.cashedSlot = true;
+            if (typeof p.filter.visible.cashedPachi !== 'boolean') p.filter.visible.cashedPachi = true;
             if (!p.history || typeof p.history !== 'object') p.history = {};
             return p;
           }
@@ -1474,11 +1490,11 @@
       var lgs = document.querySelectorAll('.chart-legend .lg');
       var v = store.filter.visible;
       var member = isMember();
+      var memberOnly = { grand:1, cashedSlot:1, cashedPachi:1 };
       for (var i = 0; i < lgs.length; i++) {
         var key = lgs[i].getAttribute('data-series');
         var on = !!v[key];
-        // grand線はメンバー限定。非メンバーは強制オフ＋ロック表示
-        if (key === 'grand' && !member) {
+        if (memberOnly[key] && !member) {
           lgs[i].classList.add('off');
           lgs[i].classList.add('locked');
         } else {
@@ -1625,18 +1641,22 @@
         if (visible.total && series[mi].total > max) max = series[mi].total;
         if (visible.slot && series[mi].slot > max) max = series[mi].slot;
         if (visible.pachi && series[mi].pachinko > max) max = series[mi].pachinko;
+        if (visible.cashedSlot && (series[mi].cashedSlot || 0) > max) max = series[mi].cashedSlot;
+        if (visible.cashedPachi && (series[mi].cashedPachi || 0) > max) max = series[mi].cashedPachi;
       }
       if (max === 0) max = 1;
       function toY(v) { return botY - (v / max) * availH; }
       var stepX = (w - pad*2) / (n - 1);
 
-      var slotPts = [], pacPts = [], totPts = [], grandPts = [];
+      var slotPts = [], pacPts = [], totPts = [], grandPts = [], cSlotPts = [], cPachiPts = [];
       for (var pi = 0; pi <= lastIdx; pi++) {
         var x = pad + pi * stepX;
         slotPts.push([x, toY(series[pi].slot)]);
         pacPts.push([x, toY(series[pi].pachinko)]);
         totPts.push([x, toY(series[pi].total)]);
         grandPts.push([x, toY(series[pi].grand || series[pi].total)]);
+        cSlotPts.push([x, toY(series[pi].cashedSlot || 0)]);
+        cPachiPts.push([x, toY(series[pi].cashedPachi || 0)]);
       }
 
       var svg = '<svg viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none">';
@@ -1654,6 +1674,8 @@
       if (visible.pachi) svg += drawLineSvg(pacPts, PACHI_COLOR, 1.8, 2);
       if (visible.total) svg += drawLineSvg(totPts, TOTAL_COLOR, 2.4, 2.4);
       if (visible.grand) svg += drawLineSvg(grandPts, GRAND_COLOR, 2, 2.2);
+      if (visible.cashedSlot) svg += drawLineSvg(cSlotPts, SLOT_COLOR, 1.6, 1.6, '3,3');
+      if (visible.cashedPachi) svg += drawLineSvg(cPachiPts, PACHI_COLOR, 1.6, 1.6, '3,3');
 
       // ラベル
       for (var lx = 0; lx < n; lx++) {
@@ -1705,16 +1727,21 @@
         var cpV = Number(hit.getAttribute('data-cpachi') || 0);
         var v = getEffectiveVisible();
         // 縦並び：1行1項目で表示（端でも見切れない）
-        var html = '<span class="tt-label">' + esc(label) + '</span>';
+        var html = '<button class="tt-close" type="button" aria-label="閉じる">✕</button>';
+        html += '<span class="tt-label">' + esc(label) + '</span>';
         if (v.total) html += '<div class="tt-row"><span>残高</span><b class="tt-tot">' + yen(tV) + '</b></div>';
-        if (v.slot) html += '<div class="tt-row"><span>残高スロ</span><b class="tt-slot">' + yen(sV) + '</b></div>';
-        if (v.pachi) html += '<div class="tt-row"><span>残高パチ</span><b class="tt-pachi">' + yen(pV) + '</b></div>';
-        if (v.grand) {
-          html += '<div class="tt-row"><span>換金スロ</span><b class="tt-slot">' + yen(csV) + '</b></div>';
-          html += '<div class="tt-row"><span>換金パチ</span><b class="tt-pachi">' + yen(cpV) + '</b></div>';
-          html += '<div class="tt-row"><span>換金＋残高</span><b class="tt-grand">' + yen(gV) + '</b></div>';
-        }
+        if (v.slot) html += '<div class="tt-row"><span>残高貯メダル</span><b class="tt-slot">' + yen(sV) + '</b></div>';
+        if (v.pachi) html += '<div class="tt-row"><span>残高貯玉</span><b class="tt-pachi">' + yen(pV) + '</b></div>';
+        if (v.cashedSlot) html += '<div class="tt-row"><span>換金貯メダル</span><b class="tt-slot">' + yen(csV) + '</b></div>';
+        if (v.cashedPachi) html += '<div class="tt-row"><span>換金貯玉</span><b class="tt-pachi">' + yen(cpV) + '</b></div>';
+        if (v.grand) html += '<div class="tt-row"><span>換金＋残高</span><b class="tt-grand">' + yen(gV) + '</b></div>';
         tip.innerHTML = html;
+        var closeBtn = tip.querySelector('.tt-close');
+        if (closeBtn) closeBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          if (hideTimer) clearTimeout(hideTimer);
+          tip.classList.remove('show');
+        });
         var rect = body.getBoundingClientRect();
         var svg = body.querySelector('svg');
         var svgRect = svg ? svg.getBoundingClientRect() : rect;
@@ -1741,7 +1768,7 @@
         }
         tip.classList.add('show');
         if (hideTimer) clearTimeout(hideTimer);
-        hideTimer = setTimeout(function () { tip.classList.remove('show'); }, 3000);
+        hideTimer = setTimeout(function () { tip.classList.remove('show'); }, 8000);
       }
       function handleEvt(e) {
         var t = e.target;
@@ -1760,13 +1787,14 @@
       };
     }
 
-    function drawLineSvg(pts, color, width, dotR) {
+    function drawLineSvg(pts, color, width, dotR, dasharray) {
       if (pts.length < 1) return '';
       var out = '';
+      var dashAttr = dasharray ? ' stroke-dasharray="' + dasharray + '"' : '';
       if (pts.length >= 2) {
         var lineD = '';
         for (var lp = 0; lp < pts.length; lp++) lineD += (lp === 0 ? 'M ' : 'L ') + pts[lp][0].toFixed(1) + ',' + pts[lp][1].toFixed(1) + ' ';
-        out += '<path d="' + lineD + '" fill="none" stroke="' + color + '" stroke-width="' + width + '" stroke-linejoin="round" stroke-linecap="round"/>';
+        out += '<path d="' + lineD + '" fill="none" stroke="' + color + '" stroke-width="' + width + '" stroke-linejoin="round" stroke-linecap="round"' + dashAttr + '/>';
       }
       for (var dp = 0; dp < pts.length; dp++) {
         var r = (dp === pts.length - 1) ? dotR + 0.5 : dotR;
@@ -2053,14 +2081,17 @@
       for (var i = 0; i < limit; i++) ids[arr[i].id] = true;
       return ids;
     }
-    // チャート系列の表示可否：メンバー限定機能(grand線)は非メンバー時は強制false
+    // チャート系列の表示可否：換金系(grand/cashedSlot/cashedPachi)は非メンバー時は強制false
     function getEffectiveVisible() {
-      var v = (store.filter && store.filter.visible) || { slot:true, pachi:true, total:true, grand:true };
+      var v = (store.filter && store.filter.visible) || { slot:true, pachi:true, total:true, grand:true, cashedSlot:true, cashedPachi:true };
+      var member = isMember();
       return {
         slot: !!v.slot,
         pachi: !!v.pachi,
         total: !!v.total,
-        grand: !!v.grand && isMember()
+        grand: !!v.grand && member,
+        cashedSlot: !!v.cashedSlot && member,
+        cashedPachi: !!v.cashedPachi && member
       };
     }
 
@@ -2166,9 +2197,9 @@
       (function (btn) {
         btn.addEventListener('click', function () {
           var key = btn.getAttribute('data-series');
-          // grand線(換金＋残高)はメンバー限定機能
-          if (key === 'grand' && !isMember()) {
-            openPaywall('「換金＋残高」推移線はメンバー限定機能です。');
+          // 換金関連線(grand/cashedSlot/cashedPachi)はメンバー限定機能
+          if ((key === 'grand' || key === 'cashedSlot' || key === 'cashedPachi') && !isMember()) {
+            openPaywall('換金関連の推移線はメンバー限定機能です。');
             return;
           }
           store.filter.visible[key] = !store.filter.visible[key];
@@ -2348,8 +2379,8 @@
       var pl = num(document.getElementById('f-pachi-lend').value);
       var pe = num(document.getElementById('f-pachi-ex').value);
       if (!name) { alert('店舗名を入力してください'); return; }
-      if (!sl || !se) { alert('スロットの貸・交換率を入力してください'); return; }
-      if (!pl || !pe) { alert('パチンコの貸・交換率を入力してください'); return; }
+      if (!sl || !se) { alert('貯メダル（スロット）の貸・交換率を入力してください'); return; }
+      if (!pl || !pe) { alert('貯玉（パチンコ）の貸・交換率を入力してください'); return; }
 
       if (editingStoreId) {
         // ===== 編集モード：既存店舗を更新（balance/used/collected/replayLimit/historyは保持） =====
@@ -2385,7 +2416,7 @@
     });
 
     document.getElementById('clearBalances').addEventListener('click', function () {
-      if (!confirm('全店の残高（スロット・パチンコ両方）と稼働中の使用/回収を0にします。よろしいですか？')) return;
+      if (!confirm('全店の残高（貯メダル・貯玉両方）と稼働中の使用/回収を0にします。よろしいですか？')) return;
       for (var i = 0; i < store.stores.length; i++) {
         var s = store.stores[i];
         s.slot.balance = 0; s.slot.used = 0; s.slot.collected = 0;
@@ -2449,8 +2480,8 @@
       var showTotal = v.total || (v.slot && v.pachi);
       if (showTotal) lines.push('残高 ' + yen(live.slot + live.pachinko));
       if (v.grand) lines.push('換金＋残高 ' + yen(live.slot + live.pachinko + (live.cashed || 0)));
-      if (v.slot) lines.push('スロット ' + yen(live.slot));
-      if (v.pachi) lines.push('パチンコ ' + yen(live.pachinko));
+      if (v.slot) lines.push('貯メダル ' + yen(live.slot));
+      if (v.pachi) lines.push('貯玉 ' + yen(live.pachinko));
       lines.push('#PSBANK #パチンコ #スロット #貯玉 #貯メダル');
       return lines.join('\n');
     }
@@ -2514,8 +2545,8 @@
         var showTotal = v.total || (v.slot && v.pachi);
         var totalShow = showTotal ? total : (v.slot ? live.slot : live.pachinko);
         var totalLabel = '合計';
-        if (!showTotal && v.slot && !v.pachi) totalLabel = 'スロット';
-        if (!showTotal && !v.slot && v.pachi) totalLabel = 'パチンコ';
+        if (!showTotal && v.slot && !v.pachi) totalLabel = '貯メダル';
+        if (!showTotal && !v.slot && v.pachi) totalLabel = '貯玉';
 
         ctx.font = '600 24px -apple-system, "Hiragino Sans", sans-serif';
         ctx.fillStyle = '#9098a4';
@@ -2535,11 +2566,11 @@
         var by = 580;
         if (v.slot) {
           ctx.fillStyle = SLOT_COLOR;
-          ctx.fillText('スロット ' + yen(live.slot), bx1, by);
+          ctx.fillText('貯メダル ' + yen(live.slot), bx1, by);
         }
         if (v.pachi) {
           ctx.fillStyle = PACHI_COLOR;
-          ctx.fillText('パチンコ ' + yen(live.pachinko), bx2, by);
+          ctx.fillText('貯玉 ' + yen(live.pachinko), bx2, by);
         }
 
         // 区切り線
@@ -2563,8 +2594,8 @@
         var lgItems = [];
         if (v.total) lgItems.push({color: TOTAL_COLOR, label: '残高'});
         if (v.grand) lgItems.push({color: GRAND_COLOR, label: '換金＋残高'});
-        if (v.pachi) lgItems.push({color: PACHI_COLOR, label: 'パチンコ'});
-        if (v.slot) lgItems.push({color: SLOT_COLOR, label: 'スロット'});
+        if (v.pachi) lgItems.push({color: PACHI_COLOR, label: '貯玉'});
+        if (v.slot) lgItems.push({color: SLOT_COLOR, label: '貯メダル'});
         for (var li = 0; li < lgItems.length; li++) {
           var tw = ctx.measureText(lgItems[li].label).width;
           ctx.fillStyle = '#ecedf1';

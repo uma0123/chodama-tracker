@@ -135,28 +135,39 @@
   }
   .cashrow .cashed:focus { outline: none; border-color: var(--accent); }
 
-  /* グラフのツールチップ */
+  /* グラフのツールチップ（縦並び・端でも見切れない） */
   .chart-tip {
     position: absolute;
     background: rgba(20,22,28,0.96);
     border: 1px solid var(--line2);
     border-radius: 8px;
-    padding: 6px 10px;
+    padding: 8px 10px;
     font-size: 11px;
     color: var(--text);
     pointer-events: none;
     z-index: 10;
-    white-space: nowrap;
     box-shadow: 0 4px 14px rgba(0,0,0,0.5);
     display: none;
+    min-width: 110px;
+    max-width: 160px;
     transform: translate(-50%, -110%);
   }
   .chart-tip.show { display: block; }
-  .chart-tip .tt-label { color: var(--accent); font-weight: 700; margin-right: 6px; }
+  .chart-tip.align-l { transform: translate(-8px, -110%); }     /* 左端：左揃え */
+  .chart-tip.align-r { transform: translate(calc(-100% + 8px), -110%); }  /* 右端：右揃え */
+  .chart-tip .tt-label {
+    display: block; color: var(--accent); font-weight: 700;
+    margin-bottom: 4px; font-size: 11px;
+  }
+  .chart-tip .tt-row {
+    display: flex; justify-content: space-between; gap: 8px;
+    padding: 1px 0; font-variant-numeric: tabular-nums;
+  }
+  .chart-tip .tt-row span:first-child { color: var(--sub); font-size: 10px; }
   .chart-tip .tt-tot { color: var(--accent); font-weight: 700; }
   .chart-tip .tt-grand { color: var(--green); font-weight: 700; }
-  .chart-tip .tt-slot { color: var(--slot); }
-  .chart-tip .tt-pachi { color: var(--pachi); }
+  .chart-tip .tt-slot { color: var(--slot); font-weight: 600; }
+  .chart-tip .tt-pachi { color: var(--pachi); font-weight: 600; }
   .chart-body { position: relative; }
   .total .filt {
     margin-top: 6px; font-size: 11px; color: var(--accent);
@@ -1643,14 +1654,14 @@
         var tV = Number(hit.getAttribute('data-tot') || 0);
         var gV = Number(hit.getAttribute('data-grand') || 0);
         var v = (store.filter && store.filter.visible) || { slot:true, pachi:true, total:true, grand:true };
-        var parts = ['<span class="tt-label">' + esc(label) + '</span>'];
-        if (v.total) parts.push('残高 <b class="tt-tot">' + yen(tV) + '</b>');
-        if (v.grand) parts.push('換金＋残高 <b class="tt-grand">' + yen(gV) + '</b>');
-        if (v.slot) parts.push('<b class="tt-slot">スロ ' + yen(sV) + '</b>');
-        if (v.pachi) parts.push('<b class="tt-pachi">パチ ' + yen(pV) + '</b>');
-        tip.innerHTML = parts.join(' ');
+        // 縦並び：1行1項目で表示（端でも見切れない）
+        var html = '<span class="tt-label">' + esc(label) + '</span>';
+        if (v.total) html += '<div class="tt-row"><span>残高</span><b class="tt-tot">' + yen(tV) + '</b></div>';
+        if (v.grand) html += '<div class="tt-row"><span>換金＋残高</span><b class="tt-grand">' + yen(gV) + '</b></div>';
+        if (v.slot) html += '<div class="tt-row"><span>スロット</span><b class="tt-slot">' + yen(sV) + '</b></div>';
+        if (v.pachi) html += '<div class="tt-row"><span>パチンコ</span><b class="tt-pachi">' + yen(pV) + '</b></div>';
+        tip.innerHTML = html;
         var rect = body.getBoundingClientRect();
-        // SVG座標(0-320,0-150) → body実座標へ変換（svgはwidth:100%）
         var svg = body.querySelector('svg');
         var svgRect = svg ? svg.getBoundingClientRect() : rect;
         var cxAttr = Number(hit.getAttribute('data-cx') || 0);
@@ -1662,6 +1673,14 @@
         var topPx = (svgRect.top - rect.top) + cyAttr * scaleY;
         tip.style.left = leftPx + 'px';
         tip.style.top = topPx + 'px';
+        // エッジ検出：bodyの左/右端付近では位置調整
+        tip.classList.remove('align-l', 'align-r');
+        var bodyW = rect.width;
+        if (leftPx < bodyW * 0.18) {
+          tip.classList.add('align-l');     // 左端：左寄せで右へ伸ばす
+        } else if (leftPx > bodyW * 0.82) {
+          tip.classList.add('align-r');     // 右端：右寄せで左へ伸ばす
+        }
         tip.classList.add('show');
         if (hideTimer) clearTimeout(hideTimer);
         hideTimer = setTimeout(function () { tip.classList.remove('show'); }, 3000);

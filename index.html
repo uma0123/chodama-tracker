@@ -135,8 +135,10 @@
   }
   .cashrow .cashed:focus { outline: none; border-color: var(--accent); }
 
-  /* グラフのツールチップ（縦並び・端でも見切れない） */
+  /* グラフのツールチップ（縦並び・四方どこでも見切れない） */
   .chart-tip {
+    --tx: -50%;
+    --ty: -110%;
     position: absolute;
     background: rgba(20,22,28,0.96);
     border: 1px solid var(--line2);
@@ -148,13 +150,14 @@
     z-index: 10;
     box-shadow: 0 4px 14px rgba(0,0,0,0.5);
     display: none;
-    min-width: 110px;
-    max-width: 160px;
-    transform: translate(-50%, -110%);
+    min-width: 120px;
+    max-width: 170px;
+    transform: translate(var(--tx), var(--ty));
   }
   .chart-tip.show { display: block; }
-  .chart-tip.align-l { transform: translate(-8px, -110%); }     /* 左端：左揃え */
-  .chart-tip.align-r { transform: translate(calc(-100% + 8px), -110%); }  /* 右端：右揃え */
+  .chart-tip.align-l { --tx: -8px; }              /* 左端：左寄せで右へ伸ばす */
+  .chart-tip.align-r { --tx: calc(-100% + 8px); } /* 右端：右寄せで左へ伸ばす */
+  .chart-tip.align-below { --ty: 16px; }          /* 上の点：下に表示 */
   .chart-tip .tt-label {
     display: block; color: var(--accent); font-weight: 700;
     margin-bottom: 4px; font-size: 11px;
@@ -244,6 +247,10 @@
   .chart-legend .lg.off { opacity: 0.35; }
   .chart-legend .lg.off .sw { background: transparent !important; border: 1px solid currentColor; }
   .chart-legend .lg:active { opacity: 0.6; }
+  .chart-legend .lg.locked::after {
+    content: '🔒'; font-size: 9px; margin-left: 2px;
+  }
+  .chart-legend .lg.locked { opacity: 0.7; }
   .chart-legend .sw {
     display: inline-block; width: 10px; height: 10px; border-radius: 2px;
   }
@@ -1014,7 +1021,7 @@
     var TOTAL_COLOR = '#ffd45c';
     var GRAND_COLOR = '#6ed59d';
 
-    var FREE_STORE_LIMIT = 1;
+    var FREE_STORE_LIMIT = 2;
     // ★ 月替わりパスワード（YYYY-MM → パスワード）
     // 毎月、noteの限定記事に貼るパスワードと一致させてください。
     // 公開前に必ず実際のパスワードに変更すること。
@@ -1436,11 +1443,20 @@
 
     function updateLegendUI() {
       var lgs = document.querySelectorAll('.chart-legend .lg');
+      var v = store.filter.visible;
+      var member = isMember();
       for (var i = 0; i < lgs.length; i++) {
         var key = lgs[i].getAttribute('data-series');
-        var on = !!store.filter.visible[key];
-        if (on) lgs[i].classList.remove('off');
-        else lgs[i].classList.add('off');
+        var on = !!v[key];
+        // grand線はメンバー限定。非メンバーは強制オフ＋ロック表示
+        if (key === 'grand' && !member) {
+          lgs[i].classList.add('off');
+          lgs[i].classList.add('locked');
+        } else {
+          lgs[i].classList.remove('locked');
+          if (on) lgs[i].classList.remove('off');
+          else lgs[i].classList.add('off');
+        }
       }
     }
 
@@ -1504,7 +1520,7 @@
         labelFn: function(s, i) { return (i + 1); },
         tipLabelFn: function(s, i) { return year + '年' + (i + 1) + '月'; },
         nowMaxIdx: (year === nowYear) ? ((new Date()).getMonth()) : 11,
-        visible: store.filter.visible
+        visible: getEffectiveVisible()
       });
       attachChartTip(body);
 
@@ -1556,7 +1572,7 @@
         },
         tipLabelFn: function (s, i) { return year + '年' + month + '月' + (i + 1) + '日'; },
         nowMaxIdx: lastIdx,
-        visible: store.filter.visible
+        visible: getEffectiveVisible()
       });
       attachChartTip(body);
 
@@ -1653,7 +1669,7 @@
         var pV = Number(hit.getAttribute('data-pachi') || 0);
         var tV = Number(hit.getAttribute('data-tot') || 0);
         var gV = Number(hit.getAttribute('data-grand') || 0);
-        var v = (store.filter && store.filter.visible) || { slot:true, pachi:true, total:true, grand:true };
+        var v = getEffectiveVisible();
         // 縦並び：1行1項目で表示（端でも見切れない）
         var html = '<span class="tt-label">' + esc(label) + '</span>';
         if (v.total) html += '<div class="tt-row"><span>残高</span><b class="tt-tot">' + yen(tV) + '</b></div>';
@@ -1673,13 +1689,17 @@
         var topPx = (svgRect.top - rect.top) + cyAttr * scaleY;
         tip.style.left = leftPx + 'px';
         tip.style.top = topPx + 'px';
-        // エッジ検出：bodyの左/右端付近では位置調整
-        tip.classList.remove('align-l', 'align-r');
+        // エッジ検出：上下左右どこでも収まるよう位置調整
+        tip.classList.remove('align-l', 'align-r', 'align-below');
         var bodyW = rect.width;
         if (leftPx < bodyW * 0.18) {
-          tip.classList.add('align-l');     // 左端：左寄せで右へ伸ばす
+          tip.classList.add('align-l');     // 左端：左寄せ
         } else if (leftPx > bodyW * 0.82) {
-          tip.classList.add('align-r');     // 右端：右寄せで左へ伸ばす
+          tip.classList.add('align-r');     // 右端：右寄せ
+        }
+        // 上の方の点はツールチップが上にはみ出して TOTAL BALANCE に隠れるので下に出す
+        if (topPx < 100) {
+          tip.classList.add('align-below');
         }
         tip.classList.add('show');
         if (hideTimer) clearTimeout(hideTimer);
@@ -1971,6 +1991,25 @@
       }
       return topId;
     }
+    function getTopStoreIds(n) {
+      // 貯玉(円換算)が多い順に最大n個のID集合を返す（{id: true}）
+      var arr = store.stores.slice();
+      arr.sort(function (a, b) { return storeValueEff(b) - storeValueEff(a); });
+      var ids = {};
+      var limit = Math.min(n || 1, arr.length);
+      for (var i = 0; i < limit; i++) ids[arr[i].id] = true;
+      return ids;
+    }
+    // チャート系列の表示可否：メンバー限定機能(grand線)は非メンバー時は強制false
+    function getEffectiveVisible() {
+      var v = (store.filter && store.filter.visible) || { slot:true, pachi:true, total:true, grand:true };
+      return {
+        slot: !!v.slot,
+        pachi: !!v.pachi,
+        total: !!v.total,
+        grand: !!v.grand && isMember()
+      };
+    }
 
     function renderLockedCard(s, list) {
       var card = document.createElement('div');
@@ -2007,12 +2046,12 @@
         empty.textContent = '登録されている店舗がありません。上の「＋ 店舗を追加」から登録してください。';
         list.appendChild(empty);
       } else if (!isMember()) {
-        // 非メンバー: 貯玉最大の1店舗だけ通常表示、他はロックプレースホルダ
-        var topId = getTopStoreId();
+        // 非メンバー: 貯玉が多い順に FREE_STORE_LIMIT 店舗だけ通常表示、他はロックプレースホルダ
+        var topIds = getTopStoreIds(FREE_STORE_LIMIT);
         var lockedCount = 0;
         for (var i = 0; i < store.stores.length; i++) {
           var s = store.stores[i];
-          if (s.id === topId) renderCard(s, list);
+          if (topIds[s.id]) renderCard(s, list);
           else { renderLockedCard(s, list); lockedCount++; }
         }
         if (lockedCount > 0) {
@@ -2074,12 +2113,18 @@
       (function (btn) {
         btn.addEventListener('click', function () {
           var key = btn.getAttribute('data-series');
+          // grand線(換金＋残高)はメンバー限定機能
+          if (key === 'grand' && !isMember()) {
+            openPaywall('「換金＋残高」推移線はメンバー限定機能です。');
+            return;
+          }
           store.filter.visible[key] = !store.filter.visible[key];
           // 全部オフは禁止（合計だけONに戻す）
           var v = store.filter.visible;
           if (!v.slot && !v.pachi && !v.total) v.total = true;
           saveQuiet();
           renderChart();
+          updateLegendUI();
         });
       })(lgs[li]);
     }
@@ -2325,7 +2370,8 @@
         if (typeof store.filter.chartYear !== 'number') store.filter.chartYear = (new Date()).getFullYear();
         if (store.filter.chartMode !== 'year' && store.filter.chartMode !== 'month') store.filter.chartMode = 'year';
         if (typeof store.filter.chartMonth !== 'number') store.filter.chartMonth = (new Date()).getMonth() + 1;
-        if (!store.filter.visible) store.filter.visible = { slot:true, pachi:true, total:true };
+        if (!store.filter.visible) store.filter.visible = { slot:true, pachi:true, total:true, grand:true };
+        if (typeof store.filter.visible.grand !== 'boolean') store.filter.visible.grand = true;
         if (!store.history) store.history = {};
         saveQuiet();
         render();
@@ -2338,7 +2384,7 @@
     // ---- SNSシェア ----
     function buildShareText() {
       var live = liveBreakdown();
-      var v = store.filter.visible;
+      var v = getEffectiveVisible();
       var lines = [];
       var headline;
       if (store.filter.chartMode === 'month') {
@@ -2411,7 +2457,7 @@
         // 合計金額
         var live = liveBreakdown();
         var total = live.slot + live.pachinko;
-        var v = store.filter.visible;
+        var v = getEffectiveVisible();
         var showTotal = v.total || (v.slot && v.pachi);
         var totalShow = showTotal ? total : (v.slot ? live.slot : live.pachinko);
         var totalLabel = '合計';

@@ -102,24 +102,32 @@
     margin-top: 2px;
   }
   .total .cash-line {
-    display: flex; gap: 14px; flex-wrap: wrap; align-items: baseline;
+    display: flex; gap: 12px; flex-wrap: wrap; align-items: baseline;
     margin-top: 6px; font-size: 12px; color: var(--sub);
   }
-  .total .cash-line .cash-lbl { color: var(--sub); font-size: 11px; }
+  .total .cash-line .cash-lbl { color: var(--accent); font-size: 11px; font-weight: 600; }
   .total .cash-line b { color: var(--text); font-weight: 700; margin-left: 4px; font-variant-numeric: tabular-nums; }
-  .total .cash-line .sub { font-size: 11px; color: var(--sub); }
-  .total .cash-line .sub b { font-weight: 600; }
+  .total .cash-line .sub { font-size: 11px; color: var(--dim); }
+  .total .cash-line .sub b { font-weight: 700; }
   .total .cash-line .s b { color: var(--slot); }
   .total .cash-line .p b { color: var(--pachi); }
-  .total .cash-line .grand b { color: var(--green); }
+  .total .cash-line .grand .cash-lbl { color: var(--green); }
+  .total .cash-line .grand b { color: var(--green); font-size: 13px; }
   .total .cash-line .sep { color: var(--dim); margin: 0 2px; }
   .total .breakdown {
     display: flex; gap: 14px; flex-wrap: wrap;
-    margin-top: 8px; font-size: 11px; color: var(--sub);
+    margin-top: 8px; font-size: 12px; color: var(--sub);
   }
-  .total .breakdown b { color: var(--text); font-weight: 600; margin-left: 4px; }
+  .total .breakdown b { color: var(--text); font-weight: 700; margin-left: 4px; font-variant-numeric: tabular-nums; }
   .total .breakdown .s b { color: var(--slot); }
   .total .breakdown .p b { color: var(--pachi); }
+  .total .meta-line {
+    display: flex; gap: 14px; flex-wrap: wrap;
+    margin-top: 8px; padding-top: 8px;
+    font-size: 11px; color: var(--dim);
+    border-top: 1px dashed var(--line);
+  }
+  .total .meta-line b { color: var(--sub); font-weight: 600; margin: 0 2px; }
   .cashrow {
     display: flex; align-items: center; gap: 6px;
     padding: 8px 2px 0;
@@ -840,17 +848,19 @@
 <div class="total">
   <div class="label">total balance · 貯玉貯メダル残高</div>
   <div class="amount" id="totalAmount">¥0</div>
+  <div class="breakdown">
+    <span class="s">貯メダル<b id="slotTotal">¥0</b></span>
+    <span class="p">貯玉<b id="pacTotal">¥0</b></span>
+  </div>
   <div class="cash-line">
     <span><span class="cash-lbl">換金済（累計）</span><b id="cashedTotal">¥0</b></span>
-    <span class="s sub">貯メダル<b id="cashedSlotTotal">¥0</b></span>
-    <span class="p sub">貯玉<b id="cashedPachiTotal">¥0</b></span>
+    <span class="s sub">換金済 貯メダル<b id="cashedSlotTotal">¥0</b></span>
+    <span class="p sub">換金済 貯玉<b id="cashedPachiTotal">¥0</b></span>
   </div>
   <div class="cash-line">
     <span class="grand"><span class="cash-lbl">換金済み＋貯玉貯メダル残高</span><b id="grandTotal">¥0</b></span>
   </div>
-  <div class="breakdown">
-    <span class="s">貯メダル<b id="slotTotal">¥0</b></span>
-    <span class="p">貯玉<b id="pacTotal">¥0</b></span>
+  <div class="meta-line">
     <span>残高あり<b id="balCount">0</b>店舗</span>
     <span>登録<b id="storeCount">0</b>店舗</span>
   </div>

@@ -704,24 +704,34 @@
 
   /* 再プレイ上限メモ */
   .replay-limit {
-    position: relative;
     background: var(--inset);
     border: 1px solid var(--line);
     border-radius: 10px;
-    padding: 8px 28px 8px 10px;
+    padding: 6px 10px 8px;
     margin: 8px 2px 0;
     font-size: 11px;
   }
-  .replay-limit .rl-close {
-    position: absolute; top: 4px; right: 4px;
-    background: transparent; border: none; color: var(--dim);
-    font-size: 16px; line-height: 1; cursor: pointer;
-    padding: 4px 7px; border-radius: 4px;
+  .replay-limit .rl-toggle {
+    background: transparent; border: none;
+    display: flex; align-items: center; justify-content: space-between;
+    width: 100%; padding: 4px 0 6px; cursor: pointer;
+    color: inherit; font-family: inherit; text-align: left;
+    -webkit-tap-highlight-color: transparent;
   }
-  .replay-limit .rl-close:active { color: var(--text); background: rgba(255,255,255,0.08); }
+  .replay-limit .rl-chevron {
+    color: var(--dim); font-size: 10px; margin-left: 8px;
+    transition: opacity 0.15s;
+  }
+  .replay-limit .rl-toggle:active .rl-chevron { opacity: 0.5; }
+  .replay-limit.collapsed {
+    padding: 4px 10px;
+  }
+  .replay-limit.collapsed .rl-toggle { padding: 4px 0; }
+  .replay-limit .rl-head-min {
+    color: var(--sub); font-weight: 600; font-size: 11px;
+  }
   .replay-limit .rl-head {
     color: var(--accent); font-weight: 700; font-size: 11px;
-    display: block; margin-bottom: 6px;
   }
   .replay-limit .rl-head small { color: var(--dim); font-weight: 500; margin-left: 4px; font-size: 10px; }
   .replay-limit .rl-row {
@@ -741,13 +751,15 @@
   .replay-limit .rl-unit { color: var(--sub); font-size: 11px; margin-right: 8px; }
 
   .replay-limit.locked {
-    display: flex; align-items: center; justify-content: space-between; gap: 8px;
     background:
       linear-gradient(135deg, rgba(255,212,92,0.05), transparent),
       var(--inset);
     border-style: dashed;
   }
   .replay-limit .rl-lock { color: var(--sub); font-size: 11px; }
+  .replay-limit .rl-locked-foot {
+    display: flex; justify-content: flex-end;
+  }
   .replay-limit .rl-cta {
     background: var(--accent); color: #1a1410; border: none; border-radius: 6px;
     padding: 4px 10px; font-size: 11px; font-weight: 700; cursor: pointer;
@@ -935,7 +947,7 @@
 <details class="settings">
   <summary>設定・一括操作</summary>
   <div class="setbtns">
-    <button class="btn" id="restoreReplayLimit">再プレイ上限タブを全店舗で再表示</button>
+    <button class="btn" id="restoreReplayLimit">再プレイ上限タブを全店舗で展開</button>
     <button class="btn" id="clearBalances">全店の残高を0にする</button>
     <button class="btn danger" id="deleteAll">全店舗を削除（空にする）</button>
     <button class="btn" id="exportData">データをエクスポート（JSONをコピー）</button>
@@ -1370,10 +1382,10 @@
       }
       var cashedT = cashedSlotT + cashedPachiT;
       document.getElementById('totalAmount').textContent = yen(total);
-      // 換金済関連はメンバー限定機能なので非メンバー時は cash-line(2つとも)を非表示に
-      var cashLines = document.querySelectorAll('.total .cash-line');
-      for (var ci = 0; ci < cashLines.length; ci++) {
-        cashLines[ci].style.display = isMember() ? '' : 'none';
+      // 換金済関連はメンバー限定機能なので非メンバー時は cash-line/cash-sub-line を全部非表示に
+      var cashEls = document.querySelectorAll('.total .cash-line, .total .cash-sub-line');
+      for (var ci = 0; ci < cashEls.length; ci++) {
+        cashEls[ci].style.display = isMember() ? '' : 'none';
       }
       var cEl = document.getElementById('cashedTotal');
       var cSEl = document.getElementById('cashedSlotTotal');
@@ -1967,14 +1979,29 @@
 
     function replayLimitHtml(s) {
       if (!s.replayLimit || typeof s.replayLimit !== 'object') s.replayLimit = { slot:0, pachi:0 };
-      if (s.hideReplayLimit) return '';
-      var closeBtn = '<button class="rl-close" type="button" title="この項目を隠す">×</button>';
-      if (isMember()) {
+      var collapsed = !!s.hideReplayLimit;
+      var chevron = '<span class="rl-chevron">' + (collapsed ? '▼' : '▲') + '</span>';
+      var member = isMember();
+
+      // 収納時：店舗カードに小さなバーだけ表示。タップで展開
+      if (collapsed) {
+        var lockMark = member ? '' : '🔒 ';
+        return '<div class="replay-limit collapsed">' +
+          '<button class="rl-toggle" type="button">' +
+            '<span class="rl-head-min">' + lockMark + '再プレイ上限</span>' +
+            chevron +
+          '</button>' +
+        '</div>';
+      }
+
+      if (member) {
         var slotV = s.replayLimit.slot > 0 ? s.replayLimit.slot : '';
         var pachiV = s.replayLimit.pachi > 0 ? s.replayLimit.pachi : '';
         return '<div class="replay-limit">' +
-            closeBtn +
-            '<span class="rl-head">再プレイ上限<small>（店舗ごとに記録）</small></span>' +
+            '<button class="rl-toggle" type="button">' +
+              '<span class="rl-head">再プレイ上限<small>（店舗ごとに記録）</small></span>' +
+              chevron +
+            '</button>' +
             '<div class="rl-row">' +
               '<span class="rl-tag tag-slot">スロ</span>' +
               '<input class="rl-input" data-rl="slot" inputmode="numeric" pattern="[0-9]*" value="' + slotV + '" placeholder="0">' +
@@ -1985,10 +2012,15 @@
             '</div>' +
           '</div>';
       }
+      // 非メンバー（ロック）
       return '<div class="replay-limit locked">' +
-        closeBtn +
-        '<span class="rl-lock">🔒 再プレイ上限メモ（メンバー限定）</span>' +
-        '<button class="rl-cta" type="button">解錠</button>' +
+        '<button class="rl-toggle" type="button">' +
+          '<span class="rl-lock">🔒 再プレイ上限メモ（メンバー限定）</span>' +
+          chevron +
+        '</button>' +
+        '<div class="rl-locked-foot">' +
+          '<button class="rl-cta" type="button">解錠</button>' +
+        '</div>' +
       '</div>';
     }
 
@@ -2045,12 +2077,11 @@
           });
         }
       }
-      // 再プレイ上限タブの ×（非表示）ボタン — メンバー/非メンバー共通
-      var rlClose = card.querySelector('.rl-close');
-      if (rlClose) rlClose.addEventListener('click', function (e) {
+      // 再プレイ上限タブの折りたたみトグル ▼/▲ — メンバー/非メンバー共通
+      var rlToggle = card.querySelector('.rl-toggle');
+      if (rlToggle) rlToggle.addEventListener('click', function (e) {
         e.stopPropagation();
-        if (!confirm('この店舗の「再プレイ上限」項目を隠します。\n再表示は「設定・一括操作」内の「再プレイ上限を全店舗で再表示」から戻せます。\nよろしいですか？')) return;
-        s.hideReplayLimit = true;
+        s.hideReplayLimit = !s.hideReplayLimit;
         saveQuiet();
         render();
       });
@@ -2463,10 +2494,10 @@
           count++;
         }
       }
-      if (count === 0) { alert('再プレイ上限タブを隠している店舗はありません。'); return; }
+      if (count === 0) { alert('折りたたまれている店舗はありません。'); return; }
       saveQuiet();
       render();
-      alert(count + ' 店舗の再プレイ上限タブを再表示しました。');
+      alert(count + ' 店舗の再プレイ上限タブを展開しました。');
     });
 
     document.getElementById('clearBalances').addEventListener('click', function () {

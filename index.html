@@ -456,6 +456,25 @@
     font-size: 17px; line-height: 1; cursor: pointer; padding: 2px 4px;
   }
   .del:active { color: var(--red); }
+  .card-toggle {
+    background: transparent; border: none; color: var(--dim);
+    font-size: 12px; line-height: 1; cursor: pointer; padding: 4px 6px;
+    border-radius: 4px;
+  }
+  .card-toggle:active { color: var(--accent); background: rgba(255,255,255,0.06); }
+
+  .store.collapsed { padding: 8px 12px; }
+  .store-summary {
+    display: flex; gap: 14px; flex-wrap: wrap; align-items: baseline;
+    margin-top: 4px;
+    font-size: 11px; color: var(--sub);
+  }
+  .store-summary .ss { display: inline-flex; align-items: baseline; gap: 4px; }
+  .store-summary .ss b { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text); }
+  .store-summary .ss.s b { color: var(--slot); }
+  .store-summary .ss.p b { color: var(--pachi); }
+  .store-summary .ss.c b { color: var(--green); }
+  .store-summary .ss.tot b { color: var(--accent); }
   .links {
     display: flex; gap: 12px;
     margin: 6px 0 10px;
@@ -608,6 +627,12 @@
   body.session-on .commit { display: inline-block; }
   .commit:active { opacity: 0.6; }
   .memo { color: var(--sub); font-size: 11px; margin: 4px 2px 0; }
+
+  /* 稼働モード/レート設定ON時は換金済入力・再プレイ上限を隠して集中UIに */
+  body.session-on .cashrow,
+  body.session-on .replay-limit,
+  body.rates-on .cashrow,
+  body.rates-on .replay-limit { display: none !important; }
 
   details {
     background: var(--card);
@@ -1221,6 +1246,7 @@
               if (typeof s.replayLimit.slot !== 'number') s.replayLimit.slot = 0;
               if (typeof s.replayLimit.pachi !== 'number') s.replayLimit.pachi = 0;
               if (typeof s.hideReplayLimit !== 'boolean') s.hideReplayLimit = false;
+              if (typeof s.collapsed !== 'boolean') s.collapsed = false;
             }
             if (!p.filter) p.filter = { corp:'all', sort:'default', onlyBalance:false, search:'', chartType:'line' };
             if (typeof p.filter.chartYear !== 'number') p.filter.chartYear = (new Date()).getFullYear();
@@ -2030,28 +2056,83 @@
       var linksHtml = '';
       if (s.url) linksHtml += '<a href="' + esc(s.url) + '" target="_blank" rel="noopener">みんパチ↗</a>';
       if (s.pworld) linksHtml += '<a href="' + esc(s.pworld) + '" target="_blank" rel="noopener">P-world↗</a>';
-      card.innerHTML =
-        '<div class="row1">' +
+      var collapsed = !!s.collapsed;
+      var cardChevron = '<button class="card-toggle" type="button" title="' + (collapsed ? '展開' : '折りたたむ') + '">' + (collapsed ? '▼' : '▲') + '</button>';
+
+      var row1Html = '<div class="row1">' +
           '<span class="name">' + esc(s.name) + '</span>' +
           (s.corp ? '<span class="chain">' + esc(s.corp) + '</span>' : '') +
           '<button class="fav' + (s.favorite ? ' on' : '') + '" title="お気に入り">' + STAR_SVG + '</button>' +
           '<button class="edit" title="この店舗を編集">✎</button>' +
+          cardChevron +
           '<button class="del" title="この店舗を削除">✕</button>' +
-        '</div>' +
-        (linksHtml ? '<div class="links">' + linksHtml + '</div>' : '') +
-        segHtml('slot', s.slot) +
-        segHtml('pachinko', s.pachinko) +
-        (s.memo ? '<div class="memo">' + esc(s.memo) + '</div>' : '') +
-        cashedLockedHtml(s) +
-        replayLimitHtml(s) +
-        '<div class="cardfoot">' +
-          '<span class="ftxt">店舗計 <b class="stotal">¥0</b><span class="upd"></span></span>' +
-          '<button class="commit" title="使用・回収を残高に反映">転記</button>' +
         '</div>';
-      list.appendChild(card);
 
-      bindKind(card, s, 'slot');
-      bindKind(card, s, 'pachinko');
+      if (collapsed) {
+        // 折りたたみ：1行のサマリだけ表示（貯メダル合計／貯玉合計／換金済累計／店舗計）
+        var slotVal = calcValue(effBal(s.slot), s.slot.exchange);
+        var pachiVal = calcValue(effBal(s.pachinko), s.pachinko.exchange);
+        var totVal = slotVal + pachiVal;
+        var cashed = (s.slot.cashedOut || 0) + (s.pachinko.cashedOut || 0);
+        var sumHtml = '<div class="store-summary">' +
+          '<span class="ss s">貯メダル<b>' + yen(slotVal) + '</b></span>' +
+          '<span class="ss p">貯玉<b>' + yen(pachiVal) + '</b></span>' +
+          (isMember() ? '<span class="ss c">換金済<b>' + yen(cashed) + '</b></span>' : '') +
+          '<span class="ss tot">店舗計<b>' + yen(totVal) + '</b></span>' +
+        '</div>';
+        card.innerHTML = row1Html + sumHtml;
+        list.appendChild(card);
+        // 折りたたみ状態でもクラス更新（残高あり/お気に入り）
+        var cls = 'store collapsed';
+        if (effBal(s.slot) > 0 || effBal(s.pachinko) > 0) cls += ' has-balance';
+        if (s.favorite) cls += ' fav-on';
+        card.className = cls;
+      } else {
+        card.innerHTML = row1Html +
+          (linksHtml ? '<div class="links">' + linksHtml + '</div>' : '') +
+          segHtml('slot', s.slot) +
+          segHtml('pachinko', s.pachinko) +
+          (s.memo ? '<div class="memo">' + esc(s.memo) + '</div>' : '') +
+          cashedLockedHtml(s) +
+          replayLimitHtml(s) +
+          '<div class="cardfoot">' +
+            '<span class="ftxt">店舗計 <b class="stotal">¥0</b><span class="upd"></span></span>' +
+            '<button class="commit" title="使用・回収を残高に反映">転記</button>' +
+          '</div>';
+        list.appendChild(card);
+        bindKind(card, s, 'slot');
+        bindKind(card, s, 'pachinko');
+      }
+
+      // card-toggle のバインド（折りたたみ/展開、両モード共通）
+      var cardTog = card.querySelector('.card-toggle');
+      if (cardTog) cardTog.addEventListener('click', function (e) {
+        e.stopPropagation();
+        s.collapsed = !s.collapsed;
+        saveQuiet();
+        render();
+      });
+
+      if (collapsed) {
+        // 折りたたみ時はここで終わり。fav/edit/del はバインド継続
+        card.querySelector('.fav').addEventListener('click', function () {
+          s.favorite = !s.favorite;
+          save(); render();
+        });
+        card.querySelector('.edit').addEventListener('click', function () {
+          openModal(s.id);
+        });
+        card.querySelector('.del').addEventListener('click', function () {
+          if (!confirm('「' + s.name + '」を削除します。よろしいですか？')) return;
+          var arr = [];
+          for (var k = 0; k < store.stores.length; k++) {
+            if (store.stores[k].id !== s.id) arr.push(store.stores[k]);
+          }
+          store.stores = arr;
+          save(); render();
+        });
+        return;
+      }
 
       // 再プレイ上限の入力バインド（メンバーのみ） or 解錠ボタン
       if (isMember()) {

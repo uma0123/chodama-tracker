@@ -1,5 +1,5 @@
-// P&S BANK Service Worker
-const CACHE = 'psbank-v18';
+// PS BANK Service Worker
+const CACHE = 'psbank-v19';
 const ASSETS = [
   './',
   './index.html',

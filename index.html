@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>P&amp;S BANK</title>
+<title>PS BANK</title>
 <meta name="theme-color" content="#ffd45c">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="P&amp;S BANK">
+<meta name="apple-mobile-web-app-title" content="PS BANK">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
@@ -883,7 +883,7 @@
 </head>
 <body>
 
-<h1>P&amp;S BANK</h1>
+<h1>PS BANK</h1>
 <div class="updated-head" id="today"></div>
 
 <div class="member-badge" id="memberBadge" role="button" tabindex="0">
@@ -2682,7 +2682,7 @@
         ctx.textAlign = 'center';
         ctx.shadowColor = 'rgba(255,212,92,0.45)';
         ctx.shadowBlur = 28;
-        ctx.fillText('P&S BANK', W / 2, 230);
+        ctx.fillText('PS BANK', W / 2, 230);
         ctx.shadowBlur = 0;
 
         // 期間サブ
@@ -2916,7 +2916,7 @@
             var file = new File([blob], 'pachi-bank.png', { type: 'image/png' });
             if (navigator.canShare({ files: [file] })) {
               navigator.share({
-                title: 'P&S BANK',
+                title: 'PS BANK',
                 text: text,
                 url: APP_URL,
                 files: [file]
@@ -2925,7 +2925,7 @@
             }
           }
           if (navigator.share) {
-            navigator.share({ title: 'P&S BANK', text: text, url: APP_URL })
+            navigator.share({ title: 'PS BANK', text: text, url: APP_URL })
               .catch(function () { fallbackShare(text); });
             return;
           }

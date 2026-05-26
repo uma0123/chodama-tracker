@@ -1,6 +1,6 @@
 {
-  "name": "P&S BANK",
-  "short_name": "P&S BANK",
+  "name": "PS BANK",
+  "short_name": "PS BANK",
   "description": "パチンコ・スロットの貯玉/貯メダルを口座のように管理",
   "start_url": "./",
   "scope": "./",
